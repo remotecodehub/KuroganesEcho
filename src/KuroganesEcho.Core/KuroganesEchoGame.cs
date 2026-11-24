@@ -1,19 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Xml.Linq;
 using KuroganesEcho.Core.Localization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 using MonoGame.Extended;
-using MonoGame.Extended.Content;
-using MonoGame.Extended.Tilemaps;
-using MonoGame.Extended.Tilemaps.Rendering;
-using MonoGame.Extended.Tilemaps.Tiled;
 using MonoGame.Extended.ViewportAdapters;
 
 namespace KuroganesEcho.Core;
@@ -42,11 +33,9 @@ public class KuroganesEchoGame : Game
     private SpriteFont _font = null!;
     private Texture2D _whiteTexture = null!;
     private PlayerCharacter _player = null!;
-    private Tilemap _tilemap = null!;
-    private TilemapSpriteBatchRenderer _tilemapRenderer = null!;
+    private GameLevel _level = null!;
     private BoxingViewportAdapter _viewportAdapter = null!;
     private OrthographicCamera _camera = null!;
-    private readonly List<Rectangle> _collisionPlatforms = new();
     private readonly string[] _characterIds = { "Kunoichi", "Ninja_Monk", "Ninja_Peasant" };
 
     private GameScreen _screen = GameScreen.MainMenu;
@@ -101,33 +90,11 @@ public class KuroganesEchoGame : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _font = Content.Load<SpriteFont>("Fonts/Hud");
-        using (var mapStream = TitleContainer.OpenStream("Content/Tiled/Maps/Act_01.tmx"))
-        {
-            var parser = new TiledTmxParser(
-                "Content/Tiled/Maps",
-                OpenTiledResource);
-            _tilemap = parser.ParseFromStream(mapStream, GraphicsDevice, "Content/Tiled/Maps");
-        }
-        _tilemapRenderer = new TilemapSpriteBatchRenderer
-        {
-            BlendState = BlendState.AlphaBlend,
-            SamplerState = SamplerState.PointClamp
-        };
-        _tilemapRenderer.LoadTilemap(_tilemap);
-        LoadCollisionPlatforms();
+        _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01);
         _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
 
         _whiteTexture = new Texture2D(GraphicsDevice, 1, 1);
         _whiteTexture.SetData(new[] { Color.White });
-    }
-
-    private static Stream OpenTiledResource(string path)
-    {
-        var normalized = path.Replace('\\', '/');
-        if (!normalized.StartsWith("Content/", StringComparison.OrdinalIgnoreCase))
-            normalized = "Content/" + normalized.TrimStart('/');
-
-        return TitleContainer.OpenStream(normalized);
     }
 
     protected override void Update(GameTime gameTime)
@@ -275,7 +242,7 @@ public class KuroganesEchoGame : Game
     private void StartAct01()
     {
         _screen = GameScreen.Act01;
-        _playerPosition = new Vector2(64f, 352f);
+        _playerPosition = _level.PlayerSpawn;
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
         _verticalVelocity = 0f;
@@ -373,8 +340,12 @@ public class KuroganesEchoGame : Game
         _playerPosition.X += _moveInput.X * movementSpeed * elapsedSeconds;
         _verticalVelocity += Gravity * elapsedSeconds;
         _playerPosition.Y += _verticalVelocity * elapsedSeconds;
-        _playerPosition.X = Math.Clamp(_playerPosition.X, 32f, _tilemap.WorldBounds.Width - 32f);
-        var landingTop = FindLandingTop(previousY: _playerPosition.Y - _verticalVelocity * elapsedSeconds, currentY: _playerPosition.Y);
+        _playerPosition.X = Math.Clamp(_playerPosition.X, 32f, _level.WorldBounds.Width - 32f);
+        var landingTop = _level.FindLandingTop(
+            _playerPosition.X,
+            previousY: _playerPosition.Y - _verticalVelocity * elapsedSeconds,
+            currentY: _playerPosition.Y,
+            playerHalfWidth: PlayerHalfWidth);
         if (_verticalVelocity >= 0f && landingTop.HasValue)
         {
             _playerPosition.Y = landingTop.Value;
@@ -417,59 +388,12 @@ public class KuroganesEchoGame : Game
         StartAction(PlayerAnimationState.Jump);
     }
 
-    private void LoadCollisionPlatforms()
-    {
-        _collisionPlatforms.Clear();
-        using var mapStream = TitleContainer.OpenStream("Content/Tiled/Maps/Act_01.tmx");
-        var document = XDocument.Load(mapStream);
-        var collisionLayer = document.Root?
-            .Elements("objectgroup")
-            .FirstOrDefault(layer => string.Equals((string)layer.Attribute("name"), "Collision", StringComparison.OrdinalIgnoreCase));
-
-        if (collisionLayer is null)
-        {
-            _collisionPlatforms.Add(new Rectangle(0, (int)_tilemap.WorldBounds.Height - 32, (int)_tilemap.WorldBounds.Width, 32));
-            return;
-        }
-
-        foreach (var objectElement in collisionLayer.Elements("object"))
-        {
-            var x = ReadMapFloat(objectElement, "x");
-            var y = ReadMapFloat(objectElement, "y");
-            var width = ReadMapFloat(objectElement, "width");
-            var height = ReadMapFloat(objectElement, "height");
-            if (width > 0f && height > 0f)
-                _collisionPlatforms.Add(new Rectangle((int)x, (int)y, (int)width, (int)height));
-        }
-    }
-
-    private static float ReadMapFloat(XElement element, string attributeName) =>
-        float.TryParse((string)element.Attribute(attributeName), NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
-            ? value
-            : 0f;
-
-    private float? FindLandingTop(float previousY, float currentY)
-    {
-        float? landingTop = null;
-        foreach (var platform in _collisionPlatforms)
-        {
-            if (_playerPosition.X + PlayerHalfWidth <= platform.Left || _playerPosition.X - PlayerHalfWidth >= platform.Right)
-                continue;
-
-            var top = platform.Top;
-            if (previousY <= top && currentY >= top && (!landingTop.HasValue || top < landingTop.Value))
-                landingTop = top;
-        }
-
-        return landingTop;
-    }
-
     private void UpdateCamera()
     {
         var halfWidth = VirtualWidth / 2f;
-        var cameraX = Math.Clamp(_playerPosition.X, halfWidth, _tilemap.WorldBounds.Width - halfWidth);
+        var cameraX = Math.Clamp(_playerPosition.X, halfWidth, _level.WorldBounds.Width - halfWidth);
         var halfHeight = VirtualHeight / 2f;
-        var cameraY = Math.Clamp(_playerPosition.Y, halfHeight, _tilemap.WorldBounds.Height - halfHeight);
+        var cameraY = Math.Clamp(_playerPosition.Y, halfHeight, _level.WorldBounds.Height - halfHeight);
         _camera.LookAt(new Vector2(cameraX, cameraY));
     }
 
@@ -539,8 +463,7 @@ public class KuroganesEchoGame : Game
     private void DrawAct01(GameTime gameTime)
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
-        _tilemapRenderer.Update(gameTime);
-        _tilemapRenderer.Draw(_spriteBatch, _camera);
+        _level.Draw(gameTime, _spriteBatch, _camera);
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: _camera.GetViewMatrix());
         DrawPlayer();

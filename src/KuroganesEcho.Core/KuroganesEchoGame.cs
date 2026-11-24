@@ -27,6 +27,7 @@ public class KuroganesEchoGame : Game
     private const int VirtualWidth = 320;
     private const int VirtualHeight = 180;
     private const float PlayerSpeed = 72f;
+    private const float RunSpeed = 132f;
     private const float PlayerScale = 0.5f;
     private const float Gravity = 480f;
     private const float JumpVelocity = -180f;
@@ -40,32 +41,25 @@ public class KuroganesEchoGame : Game
     private SpriteBatch _spriteBatch = null!;
     private SpriteFont _font = null!;
     private Texture2D _whiteTexture = null!;
-    private Texture2D _playerIdle = null!;
-    private Texture2D _playerRun = null!;
-    private Texture2D _playerAttack1 = null!;
-    private Texture2D _playerAttack2 = null!;
-    private Texture2D _playerCast = null!;
-    private Texture2D _playerWalk = null!;
-    private Texture2D _playerEating = null!;
-    private Texture2D _playerJump = null!;
+    private PlayerCharacter _player = null!;
     private Tilemap _tilemap = null!;
     private TilemapSpriteBatchRenderer _tilemapRenderer = null!;
     private BoxingViewportAdapter _viewportAdapter = null!;
     private OrthographicCamera _camera = null!;
     private readonly List<Rectangle> _collisionPlatforms = new();
+    private readonly string[] _characterIds = { "Kunoichi", "Ninja_Monk", "Ninja_Peasant" };
 
     private GameScreen _screen = GameScreen.MainMenu;
     private int _menuSelection;
     private int _languageSelection;
+    private int _characterSelection;
     private Vector2 _playerPosition = new(64f, 352f);
     private Vector2 _moveInput;
     private Vector2 _analogVisualInput;
     private float _verticalVelocity;
     private bool _isGrounded;
+    private float _runRemaining;
     private int _jumpsUsed;
-    private float _animationClock;
-    private float _actionRemaining;
-    private PlayerAnimationState _playerAnimation = PlayerAnimationState.Idle;
     private KeyboardState _previousKeyboard;
     private GamePadState _previousGamePad;
     private MouseState _previousMouse;
@@ -121,15 +115,7 @@ public class KuroganesEchoGame : Game
         };
         _tilemapRenderer.LoadTilemap(_tilemap);
         LoadCollisionPlatforms();
-
-        _playerIdle = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Idle");
-        _playerRun = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Run");
-        _playerAttack1 = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Attack_1");
-        _playerAttack2 = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Attack_2");
-        _playerCast = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Cast");
-        _playerWalk = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Walk");
-        _playerEating = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Eating");
-        _playerJump = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Jump");
+        _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
 
         _whiteTexture = new Texture2D(GraphicsDevice, 1, 1);
         _whiteTexture.SetData(new[] { Color.White });
@@ -236,6 +222,10 @@ public class KuroganesEchoGame : Game
             _languageSelection = (_languageSelection + _languageCodes.Length - 1) % _languageCodes.Length;
         if (IsNewKeyPress(keyboard, Keys.Down))
             _languageSelection = (_languageSelection + 1) % _languageCodes.Length;
+        if (IsNewKeyPress(keyboard, Keys.Left))
+            SelectCharacter(_characterSelection - 1);
+        if (IsNewKeyPress(keyboard, Keys.Right))
+            SelectCharacter(_characterSelection + 1);
 
         var point = GetPressedPoint(touches);
         if (point.HasValue)
@@ -254,6 +244,15 @@ public class KuroganesEchoGame : Game
                 _screen = GameScreen.MainMenu;
                 return;
             }
+
+            for (var index = 0; index < _characterIds.Length; index++)
+            {
+                if (CharacterButton(index).Contains(point.Value))
+                {
+                    SelectCharacter(index);
+                    return;
+                }
+            }
         }
 
         if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
@@ -266,6 +265,13 @@ public class KuroganesEchoGame : Game
         LocalizationManager.SetCulture(_languageCodes[_languageSelection]);
     }
 
+    private void SelectCharacter(int index)
+    {
+        _characterSelection = (index + _characterIds.Length) % _characterIds.Length;
+        if (_player is not null)
+            _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
+    }
+
     private void StartAct01()
     {
         _screen = GameScreen.Act01;
@@ -275,6 +281,8 @@ public class KuroganesEchoGame : Game
         _verticalVelocity = 0f;
         _isGrounded = true;
         _jumpsUsed = 0;
+        _runRemaining = 0f;
+        _player.Reset();
         UpdateCamera();
     }
 
@@ -361,7 +369,8 @@ public class KuroganesEchoGame : Game
         if (_moveInput.LengthSquared() > 1f)
             _moveInput.Normalize();
         var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        _playerPosition.X += _moveInput.X * PlayerSpeed * elapsedSeconds;
+        var movementSpeed = _runRemaining > 0f ? RunSpeed : PlayerSpeed;
+        _playerPosition.X += _moveInput.X * movementSpeed * elapsedSeconds;
         _verticalVelocity += Gravity * elapsedSeconds;
         _playerPosition.Y += _verticalVelocity * elapsedSeconds;
         _playerPosition.X = Math.Clamp(_playerPosition.X, 32f, _tilemap.WorldBounds.Width - 32f);
@@ -378,29 +387,23 @@ public class KuroganesEchoGame : Game
             _isGrounded = false;
             _playerPosition.Y = Math.Max(32f, _playerPosition.Y);
         }
-        _animationClock += (float)gameTime.ElapsedGameTime.TotalSeconds;
-        if (_actionRemaining > 0f)
+        if (_runRemaining > 0f)
+            _runRemaining = Math.Max(0f, _runRemaining - elapsedSeconds);
+        _player.Update(elapsedSeconds);
+        if (!_player.IsActionActive)
         {
-            _actionRemaining -= (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (_actionRemaining <= 0f)
-                _playerAnimation = _isGrounded
-                    ? (_moveInput.Length() > 0.05f ? PlayerAnimationState.Walk : PlayerAnimationState.Idle)
-                    : PlayerAnimationState.Jump;
-        }
-        else if (!_isGrounded)
-            _playerAnimation = PlayerAnimationState.Jump;
-        else
-        {
-            _playerAnimation = _moveInput.Length() > 0.05f ? PlayerAnimationState.Walk : PlayerAnimationState.Idle;
+            var locomotion = !_isGrounded
+                ? PlayerAnimationState.Jump
+                : (_moveInput.Length() > 0.05f ? PlayerAnimationState.Walk : PlayerAnimationState.Idle);
+            _player.SetLocomotion(locomotion);
         }
         UpdateCamera();
     }
 
     private void StartAction(PlayerAnimationState action)
     {
-        _playerAnimation = action;
-        _actionRemaining = action == PlayerAnimationState.Jump ? 0.9f : 0.65f;
-        _animationClock = 0f;
+        _player.SetAction(action);
+        _runRemaining = action == PlayerAnimationState.Run ? _player.ActionRemaining : 0f;
     }
 
     private void TryJump()
@@ -499,7 +502,7 @@ public class KuroganesEchoGame : Game
         BeginUi();
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
         DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 27f), new Color(214, 191, 135), 1.2f);
-        DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 48f), new Color(156, 170, 169), 0.75f);
+        DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 42f), new Color(156, 170, 169), 0.65f);
 
         for (var index = 0; index < _languageCodes.Length; index++)
         {
@@ -513,7 +516,17 @@ public class KuroganesEchoGame : Game
                 "en-US" => LocalizedText.Get("English"),
                 _ => LocalizedText.Get("French")
             };
-            DrawTextCentered($"{_languageCodes[index]} - {label}", bounds.Center.ToVector2(), Color.White, 0.72f);
+            DrawTextCentered($"{_languageCodes[index]} - {label}", bounds.Center.ToVector2(), Color.White, 0.62f);
+        }
+
+        DrawTextCentered(LocalizedText.Get("Character"), new Vector2(VirtualWidth / 2f, 113f), new Color(156, 170, 169), 0.65f);
+        for (var index = 0; index < _characterIds.Length; index++)
+        {
+            var selected = index == _characterSelection;
+            var bounds = CharacterButton(index);
+            DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+            DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+            DrawTextCentered(CharacterLabel(index), bounds.Center.ToVector2(), Color.White, 0.52f);
         }
 
         var back = OptionsBackButton();
@@ -544,34 +557,8 @@ public class KuroganesEchoGame : Game
 
     private void DrawPlayer()
     {
-        var texture = _playerAnimation switch
-        {
-            PlayerAnimationState.Attack1 => _playerAttack1,
-            PlayerAnimationState.Attack2 => _playerAttack2,
-            PlayerAnimationState.Cast => _playerCast,
-            PlayerAnimationState.Walk => _playerWalk,
-            PlayerAnimationState.Eating => _playerEating,
-            PlayerAnimationState.Jump => _playerJump,
-            PlayerAnimationState.Run => _playerRun,
-            _ => _playerIdle
-        };
-        var frameCount = _playerAnimation switch
-        {
-            PlayerAnimationState.Attack1 => 6,
-            PlayerAnimationState.Attack2 => 8,
-            PlayerAnimationState.Cast => 6,
-            PlayerAnimationState.Walk => 8,
-            PlayerAnimationState.Eating => 9,
-            PlayerAnimationState.Jump => 10,
-            PlayerAnimationState.Run => 8,
-            _ => 9
-        };
-        var frameWidth = texture.Width / frameCount;
-        var frame = (int)(_animationClock * (_playerAnimation is PlayerAnimationState.Idle ? 7f : 10f)) % frameCount;
-        var source = new Rectangle(frame * frameWidth, 0, frameWidth, texture.Height);
-        var origin = new Vector2(frameWidth / 2f, texture.Height);
         var effects = _moveInput.X < -0.05f ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-        _spriteBatch.Draw(texture, _playerPosition, source, Color.White, 0f, origin, PlayerScale, effects, 0f);
+        _player.Draw(_spriteBatch, _playerPosition, PlayerScale, effects);
     }
 
     private void DrawAnalog()
@@ -669,9 +656,18 @@ public class KuroganesEchoGame : Game
 
     private Rectangle MenuButton(int index) => new(80, 65 + index * 30, 160, 24);
 
-    private Rectangle LanguageButton(int index) => new(66, 61 + index * 25, 188, 20);
+    private Rectangle LanguageButton(int index) => new(66, 49 + index * 19, 188, 16);
 
-    private Rectangle OptionsBackButton() => new(112, 145, 96, 20);
+    private Rectangle CharacterButton(int index) => new(8 + index * 104, 121, 96, 20);
+
+    private Rectangle OptionsBackButton() => new(112, 153, 96, 18);
+
+    private string CharacterLabel(int index) => _characterIds[index] switch
+    {
+        "Kunoichi" => LocalizedText.Get("Kunoichi"),
+        "Ninja_Monk" => LocalizedText.Get("Monk"),
+        _ => LocalizedText.Get("Peasant")
+    };
 
     private const float AnalogRadius = 24f;
 
@@ -726,15 +722,4 @@ public class KuroganesEchoGame : Game
         Act01
     }
 
-    private enum PlayerAnimationState
-    {
-        Idle,
-        Run,
-        Attack1,
-        Attack2,
-        Cast,
-        Walk,
-        Eating,
-        Jump
-    }
 }

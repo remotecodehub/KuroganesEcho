@@ -64,3 +64,81 @@
 /processor:TextureProcessor
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Jump.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Idle.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Run.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Walk.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Attack_1.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Attack_2.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Cast.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Cast.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Jump.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Idle.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Run.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Walk.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Attack_1.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Attack_2.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Jump.png

@@ -13,7 +13,7 @@
             }
         },
         "Tilesets/Act_01_Environment.tsx": {
-            "scaleInDock": 1
+            "scaleInDock": 5.5
         },
         "Tilesets/Kunoichi.tsx": {
             "scaleInDock": 1

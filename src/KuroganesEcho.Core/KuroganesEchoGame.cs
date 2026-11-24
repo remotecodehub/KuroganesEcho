@@ -38,6 +38,9 @@ public class KuroganesEchoGame : Game
     private Texture2D _playerRun = null!;
     private Texture2D _playerAttack1 = null!;
     private Texture2D _playerAttack2 = null!;
+    private Texture2D _playerCast = null!;
+    private Texture2D _playerWalk = null!;
+    private Texture2D _playerEating = null!;
     private Texture2D _playerJump = null!;
     private Tilemap _tilemap = null!;
     private TilemapSpriteBatchRenderer _tilemapRenderer = null!;
@@ -52,7 +55,6 @@ public class KuroganesEchoGame : Game
     private Vector2 _analogVisualInput;
     private float _verticalVelocity;
     private bool _isGrounded;
-    private bool _analogJumpHeld;
     private float _animationClock;
     private float _actionRemaining;
     private PlayerAnimationState _playerAnimation = PlayerAnimationState.Idle;
@@ -115,6 +117,9 @@ public class KuroganesEchoGame : Game
         _playerRun = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Run");
         _playerAttack1 = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Attack_1");
         _playerAttack2 = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Attack_2");
+        _playerCast = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Cast");
+        _playerWalk = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Walk");
+        _playerEating = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Eating");
         _playerJump = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Jump");
 
         _whiteTexture = new Texture2D(GraphicsDevice, 1, 1);
@@ -260,7 +265,6 @@ public class KuroganesEchoGame : Game
         _analogVisualInput = Vector2.Zero;
         _verticalVelocity = 0f;
         _isGrounded = true;
-        _analogJumpHeld = false;
         UpdateCamera();
     }
 
@@ -272,21 +276,12 @@ public class KuroganesEchoGame : Game
             _moveInput.X -= 1f;
         if (keyboard.IsKeyDown(Keys.Right) || keyboard.IsKeyDown(Keys.D))
             _moveInput.X += 1f;
-        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewKeyPress(keyboard, Keys.W))
-            TryJump();
-
         if (gamePad.DPad.Left == ButtonState.Pressed)
             _moveInput.X -= 1f;
         if (gamePad.DPad.Right == ButtonState.Pressed)
             _moveInput.X += 1f;
-        if (IsNewButtonPress(gamePad, Buttons.DPadUp))
-            TryJump();
         if (gamePad.ThumbSticks.Left.Length() > 0.2f)
-        {
             _moveInput.X = gamePad.ThumbSticks.Left.X;
-            if (gamePad.ThumbSticks.Left.Y > 0.65f && _previousGamePad.ThumbSticks.Left.Y <= 0.65f)
-                TryJump();
-        }
 
         if (IsDesktop)
         {
@@ -296,9 +291,10 @@ public class KuroganesEchoGame : Game
                 StartAction(PlayerAnimationState.Attack2);
             else if (IsNewKeyPress(keyboard, Keys.C) || IsNewButtonPress(gamePad, Buttons.X))
                 TryJump();
+            else if (IsNewKeyPress(keyboard, Keys.R) || IsNewButtonPress(gamePad, Buttons.Y))
+                StartAction(PlayerAnimationState.Run);
         }
 
-        var analogJumpActive = false;
         foreach (var touch in touches)
         {
             if (!IsMobile || touch.State is not (TouchLocationState.Pressed or TouchLocationState.Moved))
@@ -316,7 +312,6 @@ public class KuroganesEchoGame : Game
                     analogInput.Normalize();
                 _analogVisualInput = analogInput;
                 _moveInput = analogInput;
-                analogJumpActive = analogInput.Y < -0.55f;
             }
 
             if (touch.State == TouchLocationState.Pressed)
@@ -327,12 +322,14 @@ public class KuroganesEchoGame : Game
                     StartAction(PlayerAnimationState.Attack2);
                 else if (ActionButtonBounds(2).Contains(point))
                     TryJump();
+                else if (ActionButtonBounds(3).Contains(point))
+                    StartAction(PlayerAnimationState.Cast);
+                else if (ActionButtonBounds(4).Contains(point))
+                    StartAction(PlayerAnimationState.Eating);
+                else if (ActionButtonBounds(5).Contains(point))
+                    StartAction(PlayerAnimationState.Run);
             }
         }
-
-        if (analogJumpActive && !_analogJumpHeld)
-            TryJump();
-        _analogJumpHeld = analogJumpActive;
 
         var mouse = Mouse.GetState();
         if (IsMobile && mouse.LeftButton == ButtonState.Pressed)
@@ -348,9 +345,6 @@ public class KuroganesEchoGame : Game
                     analogInput.Normalize();
                 _analogVisualInput = analogInput;
                 _moveInput = analogInput;
-                if (analogInput.Y < -0.55f && !_analogJumpHeld)
-                    TryJump();
-                _analogJumpHeld = analogInput.Y < -0.55f;
             }
         }
 
@@ -379,14 +373,14 @@ public class KuroganesEchoGame : Game
             _actionRemaining -= (float)gameTime.ElapsedGameTime.TotalSeconds;
             if (_actionRemaining <= 0f)
                 _playerAnimation = _isGrounded
-                    ? (_moveInput.Length() > 0.05f ? PlayerAnimationState.Run : PlayerAnimationState.Idle)
+                    ? (_moveInput.Length() > 0.05f ? PlayerAnimationState.Walk : PlayerAnimationState.Idle)
                     : PlayerAnimationState.Jump;
         }
         else if (!_isGrounded)
             _playerAnimation = PlayerAnimationState.Jump;
         else
         {
-            _playerAnimation = _moveInput.Length() > 0.05f ? PlayerAnimationState.Run : PlayerAnimationState.Idle;
+            _playerAnimation = _moveInput.Length() > 0.05f ? PlayerAnimationState.Walk : PlayerAnimationState.Idle;
         }
         UpdateCamera();
     }
@@ -495,6 +489,9 @@ public class KuroganesEchoGame : Game
         {
             PlayerAnimationState.Attack1 => _playerAttack1,
             PlayerAnimationState.Attack2 => _playerAttack2,
+            PlayerAnimationState.Cast => _playerCast,
+            PlayerAnimationState.Walk => _playerWalk,
+            PlayerAnimationState.Eating => _playerEating,
             PlayerAnimationState.Jump => _playerJump,
             PlayerAnimationState.Run => _playerRun,
             _ => _playerIdle
@@ -503,6 +500,9 @@ public class KuroganesEchoGame : Game
         {
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 8,
+            PlayerAnimationState.Cast => 6,
+            PlayerAnimationState.Walk => 8,
+            PlayerAnimationState.Eating => 9,
             PlayerAnimationState.Jump => 10,
             PlayerAnimationState.Run => 8,
             _ => 9
@@ -529,9 +529,12 @@ public class KuroganesEchoGame : Game
     {
         var buttons = new[]
         {
-            (new Rectangle(236, 130, 24, 24), "A"),
-            (new Rectangle(268, 130, 24, 24), "B"),
-            (new Rectangle(300, 130, 18, 24), "C")
+            (new Rectangle(236, 132, 24, 24), "A"),
+            (new Rectangle(264, 132, 24, 24), "B"),
+            (new Rectangle(292, 132, 24, 24), "C"),
+            (new Rectangle(236, 104, 24, 24), "X"),
+            (new Rectangle(264, 104, 24, 24), "Y"),
+            (new Rectangle(292, 104, 24, 24), "Z")
         };
         foreach (var (bounds, label) in buttons)
         {
@@ -617,9 +620,12 @@ public class KuroganesEchoGame : Game
 
     private Rectangle ActionButtonBounds(int index) => index switch
     {
-        0 => new Rectangle(236, 130, 24, 24),
-        1 => new Rectangle(268, 130, 24, 24),
-        _ => new Rectangle(300, 130, 18, 24)
+        0 => new Rectangle(236, 132, 24, 24),
+        1 => new Rectangle(264, 132, 24, 24),
+        2 => new Rectangle(292, 132, 24, 24),
+        3 => new Rectangle(236, 104, 24, 24),
+        4 => new Rectangle(264, 104, 24, 24),
+        _ => new Rectangle(292, 104, 24, 24)
     };
 
     private Point? GetPressedPoint(TouchCollection touches)
@@ -667,6 +673,9 @@ public class KuroganesEchoGame : Game
         Run,
         Attack1,
         Attack2,
+        Cast,
+        Walk,
+        Eating,
         Jump
     }
 }

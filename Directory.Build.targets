@@ -1,0 +1,39 @@
+<Project>
+  <PropertyGroup>
+    <KuroganesEchoTiledRoot>$(MSBuildThisFileDirectory)src\KuroganesEcho.Core\Content\Tiled</KuroganesEchoTiledRoot>
+  </PropertyGroup>
+
+  <!-- DesktopGL: keep the raw Tiled files beside the executable. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0' and '$(MSBuildProjectName)' == 'KuroganesEcho.DesktopGL'">
+    <Content Include="$(KuroganesEchoTiledRoot)\Maps\**\*">
+      <Link>Content\Tiled\Maps\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="$(KuroganesEchoTiledRoot)\Tilesets\**\*">
+      <Link>Content\Tiled\Tilesets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Android: place the raw files in the APK assets with the same logical paths. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0-android'">
+    <AndroidAsset Include="$(KuroganesEchoTiledRoot)\Maps\**\*">
+      <Link>Content\Tiled\Maps\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="$(KuroganesEchoTiledRoot)\Tilesets\**\*">
+      <Link>Content\Tiled\Tilesets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </AndroidAsset>
+  </ItemGroup>
+
+  <!-- iOS: bundle the raw files so TitleContainer can resolve Content/Tiled/... -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0-ios'">
+    <BundleResource Include="$(KuroganesEchoTiledRoot)\Maps\**\*">
+      <Link>Content\Tiled\Maps\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </BundleResource>
+    <BundleResource Include="$(KuroganesEchoTiledRoot)\Tilesets\**\*">
+      <Link>Content\Tiled\Tilesets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </BundleResource>
+  </ItemGroup>
+</Project>

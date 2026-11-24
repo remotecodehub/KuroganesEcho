@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KuroganesEcho.Core.Localization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -35,6 +36,7 @@ public class KuroganesEchoGame : Game
     private Texture2D _whiteTexture = null!;
     private PlayerCharacter _player = null!;
     private GameLevel _level = null!;
+    private readonly List<EnemyInstance> _enemies = new();
     private BoxingViewportAdapter _viewportAdapter = null!;
     private OrthographicCamera _camera = null!;
     private readonly string[] _characterIds = { "Kunoichi", "Ninja_Monk", "Ninja_Peasant" };
@@ -95,6 +97,7 @@ public class KuroganesEchoGame : Game
         _font = Content.Load<SpriteFont>("Fonts/Hud");
         _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01);
         _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
+        LoadEnemies();
 
         _whiteTexture = new Texture2D(GraphicsDevice, 1, 1);
         _whiteTexture.SetData(new[] { Color.White });
@@ -341,7 +344,24 @@ public class KuroganesEchoGame : Game
         _jumpsUsed = 0;
         _runRemaining = 0f;
         _player.Reset();
+        foreach (var enemy in _enemies)
+            enemy.Reset();
         UpdateCamera();
+    }
+
+    private void LoadEnemies()
+    {
+        _enemies.Clear();
+        foreach (var spawn in _level.EnemySpawns)
+        {
+            var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
+                ? configuredType
+                : string.Empty;
+            if (enemyType is not ("Black_Werewolf" or "Kitsune" or "Skeleton_Warrior"))
+                continue;
+
+            _enemies.Add(new EnemyInstance(EnemyCharacter.Load(Content, enemyType), spawn));
+        }
     }
 
     private void UpdateAct01(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
@@ -452,6 +472,8 @@ public class KuroganesEchoGame : Game
         if (_runRemaining > 0f)
             _runRemaining = Math.Max(0f, _runRemaining - elapsedSeconds);
         _player.Update(elapsedSeconds);
+        foreach (var enemy in _enemies)
+            enemy.Update(elapsedSeconds, _playerPosition, _level);
         if (!_player.IsActionActive)
         {
             var locomotion = !_isGrounded
@@ -606,6 +628,8 @@ public class KuroganesEchoGame : Game
         _level.Draw(gameTime, _spriteBatch, _camera);
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: _camera.GetViewMatrix());
+        foreach (var enemy in _enemies)
+            enemy.Draw(_spriteBatch);
         DrawPlayer();
         _spriteBatch.End();
 

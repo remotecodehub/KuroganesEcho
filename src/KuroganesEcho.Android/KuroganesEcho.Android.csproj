@@ -15,17 +15,6 @@
     </MonoGameContentReference>
   </ItemGroup>
   <ItemGroup>
-    <AndroidAsset Include="..\KuroganesEcho.Core\Content\Tiled\Maps\Act_01.tmx">
-      <Link>Content\Tiled\Maps\Act_01.tmx</Link>
-    </AndroidAsset>
-    <AndroidAsset Include="..\KuroganesEcho.Core\Content\Tiled\Tilesets\Act_01_Environment.tsx">
-      <Link>Content\Tiled\Tilesets\Act_01_Environment.tsx</Link>
-    </AndroidAsset>
-    <AndroidAsset Include="..\KuroganesEcho.Core\Content\Tiled\Tilesets\Act_01_Environment.png">
-      <Link>Content\Tiled\Tilesets\Act_01_Environment.png</Link>
-    </AndroidAsset>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\KuroganesEcho.Core\KuroganesEcho.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

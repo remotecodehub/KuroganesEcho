@@ -60,10 +60,10 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     <object id="17" name="HealthPickup_01" type="Pickup" x="1056" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>
     <object id="18" name="HealthPickup_02" type="Pickup" x="2880" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>
     <object id="19" name="HealthPickup_03" type="Pickup" x="4160" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>
-    <object id="20" name="EnemySpawn_01" type="EnemySpawn" x="1728" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Peasant"/></properties></object>
-    <object id="21" name="EnemySpawn_02" type="EnemySpawn" x="2320" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Monk"/></properties></object>
-    <object id="22" name="EnemySpawn_03" type="EnemySpawn" x="3328" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Peasant"/></properties></object>
-    <object id="23" name="EnemySpawn_04" type="EnemySpawn" x="4448" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Monk"/></properties></object>
+    <object id="20" name="EnemySpawn_01" type="EnemySpawn" x="1728" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>
+    <object id="21" name="EnemySpawn_02" type="EnemySpawn" x="2320" y="320" width="16" height="32"><properties><property name="EnemyType" value="Kitsune"/></properties></object>
+    <object id="22" name="EnemySpawn_03" type="EnemySpawn" x="3328" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>
+    <object id="23" name="EnemySpawn_04" type="EnemySpawn" x="4448" y="320" width="16" height="32"><properties><property name="EnemyType" value="Kitsune"/></properties></object>
     <object id="24" name="GuardianEncounter" type="BossEncounter" x="4800" y="256" width="256" height="96"><properties><property name="BossType" value="Guardian"/><property name="Outcome" value="LoseToGuardian"/><property name="Trigger" value="OnEnter"/></properties></object>
     <object id="25" name="ActEnd" type="StoryBeat" x="4992" y="304" width="32" height="48"><properties><property name="Beat" value="The Guardian defeats the player"/><property name="NextAct" value="Locked"/></properties></object>
   </objectgroup>

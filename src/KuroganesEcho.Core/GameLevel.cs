@@ -14,6 +14,13 @@ using MonoGame.Extended.Tilemaps.Tiled;
 
 namespace KuroganesEcho.Core;
 
+internal enum GameDifficulty
+{
+    Easy,
+    Normal,
+    Hard
+}
+
 internal sealed class LevelDefinition
 {
     public required string Id { get; init; }
@@ -58,6 +65,7 @@ internal sealed class GameLevel
     public TilemapSpriteBatchRenderer Renderer { get; }
     public RectangleF WorldBounds => Tilemap.WorldBounds;
     public Vector2 PlayerSpawn => Definition.PlayerSpawn;
+    public GameDifficulty Difficulty { get; private set; } = GameDifficulty.Normal;
     public IReadOnlyList<Rectangle> CollisionPlatforms => _collisionPlatforms;
     public IReadOnlyList<LevelObjectData> GameplayObjects => _gameplayObjects;
     public IEnumerable<LevelObjectData> EnemySpawns => _gameplayObjects.Where(item => item.Type == "EnemySpawn");
@@ -85,6 +93,8 @@ internal sealed class GameLevel
         Renderer.Update(gameTime);
         Renderer.Draw(spriteBatch, camera);
     }
+
+    public void ConfigureDifficulty(GameDifficulty difficulty) => Difficulty = difficulty;
 
     public float? FindLandingTop(float playerX, float previousY, float currentY, float playerHalfWidth = PlayerCollisionHalfWidth)
     {

@@ -28,6 +28,7 @@ public class KuroganesEchoGame : Game
     private readonly GraphicsDeviceManager _graphics;
     private readonly string[] _languageCodes = { "pt-BR", "en-US", "fr-FR" };
     private readonly string[] _menuKeys = { "Play", "Options", "Quit" };
+    private readonly string[] _difficultyKeys = { "Easy", "Normal", "Hard" };
 
     private SpriteBatch _spriteBatch = null!;
     private SpriteFont _font = null!;
@@ -42,6 +43,8 @@ public class KuroganesEchoGame : Game
     private int _menuSelection;
     private int _languageSelection;
     private int _characterSelection;
+    private int _difficultySelection = 1;
+    private GameDifficulty _selectedDifficulty = GameDifficulty.Normal;
     private Vector2 _playerPosition = new(64f, 352f);
     private Vector2 _moveInput;
     private Vector2 _analogVisualInput;
@@ -108,6 +111,10 @@ public class KuroganesEchoGame : Game
         {
             if (_screen == GameScreen.MainMenu)
                 Exit();
+            else if (_screen == GameScreen.DifficultySelection)
+                _screen = GameScreen.PlayerSelection;
+            else if (_screen == GameScreen.PlayerSelection)
+                _screen = GameScreen.MainMenu;
             else
                 _screen = GameScreen.MainMenu;
         }
@@ -118,6 +125,14 @@ public class KuroganesEchoGame : Game
         else if (_screen == GameScreen.Options)
         {
             UpdateOptions(keyboard, touchState);
+        }
+        else if (_screen == GameScreen.PlayerSelection)
+        {
+            UpdatePlayerSelection(keyboard, touchState);
+        }
+        else if (_screen == GameScreen.DifficultySelection)
+        {
+            UpdateDifficultySelection(keyboard, touchState);
         }
         else
         {
@@ -136,6 +151,10 @@ public class KuroganesEchoGame : Game
             DrawAct01(gameTime);
         else if (_screen == GameScreen.Options)
             DrawOptions();
+        else if (_screen == GameScreen.PlayerSelection)
+            DrawPlayerSelection();
+        else if (_screen == GameScreen.DifficultySelection)
+            DrawDifficultySelection();
         else
             DrawMainMenu();
 
@@ -172,7 +191,7 @@ public class KuroganesEchoGame : Game
         switch (_menuSelection)
         {
             case 0:
-                StartAct01();
+                _screen = GameScreen.PlayerSelection;
                 break;
             case 1:
                 _screen = GameScreen.Options;
@@ -189,11 +208,6 @@ public class KuroganesEchoGame : Game
             _languageSelection = (_languageSelection + _languageCodes.Length - 1) % _languageCodes.Length;
         if (IsNewKeyPress(keyboard, Keys.Down))
             _languageSelection = (_languageSelection + 1) % _languageCodes.Length;
-        if (IsNewKeyPress(keyboard, Keys.Left))
-            SelectCharacter(_characterSelection - 1);
-        if (IsNewKeyPress(keyboard, Keys.Right))
-            SelectCharacter(_characterSelection + 1);
-
         var point = GetPressedPoint(touches);
         if (point.HasValue)
         {
@@ -212,18 +226,95 @@ public class KuroganesEchoGame : Game
                 return;
             }
 
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
+            SelectLanguage(_languageSelection);
+    }
+
+    private void UpdatePlayerSelection(KeyboardState keyboard, TouchCollection touches)
+    {
+        if (IsNewKeyPress(keyboard, Keys.Left))
+            SelectCharacter(_characterSelection - 1);
+        if (IsNewKeyPress(keyboard, Keys.Right))
+            SelectCharacter(_characterSelection + 1);
+
+        var point = GetPressedPoint(touches);
+        if (point.HasValue)
+        {
             for (var index = 0; index < _characterIds.Length; index++)
             {
-                if (CharacterButton(index).Contains(point.Value))
+                if (CharacterSelectionButton(index).Contains(point.Value))
                 {
                     SelectCharacter(index);
                     return;
                 }
             }
+
+            if (SelectionContinueButton().Contains(point.Value))
+            {
+                OpenDifficultySelection();
+                return;
+            }
+
+            if (SelectionBackButton().Contains(point.Value))
+            {
+                _screen = GameScreen.MainMenu;
+                return;
+            }
         }
 
         if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
-            SelectLanguage(_languageSelection);
+            OpenDifficultySelection();
+    }
+
+    private void OpenDifficultySelection()
+    {
+        _difficultySelection = (int)_selectedDifficulty;
+        _screen = GameScreen.DifficultySelection;
+    }
+
+    private void UpdateDifficultySelection(KeyboardState keyboard, TouchCollection touches)
+    {
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewKeyPress(keyboard, Keys.Left))
+            _difficultySelection = (_difficultySelection + _difficultyKeys.Length - 1) % _difficultyKeys.Length;
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewKeyPress(keyboard, Keys.Right))
+            _difficultySelection = (_difficultySelection + 1) % _difficultyKeys.Length;
+
+        var point = GetPressedPoint(touches);
+        if (point.HasValue)
+        {
+            for (var index = 0; index < _difficultyKeys.Length; index++)
+            {
+                if (DifficultyButton(index).Contains(point.Value))
+                {
+                    _difficultySelection = index;
+                    return;
+                }
+            }
+
+            if (SelectionContinueButton().Contains(point.Value))
+            {
+                ConfirmDifficulty();
+                return;
+            }
+
+            if (SelectionBackButton().Contains(point.Value))
+            {
+                _screen = GameScreen.PlayerSelection;
+                return;
+            }
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
+            ConfirmDifficulty();
+    }
+
+    private void ConfirmDifficulty()
+    {
+        _selectedDifficulty = (GameDifficulty)_difficultySelection;
+        _level.ConfigureDifficulty(_selectedDifficulty);
+        StartAct01();
     }
 
     private void SelectLanguage(int index)
@@ -443,21 +534,70 @@ public class KuroganesEchoGame : Game
             DrawTextCentered($"{_languageCodes[index]} - {label}", bounds.Center.ToVector2(), Color.White, 0.62f);
         }
 
-        DrawTextCentered(LocalizedText.Get("Character"), new Vector2(VirtualWidth / 2f, 113f), new Color(156, 170, 169), 0.65f);
-        for (var index = 0; index < _characterIds.Length; index++)
-        {
-            var selected = index == _characterSelection;
-            var bounds = CharacterButton(index);
-            DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
-            DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
-            DrawTextCentered(CharacterLabel(index), bounds.Center.ToVector2(), Color.White, 0.52f);
-        }
-
         var back = OptionsBackButton();
         DrawRect(back, new Color(42, 53, 63));
         DrawRect(back, new Color(77, 91, 99), false, 1);
         DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.72f);
         EndUi();
+    }
+
+    private void DrawPlayerSelection()
+    {
+        GraphicsDevice.Clear(new Color(12, 16, 24));
+        BeginUi();
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawTextCentered(LocalizedText.Get("SelectPlayer"), new Vector2(VirtualWidth / 2f, 20f), new Color(214, 191, 135), 1f);
+        DrawTextCentered("<  >", new Vector2(VirtualWidth / 2f, 38f), new Color(130, 145, 149), 0.72f);
+
+        for (var index = 0; index < _characterIds.Length; index++)
+        {
+            var selected = index == _characterSelection;
+            var bounds = CharacterSelectionButton(index);
+            DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+            DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+            DrawTextCentered(CharacterLabel(index), bounds.Center.ToVector2(), Color.White, 0.52f);
+        }
+
+        _player.SetLocomotion(PlayerAnimationState.Idle);
+        _player.Draw(_spriteBatch, new Vector2(VirtualWidth / 2f, 115f), 0.42f, SpriteEffects.None);
+        DrawTextCentered(CharacterLabel(_characterSelection), new Vector2(VirtualWidth / 2f, 133f), new Color(214, 191, 135), 0.65f);
+
+        DrawSelectionButtons();
+        EndUi();
+    }
+
+    private void DrawDifficultySelection()
+    {
+        GraphicsDevice.Clear(new Color(12, 16, 24));
+        BeginUi();
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawTextCentered(LocalizedText.Get("SelectDifficulty"), new Vector2(VirtualWidth / 2f, 24f), new Color(214, 191, 135), 0.95f);
+
+        for (var index = 0; index < _difficultyKeys.Length; index++)
+        {
+            var selected = index == _difficultySelection;
+            var bounds = DifficultyButton(index);
+            DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+            DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+            DrawTextCentered(LocalizedText.Get(_difficultyKeys[index]), bounds.Center.ToVector2(), Color.White, 0.75f);
+        }
+
+        DrawTextCentered($"{LocalizedText.Get("Character")}: {CharacterLabel(_characterSelection)}", new Vector2(VirtualWidth / 2f, 122f), new Color(156, 170, 169), 0.58f);
+        DrawSelectionButtons();
+        EndUi();
+    }
+
+    private void DrawSelectionButtons()
+    {
+        var continueButton = SelectionContinueButton();
+        DrawRect(continueButton, new Color(78, 96, 105));
+        DrawRect(continueButton, new Color(214, 191, 135), false, 1);
+        DrawTextCentered(LocalizedText.Get("Continue"), continueButton.Center.ToVector2(), Color.White, 0.64f);
+
+        var backButton = SelectionBackButton();
+        DrawRect(backButton, new Color(42, 53, 63));
+        DrawRect(backButton, new Color(77, 91, 99), false, 1);
+        DrawTextCentered(LocalizedText.Get("Back"), backButton.Center.ToVector2(), Color.White, 0.64f);
     }
 
     private void DrawAct01(GameTime gameTime)
@@ -581,7 +721,13 @@ public class KuroganesEchoGame : Game
 
     private Rectangle LanguageButton(int index) => new(66, 49 + index * 19, 188, 16);
 
-    private Rectangle CharacterButton(int index) => new(8 + index * 104, 121, 96, 20);
+    private Rectangle CharacterSelectionButton(int index) => new(8 + index * 104, 49, 96, 22);
+
+    private Rectangle DifficultyButton(int index) => new(72, 50 + index * 24, 176, 20);
+
+    private Rectangle SelectionContinueButton() => new(112, 148, 96, 18);
+
+    private Rectangle SelectionBackButton() => new(8, 148, 72, 18);
 
     private Rectangle OptionsBackButton() => new(112, 153, 96, 18);
 
@@ -642,6 +788,8 @@ public class KuroganesEchoGame : Game
     {
         MainMenu,
         Options,
+        PlayerSelection,
+        DifficultySelection,
         Act01
     }
 

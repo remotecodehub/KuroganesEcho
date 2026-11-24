@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using KuroganesEcho.Core.Localization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,6 +30,8 @@ public class KuroganesEchoGame : Game
     private const float PlayerScale = 0.5f;
     private const float Gravity = 480f;
     private const float JumpVelocity = -180f;
+    private const float PlayerHalfWidth = 10f;
+    private const int MaximumJumps = 2;
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly string[] _languageCodes = { "pt-BR", "en-US", "fr-FR" };
@@ -46,6 +52,7 @@ public class KuroganesEchoGame : Game
     private TilemapSpriteBatchRenderer _tilemapRenderer = null!;
     private BoxingViewportAdapter _viewportAdapter = null!;
     private OrthographicCamera _camera = null!;
+    private readonly List<Rectangle> _collisionPlatforms = new();
 
     private GameScreen _screen = GameScreen.MainMenu;
     private int _menuSelection;
@@ -55,6 +62,7 @@ public class KuroganesEchoGame : Game
     private Vector2 _analogVisualInput;
     private float _verticalVelocity;
     private bool _isGrounded;
+    private int _jumpsUsed;
     private float _animationClock;
     private float _actionRemaining;
     private PlayerAnimationState _playerAnimation = PlayerAnimationState.Idle;
@@ -112,6 +120,7 @@ public class KuroganesEchoGame : Game
             SamplerState = SamplerState.PointClamp
         };
         _tilemapRenderer.LoadTilemap(_tilemap);
+        LoadCollisionPlatforms();
 
         _playerIdle = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Idle");
         _playerRun = Content.Load<Texture2D>("Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Run");
@@ -265,6 +274,7 @@ public class KuroganesEchoGame : Game
         _analogVisualInput = Vector2.Zero;
         _verticalVelocity = 0f;
         _isGrounded = true;
+        _jumpsUsed = 0;
         UpdateCamera();
     }
 
@@ -355,12 +365,13 @@ public class KuroganesEchoGame : Game
         _verticalVelocity += Gravity * elapsedSeconds;
         _playerPosition.Y += _verticalVelocity * elapsedSeconds;
         _playerPosition.X = Math.Clamp(_playerPosition.X, 32f, _tilemap.WorldBounds.Width - 32f);
-        var groundY = _tilemap.WorldBounds.Height - 32f;
-        if (_playerPosition.Y >= groundY)
+        var landingTop = FindLandingTop(previousY: _playerPosition.Y - _verticalVelocity * elapsedSeconds, currentY: _playerPosition.Y);
+        if (_verticalVelocity >= 0f && landingTop.HasValue)
         {
-            _playerPosition.Y = groundY;
+            _playerPosition.Y = landingTop.Value;
             _verticalVelocity = 0f;
             _isGrounded = true;
+            _jumpsUsed = 0;
         }
         else
         {
@@ -394,12 +405,60 @@ public class KuroganesEchoGame : Game
 
     private void TryJump()
     {
-        if (!_isGrounded)
+        if (_jumpsUsed >= MaximumJumps)
             return;
 
         _verticalVelocity = JumpVelocity;
         _isGrounded = false;
+        _jumpsUsed++;
         StartAction(PlayerAnimationState.Jump);
+    }
+
+    private void LoadCollisionPlatforms()
+    {
+        _collisionPlatforms.Clear();
+        using var mapStream = TitleContainer.OpenStream("Content/Tiled/Maps/Act_01.tmx");
+        var document = XDocument.Load(mapStream);
+        var collisionLayer = document.Root?
+            .Elements("objectgroup")
+            .FirstOrDefault(layer => string.Equals((string)layer.Attribute("name"), "Collision", StringComparison.OrdinalIgnoreCase));
+
+        if (collisionLayer is null)
+        {
+            _collisionPlatforms.Add(new Rectangle(0, (int)_tilemap.WorldBounds.Height - 32, (int)_tilemap.WorldBounds.Width, 32));
+            return;
+        }
+
+        foreach (var objectElement in collisionLayer.Elements("object"))
+        {
+            var x = ReadMapFloat(objectElement, "x");
+            var y = ReadMapFloat(objectElement, "y");
+            var width = ReadMapFloat(objectElement, "width");
+            var height = ReadMapFloat(objectElement, "height");
+            if (width > 0f && height > 0f)
+                _collisionPlatforms.Add(new Rectangle((int)x, (int)y, (int)width, (int)height));
+        }
+    }
+
+    private static float ReadMapFloat(XElement element, string attributeName) =>
+        float.TryParse((string)element.Attribute(attributeName), NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0f;
+
+    private float? FindLandingTop(float previousY, float currentY)
+    {
+        float? landingTop = null;
+        foreach (var platform in _collisionPlatforms)
+        {
+            if (_playerPosition.X + PlayerHalfWidth <= platform.Left || _playerPosition.X - PlayerHalfWidth >= platform.Right)
+                continue;
+
+            var top = platform.Top;
+            if (previousY <= top && currentY >= top && (!landingTop.HasValue || top < landingTop.Value))
+                landingTop = top;
+        }
+
+        return landingTop;
     }
 
     private void UpdateCamera()

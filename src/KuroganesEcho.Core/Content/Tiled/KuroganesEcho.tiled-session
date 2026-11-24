@@ -1,0 +1,34 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "Todos os Ficheiros (*)",
+    "fileStates": {
+        "Maps/KuroganesEcho_320x24.tmx": {
+            "scale": 4,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 3683.25,
+                "y": 301.5
+            }
+        },
+        "Tilesets/Act_01_Environment.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/Kunoichi.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/Ninja_Monk.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/Ninja_Peasant.tsx": {
+            "scaleInDock": 1
+        }
+    },
+    "openFiles": [
+    ],
+    "project": "KuroganesEcho.tiled-project",
+    "recentFiles": [
+        "Maps/KuroganesEcho_320x24.tmx"
+    ]
+}

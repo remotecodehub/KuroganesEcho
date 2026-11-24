@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewBox="0 0 128 64" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .bg { fill:#1b202b; }
+      .bg2 { fill:#252c38; }
+      .dark { fill:#12161f; }
+      .stone { fill:#3a414d; }
+      .stone2 { fill:#4b5260; }
+      .edge { fill:#6b737e; }
+      .wood { fill:#5a4a43; }
+      .wood2 { fill:#79625a; }
+      .glass { fill:#667f88; }
+      .green { fill:#4e6351; }
+      .food { fill:#b6975a; }
+      .warning { fill:#7b4d55; }
+    </style>
+  </defs>
+
+  <!-- 00: transparent -->
+  <g transform="translate(0,0)"/>
+
+  <!-- 01: ground top -->
+  <g transform="translate(16,0)"><rect class="stone" x="0" y="3" width="16" height="13"/><rect class="edge" x="0" y="3" width="16" height="3"/><rect class="dark" x="2" y="8" width="4" height="2"/><rect class="stone2" x="10" y="11" width="4" height="2"/></g>
+  <!-- 02: ground fill -->
+  <g transform="translate(32,0)"><rect class="stone" width="16" height="16"/><rect class="dark" x="2" y="3" width="3" height="2"/><rect class="stone2" x="10" y="8" width="4" height="2"/><rect class="dark" x="6" y="13" width="5" height="1"/></g>
+  <!-- 03: cracked stone -->
+  <g transform="translate(48,0)"><rect class="stone" width="16" height="16"/><rect class="stone2" x="1" y="2" width="5" height="2"/><rect class="dark" x="7" y="4" width="1" height="7"/><rect class="dark" x="8" y="10" width="4" height="1"/><rect class="stone2" x="11" y="12" width="3" height="2"/></g>
+  <!-- 04: wood platform -->
+  <g transform="translate(64,0)"><rect class="wood" x="0" y="5" width="16" height="11"/><rect class="wood2" y="4" width="16" height="3"/><rect class="dark" x="3" y="8" width="1" height="8"/><rect class="dark" x="12" y="8" width="1" height="8"/><rect class="stone2" x="1" y="5" width="2" height="1"/><rect class="stone2" x="13" y="5" width="2" height="1"/></g>
+  <!-- 05: platform end -->
+  <g transform="translate(80,0)"><rect class="wood" x="2" y="5" width="12" height="11"/><rect class="wood2" x="0" y="4" width="16" height="3"/><rect class="dark" x="3" y="9" width="10" height="1"/><rect class="dark" x="4" y="13" width="8" height="1"/></g>
+  <!-- 06: wall -->
+  <g transform="translate(96,0)"><rect class="stone" width="16" height="16"/><path d="M0 6h16M0 12h16M7 0v6M3 6v6M11 12v4" stroke="#252c38" stroke-width="1"/></g>
+  <!-- 07: wall crack -->
+  <g transform="translate(112,0)"><rect class="stone" width="16" height="16"/><rect class="stone2" x="1" y="2" width="6" height="2"/><path d="M9 1v5h-2v4h3v5" stroke="#12161f" stroke-width="1" fill="none"/></g>
+
+  <!-- 08: roof -->
+  <g transform="translate(0,16)"><rect class="dark" width="16" height="16"/><path d="M0 14L14 0h2L2 16M7 16L16 7" stroke="#4b5260" stroke-width="2"/></g>
+  <!-- 09: roof edge -->
+  <g transform="translate(16,16)"><rect class="dark" width="16" height="16"/><rect class="wood2" y="12" width="16" height="3"/><rect class="wood" y="15" width="16" height="1"/></g>
+  <!-- 10: beam -->
+  <g transform="translate(32,16)"><rect class="wood" x="3" width="10" height="16"/><rect class="wood2" x="5" width="3" height="16"/><rect class="dark" x="11" width="2" height="16"/></g>
+  <!-- 11: window -->
+  <g transform="translate(48,16)"><rect class="wood" x="1" y="1" width="14" height="14"/><rect class="dark" x="3" y="3" width="10" height="10"/><rect class="glass" x="4" y="4" width="4" height="4"/><rect class="bg2" x="9" y="4" width="3" height="4"/><rect class="bg2" x="4" y="9" width="4" height="3"/><rect class="glass" x="9" y="9" width="3" height="3"/></g>
+  <!-- 12: door -->
+  <g transform="translate(64,16)"><rect class="wood" x="2" y="1" width="12" height="15"/><rect class="dark" x="4" y="3" width="8" height="13"/><rect class="wood2" x="5" y="4" width="6" height="1"/><rect class="food" x="9" y="10" width="1" height="1"/></g>
+  <!-- 13: extinguished lantern -->
+  <g transform="translate(80,16)"><rect class="dark" x="7" y="0" width="2" height="4"/><rect class="wood2" x="4" y="3" width="8" height="2"/><rect class="dark" x="5" y="5" width="6" height="7"/><rect class="stone2" x="6" y="6" width="4" height="4"/><rect class="wood" x="6" y="12" width="4" height="2"/><rect class="dark" x="7" y="14" width="2" height="2"/></g>
+  <!-- 14: lantern post -->
+  <g transform="translate(96,16)"><rect class="wood" x="7" y="3" width="2" height="13"/><rect class="wood2" x="3" y="2" width="10" height="2"/><rect class="dark" x="4" y="4" width="8" height="6"/><rect class="stone2" x="6" y="5" width="4" height="3"/><rect class="wood2" x="3" y="14" width="10" height="2"/></g>
+  <!-- 15: lantern glass -->
+  <g transform="translate(112,16)"><rect class="dark" x="3" y="2" width="10" height="12"/><rect class="stone2" x="5" y="4" width="6" height="7"/><rect class="bg2" x="6" y="5" width="4" height="5"/><rect class="wood2" x="5" y="12" width="6" height="2"/></g>
+
+  <!-- 16: weed -->
+  <g transform="translate(0,32)"><path d="M8 16V8M8 11L4 7M8 13l5-6M8 9l1-6M8 14l-3-3" stroke="#4e6351" stroke-width="2" fill="none"/></g>
+  <!-- 17: rubble -->
+  <g transform="translate(16,32)"><path d="M1 15l2-5 4-1 3 3 3-5 3 2v6z" fill="#4b5260"/><rect class="dark" x="4" y="13" width="3" height="1"/><rect class="stone2" x="11" y="13" width="3" height="1"/></g>
+  <!-- 18: edible -->
+  <g transform="translate(32,32)"><path d="M3 10h10v4H3z" fill="#b6975a"/><path d="M4 9c1-4 7-5 9 0z" fill="#d0b878"/><rect class="dark" x="6" y="8" width="1" height="2"/><rect class="dark" x="9" y="7" width="1" height="2"/><rect class="dark" x="2" y="14" width="12" height="1"/></g>
+  <!-- 19: empty seal altar -->
+  <g transform="translate(48,32)"><rect class="stone2" x="2" y="11" width="12" height="5"/><rect class="stone" x="4" y="5" width="8" height="7"/><circle cx="8" cy="8" r="3" fill="#12161f"/><path d="M6 6l4 4M10 6l-4 4" stroke="#7b4d55" stroke-width="1"/></g>
+  <!-- 20: chain anchor -->
+  <g transform="translate(64,32)"><rect class="wood" x="6" y="0" width="4" height="4"/><circle cx="8" cy="7" r="5" fill="none" stroke="#9a8a68" stroke-width="2"/><rect class="dark" x="7" y="5" width="2" height="4"/><path d="M8 12v4" stroke="#9a8a68" stroke-width="2"/></g>
+  <!-- 21: chain hook -->
+  <g transform="translate(80,32)"><path d="M8 0v8c0 4-5 4-5 1M3 9l3 2 3-2" fill="none" stroke="#9a8a68" stroke-width="2"/><rect class="dark" x="6" y="0" width="4" height="2"/></g>
+  <!-- 22: checkpoint lantern -->
+  <g transform="translate(96,32)"><rect class="wood" x="7" y="4" width="2" height="12"/><rect class="wood2" x="3" y="3" width="10" height="2"/><rect class="dark" x="4" y="5" width="8" height="7"/><rect class="glass" x="6" y="7" width="4" height="3"/><rect class="wood2" x="3" y="14" width="10" height="2"/></g>
+  <!-- 23: enemy shadow -->
+  <g transform="translate(112,32)"><path d="M3 15c0-6 2-10 5-10s5 4 5 10z" fill="#12161f"/><rect class="warning" x="5" y="8" width="2" height="1"/><rect class="warning" x="9" y="8" width="2" height="1"/></g>
+
+  <!-- 24: boss statue -->
+  <g transform="translate(0,48)"><path d="M3 16V8l2-4h6l2 4v8z" fill="#252c38"/><rect class="stone2" x="5" y="5" width="2" height="2"/><rect class="warning" x="9" y="5" width="2" height="2"/><rect class="stone" x="1" y="14" width="14" height="2"/></g>
+  <!-- 25: boss gate -->
+  <g transform="translate(16,48)"><rect class="dark" x="2" y="1" width="12" height="15"/><rect class="stone2" x="3" y="2" width="2" height="14"/><rect class="stone2" x="7" y="2" width="2" height="14"/><rect class="stone2" x="11" y="2" width="2" height="14"/><path d="M4 5l8 6M12 5l-8 6" stroke="#7b4d55" stroke-width="1"/></g>
+  <!-- 26: fog -->
+  <g transform="translate(32,48)"><rect class="bg2" x="0" y="5" width="16" height="5"/><rect class="stone" x="3" y="3" width="8" height="2"/><rect class="stone" x="7" y="10" width="9" height="2"/><rect class="bg" x="1" y="12" width="6" height="2"/></g>
+  <!-- 27: dim sky -->
+  <g transform="translate(48,48)"><rect class="bg" width="16" height="16"/><rect class="bg2" x="2" y="4" width="5" height="1"/><rect class="bg2" x="10" y="9" width="4" height="1"/><rect class="stone" x="5" y="13" width="6" height="1"/></g>
+  <!-- 28: cloud -->
+  <g transform="translate(64,48)"><rect class="bg2" x="1" y="8" width="14" height="4"/><rect class="bg2" x="4" y="5" width="8" height="5"/><rect class="stone" x="7" y="3" width="4" height="4"/></g>
+  <!-- 29: distant mountain -->
+  <g transform="translate(80,48)"><path d="M0 16L6 6l3 4 3-7 4 13z" fill="#252c38"/><path d="M5 8l1-2 1 2M11 5l1-2 1 3" stroke="#3a414d" stroke-width="1"/></g>
+  <!-- 30: warning sign -->
+  <g transform="translate(96,48)"><rect class="wood" x="7" y="8" width="2" height="8"/><path d="M2 2h12v7H2z" fill="#5a4a43"/><path d="M8 3l3 5H5z" fill="#7b4d55"/><rect class="dark" x="7" y="5" width="2" height="2"/></g>
+  <!-- 31: dark marker -->
+  <g transform="translate(112,48)"><rect class="dark" x="3" y="3" width="10" height="10"/><rect class="warning" x="6" y="6" width="4" height="4"/><rect class="stone2" x="1" y="14" width="14" height="2"/></g>
+</svg>

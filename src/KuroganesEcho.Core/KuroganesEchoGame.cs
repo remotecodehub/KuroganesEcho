@@ -640,8 +640,11 @@ public class KuroganesEchoGame : Game
     private Point ToVirtualPoint(Vector2 screenPosition)
     {
         var viewport = GraphicsDevice.Viewport;
-        var x = (screenPosition.X - viewport.X) * VirtualWidth / Math.Max(1, viewport.Width);
-        var y = (screenPosition.Y - viewport.Y) * VirtualHeight / Math.Max(1, viewport.Height);
+        // TouchPanel positions are already expressed in back-buffer/viewport
+        // coordinates. Viewport.X/Y are only the render letterbox offset and
+        // must not be subtracted from touch input a second time.
+        var x = screenPosition.X * VirtualWidth / Math.Max(1, viewport.Width);
+        var y = screenPosition.Y * VirtualHeight / Math.Max(1, viewport.Height);
 
         return new Point((int)x, (int)y);
     }

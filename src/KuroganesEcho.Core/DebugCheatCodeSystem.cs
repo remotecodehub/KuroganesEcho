@@ -20,10 +20,10 @@ internal sealed class DebugCheatCodeSystem
 
     private static readonly Buttons[] DesktopSequence =
     {
-        Buttons.LeftTrigger, Buttons.LeftShoulder,
         Buttons.RightTrigger, Buttons.RightShoulder,
-        Buttons.DPadUp, Buttons.DPadDown,
-        Buttons.DPadUp, Buttons.DPadDown
+        Buttons.RightTrigger, Buttons.RightShoulder,
+        Buttons.DPadLeft, Buttons.DPadRight,
+        Buttons.DPadLeft, Buttons.DPadRight
     };
 
     private static readonly MobileSequenceButton[] MobileSequence =
@@ -35,10 +35,13 @@ internal sealed class DebugCheatCodeSystem
     };
 
     private readonly List<DebugRow> _rows = new();
+    private readonly List<string> _recentInputs = new();
     private int _sequenceIndex;
     private int _selectedRow;
     private int _scrollOffset;
     private bool _isOpen;
+    private bool _isMobileSequence;
+    private string _lastInput = "-";
     private bool _restoreResourcesRequested;
     private CheckpointOption? _selectedCheckpoint;
     private IReadOnlyList<CheckpointOption> _checkpoints = Array.Empty<CheckpointOption>();
@@ -73,6 +76,7 @@ internal sealed class DebugCheatCodeSystem
         IReadOnlyList<CheckpointOption> checkpoints)
     {
         _checkpoints = checkpoints;
+        _isMobileSequence = isMobile;
 
         if (_isOpen)
         {
@@ -167,21 +171,38 @@ internal sealed class DebugCheatCodeSystem
             0.35f);
     }
 
+    public void DrawInputHud(SpriteBatch spriteBatch, Texture2D whiteTexture, SpriteFont font)
+    {
+        var hud = new Rectangle(4, 1, VirtualWidth - 8, 18);
+        DrawRect(spriteBatch, whiteTexture, hud, new Color(8, 14, 20, 240));
+        DrawRect(spriteBatch, whiteTexture, hud, new Color(130, 190, 177), false, 1);
+
+        var mode = _isMobileSequence ? "TOUCH" : "GAMEPAD";
+        var expected = GetExpectedInputLabel();
+        var progress = $"DEBUG INPUT [{mode}]  {_sequenceIndex}/{DesktopSequence.Length}  LAST: {_lastInput}  NEXT: {expected}";
+        DrawText(
+            spriteBatch,
+            font,
+            progress,
+            new Vector2(8f, 3f),
+            new Color(214, 191, 135),
+            FitTextScale(font, progress, hud.Width - 8, 0.34f));
+
+        var history = _recentInputs.Count == 0 ? "-" : string.Join(" ", _recentInputs);
+        var historyText = $"SEEN: {history}";
+        DrawText(
+            spriteBatch,
+            font,
+            historyText,
+            new Vector2(8f, 11f),
+            new Color(156, 170, 169),
+            FitTextScale(font, historyText, hud.Width - 8, 0.30f));
+    }
+
     private void TrackDesktopButton(Buttons button)
     {
-        var token = button switch
-        {
-            Buttons.LeftTrigger => 0,
-            Buttons.LeftShoulder => 1,
-            Buttons.RightTrigger => 2,
-            Buttons.RightShoulder => 3,
-            Buttons.DPadUp => 4,
-            Buttons.DPadDown => 5,
-            _ => -1
-        };
-
-        if (token < 0)
-            return;
+        var label = GetDesktopButtonLabel(button);
+        AddInputToHud(label);
 
         var expected = DesktopSequence[_sequenceIndex];
         if (button == expected)
@@ -195,6 +216,8 @@ internal sealed class DebugCheatCodeSystem
 
     private void TrackMobileButton(MobileSequenceButton button)
     {
+        AddInputToHud(button.ToString().ToUpperInvariant());
+
         if (button == MobileSequence[_sequenceIndex])
             _sequenceIndex++;
         else
@@ -203,6 +226,39 @@ internal sealed class DebugCheatCodeSystem
         if (_sequenceIndex >= MobileSequence.Length)
             Open();
     }
+
+    private void AddInputToHud(string input)
+    {
+        _lastInput = input;
+        _recentInputs.Add(input);
+        if (_recentInputs.Count > DesktopSequence.Length)
+            _recentInputs.RemoveAt(0);
+    }
+
+    private string GetExpectedInputLabel()
+    {
+        if (_isMobileSequence)
+        {
+            return _sequenceIndex < MobileSequence.Length
+                ? MobileSequence[_sequenceIndex].ToString().ToUpperInvariant()
+                : "-";
+        }
+
+        return _sequenceIndex < DesktopSequence.Length
+            ? GetDesktopButtonLabel(DesktopSequence[_sequenceIndex])
+            : "-";
+    }
+
+    private static string GetDesktopButtonLabel(Buttons button) => button switch
+    {
+        Buttons.LeftTrigger => "L2",
+        Buttons.RightTrigger => "R2",
+        Buttons.LeftShoulder => "L1",
+        Buttons.RightShoulder => "R1",
+        Buttons.DPadLeft => "LEFT",
+        Buttons.DPadRight => "RIGHT",
+        _ => button.ToString().ToUpperInvariant()
+    };
 
     private void Open()
     {
@@ -357,6 +413,11 @@ internal sealed class DebugCheatCodeSystem
     {
         var size = font.MeasureString(text) * scale;
         spriteBatch.DrawString(font, text, center - size / 2f, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+    }
+
+    private static void DrawText(SpriteBatch spriteBatch, SpriteFont font, string text, Vector2 position, Color color, float scale)
+    {
+        spriteBatch.DrawString(font, text, position, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
     }
 
     private static void DrawRect(SpriteBatch spriteBatch, Texture2D whiteTexture, Rectangle bounds, Color color, bool filled = true, int thickness = 1)

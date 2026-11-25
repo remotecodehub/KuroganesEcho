@@ -221,7 +221,7 @@ public class KuroganesEchoGame : Game
         var touchState = TouchPanel.GetState();
 
 #if DEBUG
-        if (_screen == GameScreen.Act01)
+        if (_screen == GameScreen.Paused)
         {
             var debugMenuHandled = _debugCheatCodes.Update(
                 gamePad,
@@ -240,6 +240,10 @@ public class KuroganesEchoGame : Game
                 base.Update(gameTime);
                 return;
             }
+        }
+        else if (_screen == GameScreen.Act01)
+        {
+            ApplyDebugCheatEffects();
         }
 #endif
 
@@ -347,10 +351,12 @@ public class KuroganesEchoGame : Game
             DrawMainMenu();
 
 #if DEBUG
-        if (_screen == GameScreen.Act01 && _debugCheatCodes.IsOpen)
+        if (_screen == GameScreen.Paused)
         {
             BeginUi();
-            _debugCheatCodes.Draw(_spriteBatch, _whiteTexture, _font, _fontSemiboldWide);
+            if (_debugCheatCodes.IsOpen)
+                _debugCheatCodes.Draw(_spriteBatch, _whiteTexture, _font, _fontSemiboldWide);
+            _debugCheatCodes.DrawInputHud(_spriteBatch, _whiteTexture, _font);
             EndUi();
         }
 #endif

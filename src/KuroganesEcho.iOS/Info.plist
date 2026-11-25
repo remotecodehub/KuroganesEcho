@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>MinimumOSVersion</key>
-	<string>12.2</string>
+	<string>15.0</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
@@ -20,7 +20,7 @@
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
-		<integer>2</integer>
+		<integer>5</integer>
 	</array>
 	<key>CFBundleIdentifier</key>
 	<string>com.companyname.KuroganesEcho</string>

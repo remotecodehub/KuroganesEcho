@@ -422,7 +422,7 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Audio/Steps/Roof_03.wav
-+
+
 #begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Attack.png
 /importer:TextureImporter
 /processor:TextureProcessor

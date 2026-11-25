@@ -35,12 +35,12 @@ internal sealed class EnemyCharacter
         string Attack1,
         string Hurt,
         string Dead,
-        string? Run = null,
-        string? Attack2 = null,
-        string? Attack3 = null,
-        string? Jump = null,
-        string? Special1 = null,
-        string? Special2 = null);
+        string Run = null,
+        string Attack2 = null,
+        string Attack3 = null,
+        string Jump = null,
+        string Special1 = null,
+        string Special2 = null);
 
     private static readonly IReadOnlyDictionary<string, EnemyDefinition> Definitions =
         new Dictionary<string, EnemyDefinition>(StringComparer.OrdinalIgnoreCase)
@@ -186,7 +186,7 @@ internal sealed class EnemyCharacter
         _clips[state] = new AnimationClip(texture, GetFrameCount(texture));
     }
 
-    private void AddOptional(ContentManager content, EnemyAnimationState state, string root, string? assetName)
+    private void AddOptional(ContentManager content, EnemyAnimationState state, string root, string assetName)
     {
         if (assetName is not null)
             Add(content, state, root, assetName);
@@ -196,8 +196,6 @@ internal sealed class EnemyCharacter
         texture.Height > 0 && texture.Width % texture.Height == 0
             ? Math.Max(1, texture.Width / texture.Height)
             : 1;
-
-    public static IReadOnlyCollection<string> SupportedTypes => Definitions.Keys;
 
     public static bool IsBossType(string enemyType) =>
         enemyType is "Minotaur_1" or "Minotaur_2" or "Minotaur_3" or
@@ -211,5 +209,4 @@ internal sealed class EnemyCharacter
         "Wizard" => "Fire Wizard",
         _ => throw new ArgumentOutOfRangeException(nameof(bossType), bossType, "Unknown boss type")
     };
-    }
 }

@@ -35,7 +35,7 @@ internal sealed class BossInstance
         ContentManager content,
         BossKind kind,
         LevelObjectData spawn,
-        string? variant = null)
+        string variant = null)
     {
         Kind = kind;
         Spawn = spawn;
@@ -73,7 +73,7 @@ internal sealed class BossInstance
     public static bool TryCreate(
         ContentManager content,
         LevelObjectData spawn,
-        out BossInstance? boss)
+        out BossInstance boss)
     {
         boss = null;
         if (!spawn.Properties.TryGetValue("BossType", out var bossType))

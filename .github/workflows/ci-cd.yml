@@ -32,6 +32,9 @@ jobs:
         with:
           dotnet-version: 11.0.x
 
+      - name: Install bundled fonts
+        uses: ./.github/actions/install-array-fonts
+
       - name: Publish DesktopGL
         run: dotnet publish src/KuroganesEcho.DesktopGL/KuroganesEcho.DesktopGL.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output artifacts/publish
 
@@ -69,6 +72,9 @@ jobs:
 
       - name: Install ${{ matrix.platform }} workload
         run: dotnet workload install ${{ matrix.workload }}
+
+      - name: Install bundled fonts
+        uses: ./.github/actions/install-array-fonts
 
       - name: Publish Android APK
         if: matrix.platform == 'android'

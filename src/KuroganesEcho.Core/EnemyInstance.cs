@@ -38,7 +38,7 @@ internal sealed class EnemyInstance
     public EnemyCharacter Character { get; }
     public LevelObjectData Spawn { get; }
     public Vector2 Position { get; private set; }
-    public int MaxHealth => 20;
+    public int MaxHealth => CombatBalance.EnemyMaxHealth;
     public int Health { get; private set; }
     public bool IsAlive => Health > 0;
     public bool IsAttacking => IsAlive && _attackRemaining > 0f;

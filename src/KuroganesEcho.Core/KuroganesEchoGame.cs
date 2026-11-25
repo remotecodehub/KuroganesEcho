@@ -25,9 +25,6 @@ public class KuroganesEchoGame : Game
     private const float JumpVelocity = -180f;
     private const float PlayerHalfWidth = 10f;
     private const int MaximumJumps = 2;
-    private const int PlayerMaxHealth = 100;
-    private const int PlayerAttackDamage = 10;
-    private const int EnemyAttackDamage = 8;
     private const float PlayerHeight = 32f;
 
     private readonly GraphicsDeviceManager _graphics;
@@ -78,7 +75,7 @@ public class KuroganesEchoGame : Game
     private float _playerInvulnerability;
     private float _playerKnockbackVelocity;
     private int _jumpsUsed;
-    private int _playerHealth = PlayerMaxHealth;
+    private int _playerHealth = CombatBalance.PlayerMaxHealth;
     private int _playerFacing = 1;
     private bool _playerAttackHitApplied;
     private KeyboardState _previousKeyboard;
@@ -555,7 +552,7 @@ public class KuroganesEchoGame : Game
         _isGrounded = true;
         _jumpsUsed = 0;
         _runRemaining = 0f;
-        _playerHealth = PlayerMaxHealth;
+        _playerHealth = CombatBalance.PlayerMaxHealth;
         _playerInvulnerability = 0f;
         _playerKnockbackVelocity = 0f;
         _playerFacing = 1;
@@ -736,7 +733,7 @@ public class KuroganesEchoGame : Game
             foreach (var enemy in _enemies)
             {
                 if (enemy.IsAlive && PlayerAttackHitbox.Intersects(enemy.Hitbox) &&
-                    enemy.TakeDamage(PlayerAttackDamage, _playerPosition.X))
+                    enemy.TakeDamage(CombatBalance.PlayerAttackDamage, _playerPosition.X))
                 {
                     _playerAttackHitApplied = true;
                 }
@@ -747,7 +744,7 @@ public class KuroganesEchoGame : Game
         foreach (var enemy in _enemies)
         {
             if (enemy.TryConsumeAttackHit(playerHitbox))
-                TakePlayerDamage(EnemyAttackDamage, enemy.Position.X);
+                TakePlayerDamage(CombatBalance.EnemyAttackDamage, enemy.Position.X);
         }
     }
 
@@ -789,7 +786,7 @@ public class KuroganesEchoGame : Game
 
     private void ResetPlayerAfterDefeat()
     {
-        _playerHealth = PlayerMaxHealth;
+        _playerHealth = CombatBalance.PlayerMaxHealth;
         _playerPosition = _level.PlayerSpawn;
         _verticalVelocity = 0f;
         _playerKnockbackVelocity = 0f;
@@ -1022,7 +1019,7 @@ public class KuroganesEchoGame : Game
     private void DrawPlayerHealthBar()
     {
         DrawText(LocalizedText.Get("Health"), new Vector2(8f, 5f), Color.White, 0.48f);
-        DrawHealthBar(new Rectangle(8, 17, 92, 7), _playerHealth, PlayerMaxHealth);
+        DrawHealthBar(new Rectangle(8, 17, 92, 7), _playerHealth, CombatBalance.PlayerMaxHealth);
     }
 
     private void DrawWorldHealthBar(Vector2 feetPosition, int health, int maximumHealth)

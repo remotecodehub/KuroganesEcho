@@ -116,7 +116,7 @@
   </object>
   <object id="21" name="EnemySpawn_02" type="EnemySpawn" x="2320" y="320" width="16" height="32">
    <properties>
-    <property name="EnemyType" value="Kitsune"/>
+    <property name="EnemyType" value="Skeleton_Warrior"/>
    </properties>
   </object>
   <object id="22" name="EnemySpawn_03" type="EnemySpawn" x="3328" y="320" width="16" height="32">
@@ -126,7 +126,47 @@
   </object>
   <object id="23" name="EnemySpawn_04" type="EnemySpawn" x="4448" y="320" width="16" height="32">
    <properties>
-    <property name="EnemyType" value="Kitsune"/>
+    <property name="EnemyType" value="Skeleton_Warrior"/>
+   </properties>
+  </object>
+  <object id="26" name="EnemySpawn_05" type="EnemySpawn" x="1808" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Warrior"/>
+   </properties>
+  </object>
+  <object id="27" name="EnemySpawn_06" type="EnemySpawn" x="1888" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Black_Werewolf"/>
+   </properties>
+  </object>
+  <object id="36" name="EnemySpawn_07" type="EnemySpawn" x="2400" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Black_Werewolf"/>
+   </properties>
+  </object>
+  <object id="37" name="EnemySpawn_08" type="EnemySpawn" x="2480" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Warrior"/>
+   </properties>
+  </object>
+  <object id="38" name="EnemySpawn_09" type="EnemySpawn" x="3408" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Warrior"/>
+   </properties>
+  </object>
+  <object id="39" name="EnemySpawn_10" type="EnemySpawn" x="3488" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Black_Werewolf"/>
+   </properties>
+  </object>
+  <object id="40" name="EnemySpawn_11" type="EnemySpawn" x="4528" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Black_Werewolf"/>
+   </properties>
+  </object>
+  <object id="41" name="EnemySpawn_12" type="EnemySpawn" x="4608" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Warrior"/>
    </properties>
   </object>
   <object id="24" name="GuardianEncounter" type="BossEncounter" x="4800" y="256" width="256" height="96">

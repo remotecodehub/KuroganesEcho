@@ -102,6 +102,9 @@ public class KuroganesEchoGame : Game
     private int _controlSelection;
     private int _pauseSelection;
     private string _pauseStatusMessage = string.Empty;
+    private int _slotSelection;
+    private string _slotStatusMessage = string.Empty;
+    private GameScreen _slotSelectionReturnScreen = GameScreen.MainMenu;
     private GameScreen _optionsReturnScreen = GameScreen.MainMenu;
     private BindingDevice _bindingDevice = BindingDevice.Keyboard;
     private bool _waitingForBinding;
@@ -271,6 +274,8 @@ public class KuroganesEchoGame : Game
                 _screen = GameScreen.Options;
             else if (_screen == GameScreen.Options)
                 ReturnFromOptions();
+            else if (_screen == GameScreen.SaveSlotSelection)
+                _screen = _slotSelectionReturnScreen;
             else if (_screen is GameScreen.GameOver or GameScreen.Victory)
             {
                 _screen = GameScreen.MainMenu;
@@ -309,6 +314,10 @@ public class KuroganesEchoGame : Game
         else if (_screen == GameScreen.Paused)
         {
             UpdatePaused(keyboard, gamePad, touchState);
+        }
+        else if (_screen == GameScreen.SaveSlotSelection)
+        {
+            UpdateSaveSlotSelection(keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.GameOver)
         {
@@ -353,6 +362,18 @@ public class KuroganesEchoGame : Game
         {
             DrawAct01(gameTime);
             DrawPauseOverlay();
+        }
+        else if (_screen == GameScreen.SaveSlotSelection)
+        {
+            if (_slotSelectionReturnScreen == GameScreen.Paused)
+            {
+                DrawAct01(gameTime);
+                DrawSaveSlotSelectionOverlay(true);
+            }
+            else
+            {
+                DrawSaveSlotSelectionOverlay(false);
+            }
         }
         else
             DrawMainMenu();
@@ -418,6 +439,13 @@ public class KuroganesEchoGame : Game
         var point = GetPressedPoint(touches);
         if (point.HasValue)
         {
+            if (PauseContinueButton().Contains(point.Value))
+            {
+                _pauseSelection = PauseContinueIndex;
+                OpenSaveSlotSelection(GameScreen.Paused);
+                return;
+            }
+
             for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
             {
                 if (!PauseSlotButton(slot).Contains(point.Value))
@@ -462,7 +490,9 @@ public class KuroganesEchoGame : Game
     }
 
     private const int PauseResumeIndex = 0;
-    private const int PauseOptionsIndex = SaveProgressStore.SlotCount + 1;
+    private const int PauseContinueIndex = 1;
+    private const int PauseSaveSlotStartIndex = 2;
+    private const int PauseOptionsIndex = PauseSaveSlotStartIndex + SaveProgressStore.SlotCount;
     private const int PauseMainMenuIndex = PauseOptionsIndex + 1;
     private const int PauseOptionCount = PauseMainMenuIndex + 1;
 
@@ -474,9 +504,16 @@ public class KuroganesEchoGame : Game
             return;
         }
 
-        if (_pauseSelection is >= 1 and <= SaveProgressStore.SlotCount)
+        if (_pauseSelection == PauseContinueIndex)
         {
-            SaveStateToSlot(_pauseSelection);
+            OpenSaveSlotSelection(GameScreen.Paused);
+            return;
+        }
+
+        if (_pauseSelection >= PauseSaveSlotStartIndex &&
+            _pauseSelection < PauseSaveSlotStartIndex + SaveProgressStore.SlotCount)
+        {
+            SaveStateToSlot(_pauseSelection - PauseSaveSlotStartIndex + 1);
             return;
         }
 
@@ -499,6 +536,112 @@ public class KuroganesEchoGame : Game
             LocalizedText.Get("SaveComplete"),
             slot);
         _audio.PlayCue(AudioCue.Collectable, 0.7f);
+    }
+
+    private void OpenSaveSlotSelection(GameScreen returnScreen)
+    {
+        _slotSelectionReturnScreen = returnScreen;
+        _slotSelection = 0;
+        _slotStatusMessage = string.Empty;
+        _screen = GameScreen.SaveSlotSelection;
+    }
+
+    private void UpdateSaveSlotSelection(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    {
+        var optionCount = SaveProgressStore.SlotCount + 1;
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
+            _slotSelection = (_slotSelection + optionCount - 1) % optionCount;
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
+            _slotSelection = (_slotSelection + 1) % optionCount;
+
+        var point = GetPressedPoint(touches);
+        if (point.HasValue)
+        {
+            for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
+            {
+                if (!SaveSlotButton(slot).Contains(point.Value))
+                    continue;
+
+                _slotSelection = slot - 1;
+                LoadStateFromSlot(slot);
+                return;
+            }
+
+            if (SaveSlotBackButton().Contains(point.Value))
+            {
+                ReturnFromSaveSlotSelection();
+                return;
+            }
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Escape) ||
+            IsNewButtonPress(gamePad, Buttons.B))
+        {
+            ReturnFromSaveSlotSelection();
+            return;
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Enter) ||
+            IsNewKeyPress(keyboard, Keys.Space) ||
+            IsNewButtonPress(gamePad, Buttons.A))
+        {
+            if (_slotSelection < SaveProgressStore.SlotCount)
+                LoadStateFromSlot(_slotSelection + 1);
+            else
+                ReturnFromSaveSlotSelection();
+        }
+    }
+
+    private void ReturnFromSaveSlotSelection()
+    {
+        _screen = _slotSelectionReturnScreen;
+        _slotStatusMessage = string.Empty;
+    }
+
+    private void LoadStateFromSlot(int slot)
+    {
+        if (!SaveProgressStore.HasSlot(slot))
+        {
+            _slotStatusMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                LocalizedText.Get("SlotUnavailable"),
+                slot);
+            return;
+        }
+
+        _saveProgress = SaveProgressStore.LoadSlot(slot);
+        _selectedDifficulty = Enum.IsDefined(typeof(GameDifficulty), _saveProgress.Difficulty)
+            ? _saveProgress.Difficulty
+            : GameDifficulty.Normal;
+        _difficultySelection = (int)_selectedDifficulty;
+
+        var savedCharacterIndex = Array.IndexOf(_characterIds, _saveProgress.CharacterId);
+        if (savedCharacterIndex >= 0)
+            SelectCharacter(savedCharacterIndex);
+
+        var levelId = ResolveSavedLevelId(_saveProgress);
+        LoadLevel(levelId);
+        StartAct01(levelId);
+    }
+
+    private static string ResolveSavedLevelId(SaveProgressState state)
+    {
+        var candidates = new[] { state.CurrentLevelId, state.CheckpointLevelId, state.UnlockedLevelId };
+        foreach (var candidate in candidates)
+        {
+            switch (candidate)
+            {
+                case "Act_02_C":
+                case "Act_02_B":
+                case "Act_02_A":
+                case "Act_01_C":
+                case "Act_01_B":
+                case "Act_01_A":
+                    return candidate;
+            }
+        }
+
+        return "Act_01_A";
     }
 
     private static SaveProgressState CloneSaveState(SaveProgressState source) => new()
@@ -554,7 +697,7 @@ public class KuroganesEchoGame : Game
                 _screen = GameScreen.PlayerSelection;
                 break;
             case 1:
-                ContinueSavedProgress();
+                OpenSaveSlotSelection(GameScreen.MainMenu);
                 break;
             case 2:
                 OpenOptions(GameScreen.MainMenu);
@@ -2451,13 +2594,17 @@ public class KuroganesEchoGame : Game
         DrawTextCentered(LocalizedText.Get("Paused"), new Vector2(VirtualWidth / 2f, 21f), new Color(214, 191, 135), _fontSemiboldWide, 0.9f);
 
         DrawPauseButton(PauseResumeButton(), _pauseSelection == PauseResumeIndex, LocalizedText.Get("Resume"));
-        DrawText(LocalizedText.Get("MemoryCard"), new Vector2(42f, 51f), new Color(130, 190, 177), 0.48f);
+        DrawPauseButton(PauseContinueButton(), _pauseSelection == PauseContinueIndex, LocalizedText.Get("ContinueFromState"));
+        DrawText(LocalizedText.Get("MemoryCard"), new Vector2(42f, 61f), new Color(130, 190, 177), 0.42f);
         for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
         {
             var slotLabel = SaveProgressStore.HasSlot(slot)
                 ? string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotOccupied"), slot)
                 : string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotEmpty"), slot);
-            DrawPauseButton(PauseSlotButton(slot), _pauseSelection == slot, slotLabel);
+            DrawPauseButton(
+                PauseSlotButton(slot),
+                _pauseSelection == PauseSaveSlotStartIndex + slot - 1,
+                slotLabel);
         }
 
         DrawPauseButton(PauseOptionsButton(), _pauseSelection == PauseOptionsIndex, LocalizedText.Get("Options"));
@@ -2466,6 +2613,43 @@ public class KuroganesEchoGame : Game
             DrawTextCentered(_pauseStatusMessage, new Vector2(VirtualWidth / 2f, 168f), new Color(156, 201, 191), 0.42f);
         else
             DrawTextCentered(LocalizedText.Get("PausePrompt"), new Vector2(VirtualWidth / 2f, 168f), Color.White, 0.42f);
+        EndUi();
+    }
+
+    private void DrawSaveSlotSelectionOverlay(bool paused)
+    {
+        if (!paused)
+            GraphicsDevice.Clear(new Color(12, 16, 24));
+
+        BeginUi();
+        if (paused)
+        {
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 7, 12, 205));
+            DrawRect(new Rectangle(24, 10, VirtualWidth - 48, VirtualHeight - 20), new Color(20, 29, 39, 245));
+            DrawRect(new Rectangle(24, 10, VirtualWidth - 48, VirtualHeight - 20), new Color(214, 191, 135), false, 2);
+        }
+        else
+        {
+            DrawMenuBackground();
+            DrawRect(new Rectangle(12, 12, VirtualWidth - 24, VirtualHeight - 24), new Color(25, 35, 45), false, 2);
+        }
+
+        DrawTextCentered(LocalizedText.Get("ContinueFromState"), new Vector2(VirtualWidth / 2f, 25f), new Color(214, 191, 135), _fontSemiboldWide, 0.72f);
+        DrawTextCentered(LocalizedText.Get("SelectSaveSlot"), new Vector2(VirtualWidth / 2f, 39f), new Color(156, 201, 191), 0.42f);
+
+        for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
+        {
+            var slotLabel = SaveProgressStore.HasSlot(slot)
+                ? string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotOccupied"), slot)
+                : string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotEmpty"), slot);
+            DrawPauseButton(SaveSlotButton(slot), _slotSelection == slot - 1, slotLabel);
+        }
+
+        DrawPauseButton(SaveSlotBackButton(), _slotSelection == SaveProgressStore.SlotCount, LocalizedText.Get("Back"));
+        if (!string.IsNullOrWhiteSpace(_slotStatusMessage))
+            DrawTextCentered(_slotStatusMessage, new Vector2(VirtualWidth / 2f, 161f), new Color(236, 188, 120), 0.42f);
+        else
+            DrawTextCentered(LocalizedText.Get("PausePrompt"), new Vector2(VirtualWidth / 2f, 161f), Color.White, 0.38f);
         EndUi();
     }
 
@@ -2655,13 +2839,19 @@ public class KuroganesEchoGame : Game
 
     private Rectangle PauseTouchButton() => new(278, 4, 34, 16);
 
-    private Rectangle PauseResumeButton() => new(64, 29, 192, 16);
+    private Rectangle PauseResumeButton() => new(64, 28, 192, 14);
 
-    private Rectangle PauseSlotButton(int slot) => new(42, 56 + (slot - 1) * 19, 236, 16);
+    private Rectangle PauseContinueButton() => new(64, 44, 192, 14);
 
-    private Rectangle PauseOptionsButton() => new(64, 118, 192, 16);
+    private Rectangle PauseSlotButton(int slot) => new(42, 66 + (slot - 1) * 14, 236, 13);
 
-    private Rectangle PauseMainMenuButton() => new(64, 137, 192, 16);
+    private Rectangle PauseOptionsButton() => new(64, 113, 192, 14);
+
+    private Rectangle PauseMainMenuButton() => new(64, 130, 192, 14);
+
+    private Rectangle SaveSlotButton(int slot) => new(42, 55 + (slot - 1) * 22, 236, 18);
+
+    private Rectangle SaveSlotBackButton() => new(112, 125, 96, 18);
 
     private Rectangle LanguageButton(int index) => new(66, 43 + index * 16, 188, 14);
 
@@ -2820,6 +3010,7 @@ public class KuroganesEchoGame : Game
         Controls,
         Act01,
         Paused,
+        SaveSlotSelection,
         GameOver,
         Victory
     }

@@ -65,10 +65,13 @@
   <data name="Paused" xml:space="preserve"><value>PAUSADO</value></data>
   <data name="PausePrompt" xml:space="preserve"><value>Use ENTER/A para escolher; ESC/START para voltar</value></data>
   <data name="Resume" xml:space="preserve"><value>Continuar</value></data>
+  <data name="ContinueFromState" xml:space="preserve"><value>Continuar do estado</value></data>
+  <data name="SelectSaveSlot" xml:space="preserve"><value>Escolha o slot para carregar</value></data>
   <data name="MemoryCard" xml:space="preserve"><value>MEMORY CARD - SALVAR ESTADO</value></data>
   <data name="SlotEmpty" xml:space="preserve"><value>SLOT {0} - VAZIO</value></data>
   <data name="SlotOccupied" xml:space="preserve"><value>SLOT {0} - OCUPADO</value></data>
   <data name="SaveComplete" xml:space="preserve"><value>Estado salvo no slot {0}</value></data>
+  <data name="SlotUnavailable" xml:space="preserve"><value>O slot {0} está vazio</value></data>
   <data name="MainMenu" xml:space="preserve"><value>Menu principal</value></data>
   <data name="SpecialPrimary" xml:space="preserve"><value>Especial primário</value></data>
   <data name="SpecialSecondary" xml:space="preserve"><value>Especial secundário</value></data>

@@ -584,6 +584,15 @@ public class KuroganesEchoGame : Game
     private void UpdateAct01(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
         var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (_player.Animation == PlayerAnimationState.Dead)
+        {
+            _player.Update(elapsedSeconds);
+            if (_player.IsDeadAnimationComplete)
+                ResetPlayerAfterDefeat();
+            return;
+        }
+
         _playerInvulnerability = Math.Max(0f, _playerInvulnerability - elapsedSeconds);
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
@@ -775,7 +784,7 @@ public class KuroganesEchoGame : Game
         _isGrounded = false;
 
         if (_playerHealth == 0)
-            ResetPlayerAfterDefeat();
+            _player.SetDead();
     }
 
     private void ResetPlayerAfterDefeat()

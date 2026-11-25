@@ -15,7 +15,8 @@ internal enum PlayerAnimationState
     Cast,
     Walk,
     Eating,
-    Jump
+    Jump,
+    Dead
 }
 
 /// <summary>
@@ -27,6 +28,8 @@ internal sealed class PlayerCharacter
     private readonly Dictionary<PlayerAnimationState, Texture2D> _textures = new();
     private readonly Dictionary<PlayerAnimationState, int> _frameCounts = new();
     private float _animationClock;
+
+    private const float DeadFrameRate = 3f;
 
     private PlayerCharacter(string id)
     {
@@ -55,6 +58,7 @@ internal sealed class PlayerCharacter
         player.Add(content, PlayerAnimationState.Attack1, $"{root}/Attack_1", FrameCount(characterId, PlayerAnimationState.Attack1));
         player.Add(content, PlayerAnimationState.Attack2, $"{root}/Attack_2", FrameCount(characterId, PlayerAnimationState.Attack2));
         player.Add(content, PlayerAnimationState.Jump, $"{root}/Jump", FrameCount(characterId, PlayerAnimationState.Jump));
+        player.Add(content, PlayerAnimationState.Dead, $"{root}/Dead", FrameCount(characterId, PlayerAnimationState.Dead));
 
         if (hasCast)
             player.Add(content, PlayerAnimationState.Cast, $"{root}/Cast", FrameCount(characterId, PlayerAnimationState.Cast));
@@ -75,6 +79,20 @@ internal sealed class PlayerCharacter
         ActionRemaining = animation == PlayerAnimationState.Jump ? 0.9f : 0.65f;
         _animationClock = 0f;
     }
+
+    public void SetDead()
+    {
+        if (Animation == PlayerAnimationState.Dead)
+            return;
+
+        Animation = PlayerAnimationState.Dead;
+        ActionRemaining = FrameCountForAnimation(PlayerAnimationState.Dead) / DeadFrameRate;
+        _animationClock = 0f;
+    }
+
+    public bool IsDeadAnimationComplete =>
+        Animation == PlayerAnimationState.Dead &&
+        _animationClock >= _frameCounts[PlayerAnimationState.Dead] / DeadFrameRate;
 
     public void SetLocomotion(PlayerAnimationState animation)
     {
@@ -105,7 +123,12 @@ internal sealed class PlayerCharacter
         var texture = _textures[Animation];
         var frameCount = _frameCounts[Animation];
         var frameWidth = texture.Width / frameCount;
-        var frame = (int)(_animationClock * (Animation == PlayerAnimationState.Idle ? 7f : 10f)) % frameCount;
+        var frameRate = Animation == PlayerAnimationState.Dead
+            ? DeadFrameRate
+            : Animation == PlayerAnimationState.Idle ? 7f : 10f;
+        var frame = Animation == PlayerAnimationState.Dead
+            ? Math.Min((int)(_animationClock * frameRate), frameCount - 1)
+            : (int)(_animationClock * frameRate) % frameCount;
         var source = new Rectangle(frame * frameWidth, 0, frameWidth, texture.Height);
         var origin = new Vector2(frameWidth / 2f, texture.Height);
         spriteBatch.Draw(texture, position, source, Color.White, 0f, origin, scale, effects, 0f);
@@ -133,6 +156,7 @@ internal sealed class PlayerCharacter
             PlayerAnimationState.Attack2 => 8,
             PlayerAnimationState.Cast => 6,
             PlayerAnimationState.Jump => 10,
+            PlayerAnimationState.Dead => 5,
             _ => 1
         },
         "Ninja_Monk" => animation switch
@@ -140,6 +164,7 @@ internal sealed class PlayerCharacter
             PlayerAnimationState.Idle or PlayerAnimationState.Walk => 7,
             PlayerAnimationState.Run or PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Cast => 5,
             PlayerAnimationState.Jump => 9,
+            PlayerAnimationState.Dead => 5,
             _ => 1
         },
         "Ninja_Peasant" => animation switch
@@ -150,8 +175,11 @@ internal sealed class PlayerCharacter
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 4,
             PlayerAnimationState.Jump => 8,
+            PlayerAnimationState.Dead => 4,
             _ => 1
         },
         _ => throw new ArgumentOutOfRangeException(nameof(characterId), characterId, "Unknown player character")
     };
+
+    private int FrameCountForAnimation(PlayerAnimationState animation) => _frameCounts[animation];
 }

@@ -32,6 +32,8 @@ internal sealed class EnemyCharacter
     private readonly Dictionary<EnemyAnimationState, AnimationClip> _clips = new();
     private float _animationClock;
 
+    private const float DeadFrameRate = 3f;
+
     private EnemyCharacter(string id)
     {
         Id = id;
@@ -89,7 +91,12 @@ internal sealed class EnemyCharacter
     {
         var clip = _clips[Animation];
         var frameWidth = clip.Texture.Width / clip.FrameCount;
-        var frame = (int)(_animationClock * (Animation == EnemyAnimationState.Idle ? 7f : 10f)) % clip.FrameCount;
+        var frameRate = Animation == EnemyAnimationState.Dead
+            ? DeadFrameRate
+            : Animation == EnemyAnimationState.Idle ? 7f : 10f;
+        var frame = Animation == EnemyAnimationState.Dead
+            ? Math.Min((int)(_animationClock * frameRate), clip.FrameCount - 1)
+            : (int)(_animationClock * frameRate) % clip.FrameCount;
         var source = new Rectangle(frame * frameWidth, 0, frameWidth, clip.Texture.Height);
         var origin = new Vector2(frameWidth / 2f, clip.Texture.Height);
         spriteBatch.Draw(clip.Texture, position, source, Color.White, 0f, origin, scale, effects, 0f);

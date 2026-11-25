@@ -59,7 +59,7 @@
   <data name="Act01AObjective" xml:space="preserve"><value>Atravesse a trilha e alcance o portão do templo.</value></data>
   <data name="Act01ATutorial" xml:space="preserve"><value>Mova, pule, ataque e corra para conservar stamina.</value></data>
   <data name="Act01BTitle" xml:space="preserve"><value>A Fortaleza do Templo Sem Lua</value></data>
-  <data name="Act01BObjective" xml:space="preserve"><value>Derrote o guardião final e recupere o talismã.</value></data>
+  <data name="Act01BObjective" xml:space="preserve"><value>Derrote o guardião e recupere a primeira parte do Selo de Cinzas.</value></data>
   <data name="Act01BTutorial" xml:space="preserve"><value>Use as plataformas e colete tiles de vida e stamina.</value></data>
   <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A  CONTINUAR</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSADO</value></data>
@@ -75,9 +75,9 @@
   <data name="IntroLine01" xml:space="preserve"><value>O clã Kurogane guardava o</value></data>
   <data name="IntroLine02" xml:space="preserve"><value>Selo de Cinzas há três gerações.</value></data>
   <data name="IntroLine03" xml:space="preserve"><value></value></data>
-  <data name="IntroLine04" xml:space="preserve"><value>Um talismã de ferro forjado</value></data>
+  <data name="IntroLine04" xml:space="preserve"><value>Uma relíquia dividida em partes,</value></data>
   <data name="IntroLine05" xml:space="preserve"><value>com o sangue e a memória dos</value></data>
-  <data name="IntroLine06" xml:space="preserve"><value>antigos mestres ninjas.</value></data>
+  <data name="IntroLine06" xml:space="preserve"><value>forjada pelos antigos mestres ninjas.</value></data>
   <data name="IntroLine07" xml:space="preserve"><value></value></data>
   <data name="IntroLine08" xml:space="preserve"><value>A relíquia mantém acesa a</value></data>
   <data name="IntroLine09" xml:space="preserve"><value>Chama Silenciosa, um vínculo</value></data>
@@ -93,6 +93,15 @@
   <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lança Dart (sem gastar poder)</value></data>
   <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: defesa sem dano (gasta poder)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>O Santuário em Ruínas</value></data>
-  <data name="Act01CObjective" xml:space="preserve"><value>Derrote o Minotauro e recupere o talismã de ferro.</value></data>
-  <data name="Act01CTutorial" xml:space="preserve"><value>Atravesse as runas corrompidas e sobreviva ao guardião final.</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Derrote o Minotauro e recupere a primeira parte do Selo de Cinzas.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>De ilha em ilha, siga o rastro de espíritos e guerreiros corrompidos.</value></data>
+  <data name="Act02ATitle" xml:space="preserve"><value>A Vila da Cinza Matinal</value></data>
+  <data name="Act02AObjective" xml:space="preserve"><value>Explore a ilha devastada e encontre o caminho para a vila feudal.</value></data>
+  <data name="Act02ATutorial" xml:space="preserve"><value>O dia revela casas, castelos e montanhas destruídos por espíritos e guerreiros corrompidos.</value></data>
+  <data name="Act02BTitle" xml:space="preserve"><value>O Vale dos Estandartes Rasgados</value></data>
+  <data name="Act02BObjective" xml:space="preserve"><value>Enfrente a ventania e alcance a fortaleza no fim da ilha.</value></data>
+  <data name="Act02BTutorial" xml:space="preserve"><value>A rajada é visual e não causa dano; avance entre as ruínas sem perder o rumo.</value></data>
+  <data name="Act02CTitle" xml:space="preserve"><value>A Fortaleza sob Asas Negras</value></data>
+  <data name="Act02CObjective" xml:space="preserve"><value>Derrote o boss noturno e recupere a segunda parte do Selo de Cinzas.</value></data>
+  <data name="Act02CTutorial" xml:space="preserve"><value>Os pássaros noturnos cruzam o mapa para atrapalhar sua visão, mas não causam dano.</value></data>
 </root>

@@ -178,7 +178,7 @@
   <data name="Act01AObjective" xml:space="preserve"><value>Traversez le sentier jusqu'à la porte du temple.</value></data>
   <data name="Act01ATutorial" xml:space="preserve"><value>Déplacez-vous, sautez, attaquez et courez.</value></data>
   <data name="Act01BTitle" xml:space="preserve"><value>La Forteresse du Temple sans Lune</value></data>
-  <data name="Act01BObjective" xml:space="preserve"><value>Vainquez le gardien final et récupérez le talisman.</value></data>
+  <data name="Act01BObjective" xml:space="preserve"><value>Vainquez le gardien et récupérez la première partie du Sceau des Cendres.</value></data>
   <data name="Act01BTutorial" xml:space="preserve"><value>Utilisez les plateformes et les tuiles de vie.</value></data>
   <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTRÉE / A  CONTINUER</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSE</value></data>
@@ -194,9 +194,9 @@
   <data name="IntroLine01" xml:space="preserve"><value>Le clan Kurogane gardait le</value></data>
   <data name="IntroLine02" xml:space="preserve"><value>Sceau des Cendres depuis trois générations.</value></data>
   <data name="IntroLine03" xml:space="preserve"><value></value></data>
-  <data name="IntroLine04" xml:space="preserve"><value>Un talisman de fer forgé avec</value></data>
+  <data name="IntroLine04" xml:space="preserve"><value>Une relique divisée en fragments,</value></data>
   <data name="IntroLine05" xml:space="preserve"><value>le sang et la mémoire des</value></data>
-  <data name="IntroLine06" xml:space="preserve"><value>anciens maîtres ninjas.</value></data>
+  <data name="IntroLine06" xml:space="preserve"><value>forgée par les anciens maîtres ninjas.</value></data>
   <data name="IntroLine07" xml:space="preserve"><value></value></data>
   <data name="IntroLine08" xml:space="preserve"><value>La relique entretient la Flamme Silencieuse,</value></data>
   <data name="IntroLine09" xml:space="preserve"><value>un lien spirituel qui empêche</value></data>
@@ -212,6 +212,15 @@
   <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lance Dart (sans coût de pouvoir)</value></data>
   <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: immunité aux dégâts (coûte du pouvoir)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>Le Sanctuaire en Ruines</value></data>
-  <data name="Act01CObjective" xml:space="preserve"><value>Vainquez le Minotaure et récupérez le talisman de fer.</value></data>
-  <data name="Act01CTutorial" xml:space="preserve"><value>Traversez les runes corrompues et survivez au gardien final.</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Vainquez le Minotaure et récupérez la première partie du Sceau des Cendres.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>Voyagez d'île en île sur la piste des esprits et des guerriers corrompus.</value></data>
+  <data name="Act02ATitle" xml:space="preserve"><value>Le Village des Cendres du Matin</value></data>
+  <data name="Act02AObjective" xml:space="preserve"><value>Explorez l'île dévastée et trouvez le chemin vers le village féodal.</value></data>
+  <data name="Act02ATutorial" xml:space="preserve"><value>Le jour révèle des maisons, châteaux et montagnes ravagés.</value></data>
+  <data name="Act02BTitle" xml:space="preserve"><value>La Vallée aux Bannières Déchirées</value></data>
+  <data name="Act02BObjective" xml:space="preserve"><value>Affrontez le vent et atteignez la forteresse au bout de l'île.</value></data>
+  <data name="Act02BTutorial" xml:space="preserve"><value>Les rafales sont visuelles et inoffensives; avancez dans les ruines.</value></data>
+  <data name="Act02CTitle" xml:space="preserve"><value>La Forteresse sous les Ailes Noires</value></data>
+  <data name="Act02CObjective" xml:space="preserve"><value>Vainquez le boss nocturne et récupérez la deuxième partie du Sceau des Cendres.</value></data>
+  <data name="Act02CTutorial" xml:space="preserve"><value>Les oiseaux nocturnes distraient le joueur sans lui infliger de dégâts.</value></data>
 </root>

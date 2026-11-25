@@ -131,8 +131,17 @@
   <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: launches Dart (no power cost)</value></data>
   <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: damage immunity (uses power)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>The Ruined Sanctuary</value></data>
-  <data name="Act01CObjective" xml:space="preserve"><value>Defeat the Minotaur and recover the iron talisman.</value></data>
-  <data name="Act01CTutorial" xml:space="preserve"><value>Cross the corrupted runes and survive the final guardian.</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Defeat the Minotaur and recover the first part of the Ash Seal.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>Travel from island to island along the trail of spirits and corrupted warriors.</value></data>
+  <data name="Act02ATitle" xml:space="preserve"><value>The Morning Ash Village</value></data>
+  <data name="Act02AObjective" xml:space="preserve"><value>Explore the devastated island and find the road into the feudal village.</value></data>
+  <data name="Act02ATutorial" xml:space="preserve"><value>Daylight reveals houses, castles and mountains ruined by spirits and corrupted warriors.</value></data>
+  <data name="Act02BTitle" xml:space="preserve"><value>The Valley of Torn Banners</value></data>
+  <data name="Act02BObjective" xml:space="preserve"><value>Endure the strong wind and reach the fortress at the island's edge.</value></data>
+  <data name="Act02BTutorial" xml:space="preserve"><value>The gusts are visual and harmless; keep moving through the wreckage.</value></data>
+  <data name="Act02CTitle" xml:space="preserve"><value>The Fortress beneath Black Wings</value></data>
+  <data name="Act02CObjective" xml:space="preserve"><value>Defeat the night boss and recover the second part of the Ash Seal.</value></data>
+  <data name="Act02CTutorial" xml:space="preserve"><value>Nocturnal birds cross the map to distract you, but they cannot deal damage.</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSED</value></data>
   <data name="PausePrompt" xml:space="preserve"><value>Use ENTER/A to choose; ESC/START to resume</value></data>
   <data name="Resume" xml:space="preserve"><value>Resume</value></data>

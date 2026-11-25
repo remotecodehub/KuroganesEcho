@@ -27,7 +27,8 @@ internal enum CollectibleKind
     Stamina,
     PowerFruit,
     ExtraLife,
-    IronTalismanThird
+    IronTalismanThird,
+    SealAshesPart
 }
 
 internal sealed class LevelDefinition
@@ -81,8 +82,50 @@ internal sealed class LevelDefinition
         BriefingTutorialKey = "Act01CTutorial"
     };
 
+    public static LevelDefinition Act02A => new()
+    {
+        Id = "Act_02_A",
+        MapAssetPath = "Content/Tiled/Maps/Act_02_A.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = "Act_02_B",
+        BriefingTitleKey = "Act02ATitle",
+        BriefingObjectiveKey = "Act02AObjective",
+        BriefingTutorialKey = "Act02ATutorial"
+    };
+
+    public static LevelDefinition Act02B => new()
+    {
+        Id = "Act_02_B",
+        MapAssetPath = "Content/Tiled/Maps/Act_02_B.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = "Act_02_C",
+        BriefingTitleKey = "Act02BTitle",
+        BriefingObjectiveKey = "Act02BObjective",
+        BriefingTutorialKey = "Act02BTutorial"
+    };
+
+    public static LevelDefinition Act02C => new()
+    {
+        Id = "Act_02_C",
+        MapAssetPath = "Content/Tiled/Maps/Act_02_C.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = null,
+        BriefingTitleKey = "Act02CTitle",
+        BriefingObjectiveKey = "Act02CObjective",
+        BriefingTutorialKey = "Act02CTutorial"
+    };
+
     public static LevelDefinition ForId(string id) => id switch
     {
+        "Act_02_C" => Act02C,
+        "Act_02_B" => Act02B,
+        "Act_02_A" => Act02A,
         "Act_01_C" => Act01C,
         "Act_01_B" => Act01B,
         _ => Act01A
@@ -303,14 +346,17 @@ internal sealed class GameLevel
         if (powerFruitTile.HasValue)
             powerFruitTiles.Add(powerFruitTile.Value);
         var ironTalismanTile = ReadTileCoordinate(root, "IronTalismanTile");
+        var sealAshesPartTiles = ReadTileCoordinates(root, "SealAshesPartTiles");
 
         var tileValues = ReadTileValues(data, width * height);
         for (var index = 0; index < tileValues.Count; index++)
         {
             var gid = tileValues[index];
             var tileCoordinate = new Point(index % width, index / width);
-            var kind = ironTalismanTile.HasValue && ironTalismanTile.Value == tileCoordinate
-                ? CollectibleKind.IronTalismanThird
+            var kind = sealAshesPartTiles.Contains(tileCoordinate)
+                ? CollectibleKind.SealAshesPart
+                : ironTalismanTile.HasValue && ironTalismanTile.Value == tileCoordinate
+                    ? CollectibleKind.IronTalismanThird
                 : powerFruitTiles.Contains(tileCoordinate)
                     ? CollectibleKind.PowerFruit
                     : gid switch
@@ -343,8 +389,11 @@ internal sealed class GameLevel
                 properties["RestorePower"] = CombatBalance.PowerFruitRestore.ToString(CultureInfo.InvariantCulture);
             else if (kind.Value == CollectibleKind.ExtraLife)
                 properties["ExtraLife"] = "1";
-            else
+            else if (kind.Value is CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart)
+            {
                 properties["UnlockAfterBoss"] = "true";
+                properties["PickupGroup"] = "SealAshesPart";
+            }
 
             _gameplayObjects.Add(new LevelObjectData
             {
@@ -354,7 +403,7 @@ internal sealed class GameLevel
                 Properties = properties
             });
 
-            if (kind.Value == CollectibleKind.IronTalismanThird)
+            if (kind.Value is CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart)
                 tileLayer?.SetTile(tileX, tileY, null);
         }
     }

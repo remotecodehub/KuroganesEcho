@@ -59,7 +59,7 @@
   <data name="Act01AObjective" xml:space="preserve"><value>Cross the trail and reach the temple gate.</value></data>
   <data name="Act01ATutorial" xml:space="preserve"><value>Move, jump, attack and run to conserve stamina.</value></data>
   <data name="Act01BTitle" xml:space="preserve"><value>The Moonless Temple Fortress</value></data>
-  <data name="Act01BObjective" xml:space="preserve"><value>Defeat the final guardian and recover the talisman.</value></data>
+  <data name="Act01BObjective" xml:space="preserve"><value>Defeat the guardian and recover the first part of the Ash Seal.</value></data>
   <data name="Act01BTutorial" xml:space="preserve"><value>Use the platforms and collect health and stamina tiles.</value></data>
   <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A  CONTINUE</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSED</value></data>
@@ -75,9 +75,9 @@
   <data name="IntroLine01" xml:space="preserve"><value>The Kurogane clan guarded the</value></data>
   <data name="IntroLine02" xml:space="preserve"><value>Ash Seal for three generations.</value></data>
   <data name="IntroLine03" xml:space="preserve"><value></value></data>
-  <data name="IntroLine04" xml:space="preserve"><value>An iron talisman forged with</value></data>
+  <data name="IntroLine04" xml:space="preserve"><value>A relic divided into pieces,</value></data>
   <data name="IntroLine05" xml:space="preserve"><value>the blood and memory of the</value></data>
-  <data name="IntroLine06" xml:space="preserve"><value>ancient ninja masters.</value></data>
+  <data name="IntroLine06" xml:space="preserve"><value>forged by ancient ninja masters.</value></data>
   <data name="IntroLine07" xml:space="preserve"><value></value></data>
   <data name="IntroLine08" xml:space="preserve"><value>The relic keeps the Silent Flame,</value></data>
   <data name="IntroLine09" xml:space="preserve"><value>a spiritual bond that prevents</value></data>
@@ -93,6 +93,15 @@
   <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: launches Dart (no power cost)</value></data>
   <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: damage immunity (uses power)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>The Ruined Sanctuary</value></data>
-  <data name="Act01CObjective" xml:space="preserve"><value>Defeat the Minotaur and recover the iron talisman.</value></data>
-  <data name="Act01CTutorial" xml:space="preserve"><value>Cross the corrupted runes and survive the final guardian.</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Defeat the Minotaur and recover the first part of the Ash Seal.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>Travel from island to island along the trail of spirits and corrupted warriors.</value></data>
+  <data name="Act02ATitle" xml:space="preserve"><value>The Morning Ash Village</value></data>
+  <data name="Act02AObjective" xml:space="preserve"><value>Explore the devastated island and find the road into the feudal village.</value></data>
+  <data name="Act02ATutorial" xml:space="preserve"><value>Daylight reveals houses, castles and mountains ruined by spirits and corrupted warriors.</value></data>
+  <data name="Act02BTitle" xml:space="preserve"><value>The Valley of Torn Banners</value></data>
+  <data name="Act02BObjective" xml:space="preserve"><value>Endure the strong wind and reach the fortress at the island's edge.</value></data>
+  <data name="Act02BTutorial" xml:space="preserve"><value>The gusts are visual and harmless; keep moving through the wreckage.</value></data>
+  <data name="Act02CTitle" xml:space="preserve"><value>The Fortress beneath Black Wings</value></data>
+  <data name="Act02CObjective" xml:space="preserve"><value>Defeat the night boss and recover the second part of the Ash Seal.</value></data>
+  <data name="Act02CTutorial" xml:space="preserve"><value>Nocturnal birds cross the map to distract you, but they cannot deal damage.</value></data>
 </root>

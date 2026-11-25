@@ -128,6 +128,7 @@ public class KuroganesEchoGame : Game
     private bool _playerAttackHitApplied;
     private readonly HashSet<string> _collectedCollectibles = new(StringComparer.OrdinalIgnoreCase);
     private float _levelBriefingRemaining;
+    private float _atmosphereTime;
     private bool _finalBossDefeated;
     private bool _finalBossRewardCollected;
     private KeyboardState _previousKeyboard;
@@ -507,7 +508,7 @@ public class KuroganesEchoGame : Game
         CharacterId = source.CharacterId,
         Difficulty = source.Difficulty,
         LivesRemaining = source.LivesRemaining,
-        IronTalismanPieces = source.IronTalismanPieces,
+        SealAshesParts = source.SealAshesParts,
         CheckpointLevelId = source.CheckpointLevelId,
         CheckpointId = source.CheckpointId
     };
@@ -956,6 +957,9 @@ public class KuroganesEchoGame : Game
 
         var levelId = _saveProgress.UnlockedLevelId switch
         {
+            "Act_02_C" => "Act_02_C",
+            "Act_02_B" => "Act_02_B",
+            "Act_02_A" => "Act_02_A",
             "Act_01_C" => "Act_01_C",
             "Act_01_B" => "Act_01_B",
             _ => "Act_01_A"
@@ -969,6 +973,7 @@ public class KuroganesEchoGame : Game
         _screen = GameScreen.Act01;
         _currentLevelId = levelId;
         _levelBriefingRemaining = LevelBriefingDuration;
+        _atmosphereTime = 0f;
         _collectedCollectibles.Clear();
         _finalBossDefeated = false;
         _finalBossRewardCollected = false;
@@ -1203,6 +1208,10 @@ public class KuroganesEchoGame : Game
         _boss = null;
         foreach (var spawn in _level.EnemySpawns)
         {
+            if (spawn.Properties.TryGetValue("SpawnOnly", out var spawnOnly) &&
+                bool.TryParse(spawnOnly, out var isSpawnOnly) && isSpawnOnly)
+                continue;
+
             var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
                 ? configuredType
                 : string.Empty;
@@ -1228,6 +1237,7 @@ public class KuroganesEchoGame : Game
     private void UpdateAct01(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
         var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _atmosphereTime += elapsedSeconds;
         _effects.Update(elapsedSeconds);
         if (_levelBriefingRemaining > 0f)
         {
@@ -1380,13 +1390,14 @@ public class KuroganesEchoGame : Game
         ResolveCombat();
         ResolvePlayerEnemyCollisions();
         _enemies.RemoveAll(enemy => !enemy.IsAlive);
-        if (_currentLevelId == "Act_01_C" && _boss is not null && !_boss.IsAlive && !_finalBossDefeated)
+        if (IsBossRewardLevel && _boss is not null && !_boss.IsAlive && !_finalBossDefeated)
         {
             _finalBossDefeated = true;
             foreach (var collectible in _level.Collectibles)
             {
                 if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
-                    string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase))
+                    (string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase)))
                     _level.RevealCollectibleTile(collectible);
             }
             _audio.PlayCue(AudioCue.Collectable, 1f);
@@ -1413,10 +1424,31 @@ public class KuroganesEchoGame : Game
             StartAct01("Act_01_C");
             return;
         }
+        if (_currentLevelId == "Act_02_A" && PlayerAtLevelExit())
+        {
+            LoadLevel("Act_02_B");
+            _saveProgress.UnlockedLevelId = "Act_02_B";
+            StartAct01("Act_02_B");
+            return;
+        }
+        if (_currentLevelId == "Act_02_B" && PlayerAtLevelExit())
+        {
+            LoadLevel("Act_02_C");
+            _saveProgress.UnlockedLevelId = "Act_02_C";
+            StartAct01("Act_02_C");
+            return;
+        }
         if (_currentLevelId == "Act_01_C" && _finalBossDefeated && _finalBossRewardCollected)
         {
-            _saveProgress.CurrentLevelId = "Act_01_C";
-            _saveProgress.UnlockedLevelId = "Act_01_C";
+            LoadLevel("Act_02_A");
+            _saveProgress.UnlockedLevelId = "Act_02_A";
+            StartAct01("Act_02_A");
+            return;
+        }
+        if (_currentLevelId == "Act_02_C" && _finalBossDefeated && _finalBossRewardCollected)
+        {
+            _saveProgress.CurrentLevelId = "Act_02_C";
+            _saveProgress.UnlockedLevelId = "Act_02_C";
             SaveCurrentProgress();
             _screen = GameScreen.Victory;
             _audio.PlayVictoryMusic();
@@ -1448,7 +1480,7 @@ public class KuroganesEchoGame : Game
                 !Enum.TryParse<CollectibleKind>(pickupKind, true, out var kind))
                 continue;
 
-            if (kind == CollectibleKind.IronTalismanThird && !_finalBossDefeated)
+            if ((kind is CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart) && !_finalBossDefeated)
                 continue;
 
             var collected = kind switch
@@ -1458,6 +1490,7 @@ public class KuroganesEchoGame : Game
                 CollectibleKind.PowerFruit => TryCollectPowerFruit(collectible),
                 CollectibleKind.ExtraLife => TryCollectExtraLife(),
                 CollectibleKind.IronTalismanThird => TryCollectTalismanThird(),
+                CollectibleKind.SealAshesPart => TryCollectSealAshesPart(),
                 _ => false
             };
             if (!collected)
@@ -1465,6 +1498,18 @@ public class KuroganesEchoGame : Game
 
             _collectedCollectibles.Add(collectible.Name);
             _level.RemoveCollectibleTile(collectible);
+            if (collectible.Properties.TryGetValue("PickupGroup", out var pickupGroup))
+            {
+                foreach (var groupedCollectible in _level.Collectibles)
+                {
+                    if (!groupedCollectible.Properties.TryGetValue("PickupGroup", out var group) ||
+                        !string.Equals(group, pickupGroup, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    _collectedCollectibles.Add(groupedCollectible.Name);
+                    _level.RemoveCollectibleTile(groupedCollectible);
+                }
+            }
             _audio.PlayCue(AudioCue.Collectable, 0.9f);
             _effects.Spawn(new Vector2(collectible.Bounds.Center.X, collectible.Bounds.Top), CombatEffectKind.Magic, Vector2.UnitY, 0.8f);
             SaveCurrentProgress();
@@ -1564,9 +1609,15 @@ public class KuroganesEchoGame : Game
             return false;
 
         _finalBossRewardCollected = true;
-        _saveProgress.IronTalismanPieces = Math.Min(3, _saveProgress.IronTalismanPieces + 1);
+        _saveProgress.SealAshesParts = Math.Min(3, _saveProgress.SealAshesParts + 1);
         return true;
     }
+
+    private bool TryCollectSealAshesPart() => TryCollectTalismanThird();
+
+    private bool IsBossRewardLevel =>
+        string.Equals(_currentLevelId, "Act_01_C", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(_currentLevelId, "Act_02_C", StringComparison.OrdinalIgnoreCase);
 
     private Rectangle PlayerHitbox => new(
         (int)(_playerPosition.X - PlayerHalfWidth),
@@ -2213,6 +2264,7 @@ public class KuroganesEchoGame : Game
         _level.Draw(gameTime, _spriteBatch, _camera);
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: _camera.GetViewMatrix());
+        DrawSealAshesVisual();
         foreach (var enemy in _enemies)
         {
             if (!enemy.IsAlive)
@@ -2232,6 +2284,7 @@ public class KuroganesEchoGame : Game
         _effects.Draw(_spriteBatch, _whiteTexture);
         _spriteBatch.End();
 
+        DrawAtmosphere();
         BeginUi();
         DrawPlayerHealthBar();
         if (IsMobile)
@@ -2243,6 +2296,88 @@ public class KuroganesEchoGame : Game
         EndUi();
         if (_levelBriefingRemaining > 0f)
             DrawLevelBriefingOverlay();
+    }
+
+    private void DrawAtmosphere()
+    {
+        BeginUi();
+        if (_currentLevelId == "Act_02_A")
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(255, 205, 142, 24));
+        else if (_currentLevelId == "Act_02_B")
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(255, 174, 118, 36));
+        else if (_currentLevelId == "Act_02_C")
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 8, 25, 152));
+
+        if (_currentLevelId == "Act_01_A")
+        {
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(64, 110, 150, 18));
+            for (var index = 0; index < 24; index++)
+            {
+                var x = (index * 31 + _atmosphereTime * 18f) % (VirtualWidth + 24f) - 12f;
+                var y = (index * 17 + _atmosphereTime * 54f) % (VirtualHeight + 20f) - 10f;
+                DrawLine(new Vector2(x, y), new Vector2(x - 3f, y + 9f), 1f, new Color(155, 190, 208, 92));
+            }
+        }
+
+        if (_currentLevelId == "Act_02_B")
+        {
+            for (var index = 0; index < 14; index++)
+            {
+                var y = 27f + (index * 19f) % 142f;
+                var x = ((index * 47f + _atmosphereTime * 76f) % 390f) - 35f;
+                DrawLine(new Vector2(x, y), new Vector2(x + 21f, y - 4f), 1f, new Color(225, 206, 171, 92));
+            }
+        }
+
+        if (_currentLevelId == "Act_02_C")
+        {
+            // Purely visual night birds: they never enter the gameplay object list
+            // and therefore cannot hit or damage the player.
+            for (var index = 0; index < 5; index++)
+            {
+                var x = ((index * 77f + _atmosphereTime * (18f + index * 2f)) % 380f) - 30f;
+                var y = 34f + (index * 23f) % 74f + MathF.Sin(_atmosphereTime * 2f + index) * 4f;
+                var wing = 3f + MathF.Sin(_atmosphereTime * 5f + index) * 1.5f;
+                var color = new Color(18, 25, 38, 210);
+                DrawLine(new Vector2(x - 4f, y + wing), new Vector2(x, y), 1f, color);
+                DrawLine(new Vector2(x, y), new Vector2(x + 4f, y + wing), 1f, color);
+            }
+        }
+
+        EndUi();
+    }
+
+    private void DrawSealAshesVisual()
+    {
+        if (_currentLevelId != "Act_02_C" || !_finalBossDefeated || _finalBossRewardCollected)
+            return;
+
+        LevelObjectData anchor = null;
+        foreach (var collectible in _level.Collectibles)
+        {
+            if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
+                string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase))
+            {
+                anchor = collectible;
+                break;
+            }
+        }
+
+        if (anchor is null)
+            return;
+
+        // The pickup remains four 16x16 map cells for collision/progression. This
+        // pixel-art overlay gives the revealed 2x2 fragment a single readable seal
+        // silhouette without introducing an enemy or a damage collider.
+        var x = anchor.Bounds.X;
+        var y = anchor.Bounds.Y;
+        DrawRect(new Rectangle(x, y, 32, 32), new Color(20, 15, 24, 220));
+        DrawRect(new Rectangle(x + 2, y + 2, 28, 28), new Color(116, 73, 38, 210), false, 1);
+        DrawRect(new Rectangle(x + 7, y + 7, 18, 18), new Color(214, 170, 75, 230), false, 2);
+        DrawLine(new Vector2(x + 8, y + 23), new Vector2(x + 16, y + 8), 2f, new Color(241, 208, 112, 230));
+        DrawLine(new Vector2(x + 16, y + 8), new Vector2(x + 24, y + 23), 2f, new Color(241, 208, 112, 230));
+        DrawLine(new Vector2(x + 11, y + 16), new Vector2(x + 21, y + 16), 2f, new Color(241, 208, 112, 230));
+        DrawRect(new Rectangle(x + 14, y + 13, 4, 6), new Color(79, 33, 43, 240));
     }
 
     private void DrawPlayer()

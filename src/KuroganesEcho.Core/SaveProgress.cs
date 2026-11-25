@@ -11,7 +11,7 @@ internal sealed class SaveProgressState
     public string CharacterId { get; set; } = "Kunoichi";
     public GameDifficulty Difficulty { get; set; } = GameDifficulty.Normal;
     public int LivesRemaining { get; set; } = 3;
-    public int IronTalismanPieces { get; set; }
+    public int SealAshesParts { get; set; }
     public string CheckpointLevelId { get; set; } = "Act_01_A";
     public int CheckpointId { get; set; }
 }

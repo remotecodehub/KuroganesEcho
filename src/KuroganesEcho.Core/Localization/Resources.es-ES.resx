@@ -131,8 +131,17 @@
   <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lanza Dart (sin gastar poder)</value></data>
   <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: defensa sin daño (gasta poder)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>El Santuario en Ruinas</value></data>
-  <data name="Act01CObjective" xml:space="preserve"><value>Derrota al Minotauro y recupera el talismán de hierro.</value></data>
-  <data name="Act01CTutorial" xml:space="preserve"><value>Atraviesa las runas corruptas y sobrevive al guardián final.</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Derrota al Minotauro y recupera la primera parte del Sello de Cenizas.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>Viaja de isla en isla siguiendo a los espíritus y guerreros corruptos.</value></data>
+  <data name="Act02ATitle" xml:space="preserve"><value>La Aldea de Ceniza Matinal</value></data>
+  <data name="Act02AObjective" xml:space="preserve"><value>Explora la isla devastada y encuentra el camino a la aldea feudal.</value></data>
+  <data name="Act02ATutorial" xml:space="preserve"><value>La luz revela casas, castillos y montañas destruidos.</value></data>
+  <data name="Act02BTitle" xml:space="preserve"><value>El Valle de las Banderas Rasgadas</value></data>
+  <data name="Act02BObjective" xml:space="preserve"><value>Resiste el viento y llega a la fortaleza al final de la isla.</value></data>
+  <data name="Act02BTutorial" xml:space="preserve"><value>Las ráfagas son visuales y no causan daño.</value></data>
+  <data name="Act02CTitle" xml:space="preserve"><value>La Fortaleza bajo Alas Negras</value></data>
+  <data name="Act02CObjective" xml:space="preserve"><value>Derrota al boss nocturno y recupera la segunda parte del Sello de Cenizas.</value></data>
+  <data name="Act02CTutorial" xml:space="preserve"><value>Los pájaros nocturnos distraen, pero no causan daño.</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSADO</value></data>
   <data name="PausePrompt" xml:space="preserve"><value>Usa ENTER/A para elegir; ESC/START para continuar</value></data>
   <data name="Resume" xml:space="preserve"><value>Continuar</value></data>

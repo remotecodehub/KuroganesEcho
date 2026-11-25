@@ -28,6 +28,78 @@ internal enum EnemyAnimationState
 internal sealed class EnemyCharacter
 {
     private sealed record AnimationClip(Texture2D Texture, int FrameCount);
+    private sealed record EnemyDefinition(
+        string Root,
+        string Idle,
+        string Walk,
+        string Attack1,
+        string Hurt,
+        string Dead,
+        string Run = null,
+        string Attack2 = null,
+        string Attack3 = null,
+        string Jump = null,
+        string Special1 = null,
+        string Special2 = null);
+
+    private static readonly IReadOnlyDictionary<string, EnemyDefinition> Definitions =
+        new Dictionary<string, EnemyDefinition>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Black_Werewolf"] = new(
+                "Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Black_Werewolf",
+                "Idle", "walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump"),
+            ["Red_Werewolf"] = new(
+                "Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump"),
+            ["White_Werewolf"] = new(
+                "Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump"),
+            ["Karasu_tengu"] = new(
+                "Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump"),
+            ["Kitsune"] = new(
+                "Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Kitsune",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump", "Fire_1", "Fire_2"),
+            ["Yamabushi_tengu"] = new(
+                "Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump"),
+            ["Skeleton_Archer"] = new(
+                "Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", null, "Attack_2", "Attack_3", null, "Shot_1", "Shot_2"),
+            ["Skeleton_Spearman"] = new(
+                "Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, null, "Protect", "Run+attack"),
+            ["Skeleton_Warrior"] = new(
+                "Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Warrior",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", null, "Protect", "Run+attack"),
+            ["Minotaur_1"] = new(
+                "Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1",
+                "Idle", "Walk", "Attack", "Hurt", "Dead"),
+            ["Minotaur_2"] = new(
+                "Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2",
+                "Idle", "Walk", "Attack", "Hurt", "Dead"),
+            ["Minotaur_3"] = new(
+                "Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3",
+                "Idle", "Walk", "Attack", "Hurt", "Dead"),
+            ["Gorgon_1"] = new(
+                "Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", null, "Special"),
+            ["Gorgon_2"] = new(
+                "Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", null, "Special"),
+            ["Gorgon_3"] = new(
+                "Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", null, "Special"),
+            ["Fire Wizard"] = new(
+                "Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Fireball", "Flame_jet"),
+            ["Lightning Mage"] = new(
+                "Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Light_ball", "Light_charge"),
+            ["Wanderer Magican"] = new(
+                "Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican",
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Charge_1", "Charge_2")
+        };
 
     private readonly Dictionary<EnemyAnimationState, AnimationClip> _clips = new();
     private float _animationClock;
@@ -45,24 +117,15 @@ internal sealed class EnemyCharacter
 
     public static EnemyCharacter Load(ContentManager content, string enemyType)
     {
-        var enemy = new EnemyCharacter(enemyType);
-        switch (enemyType)
-        {
-            case "Black_Werewolf":
-                enemy.LoadWerewolf(content);
-                break;
-            case "Kitsune":
-                enemy.LoadKitsune(content);
-                break;
-            case "Skeleton_Warrior":
-                enemy.LoadSkeleton(content);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(enemyType), enemyType, "Unknown enemy type");
-        }
+        if (!Definitions.TryGetValue(enemyType, out var definition))
+            throw new ArgumentOutOfRangeException(nameof(enemyType), enemyType, "Unknown enemy type");
 
+        var enemy = new EnemyCharacter(enemyType);
+        enemy.LoadDefinition(content, definition);
         return enemy;
     }
+
+    public static bool IsSupported(string enemyType) => Definitions.ContainsKey(enemyType);
 
     public void SetAnimation(EnemyAnimationState animation)
     {
@@ -102,53 +165,48 @@ internal sealed class EnemyCharacter
         spriteBatch.Draw(clip.Texture, position, source, Color.White, 0f, origin, scale, effects, 0f);
     }
 
-    private void LoadWerewolf(ContentManager content)
+    private void LoadDefinition(ContentManager content, EnemyDefinition definition)
     {
-        const string root = "Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Black_Werewolf";
-        Add(content, EnemyAnimationState.Idle, root, "Idle", 8);
-        Add(content, EnemyAnimationState.Walk, root, "walk", 11);
-        Add(content, EnemyAnimationState.Run, root, "Run", 9);
-        Add(content, EnemyAnimationState.Attack1, root, "Attack_1", 6);
-        Add(content, EnemyAnimationState.Attack2, root, "Attack_2", 4);
-        Add(content, EnemyAnimationState.Attack3, root, "Attack_3", 5);
-        Add(content, EnemyAnimationState.Hurt, root, "Hurt", 2);
-        Add(content, EnemyAnimationState.Dead, root, "Dead", 2);
-        Add(content, EnemyAnimationState.Jump, root, "Jump", 11);
+        Add(content, EnemyAnimationState.Idle, definition.Root, definition.Idle);
+        Add(content, EnemyAnimationState.Walk, definition.Root, definition.Walk);
+        Add(content, EnemyAnimationState.Attack1, definition.Root, definition.Attack1);
+        Add(content, EnemyAnimationState.Hurt, definition.Root, definition.Hurt);
+        Add(content, EnemyAnimationState.Dead, definition.Root, definition.Dead);
+        AddOptional(content, EnemyAnimationState.Run, definition.Root, definition.Run);
+        AddOptional(content, EnemyAnimationState.Attack2, definition.Root, definition.Attack2);
+        AddOptional(content, EnemyAnimationState.Attack3, definition.Root, definition.Attack3);
+        AddOptional(content, EnemyAnimationState.Jump, definition.Root, definition.Jump);
+        AddOptional(content, EnemyAnimationState.Special1, definition.Root, definition.Special1);
+        AddOptional(content, EnemyAnimationState.Special2, definition.Root, definition.Special2);
     }
 
-    private void LoadKitsune(ContentManager content)
+    private void Add(ContentManager content, EnemyAnimationState state, string root, string assetName)
     {
-        const string root = "Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Kitsune";
-        Add(content, EnemyAnimationState.Idle, root, "Idle", 8);
-        Add(content, EnemyAnimationState.Walk, root, "Walk", 8);
-        Add(content, EnemyAnimationState.Run, root, "Run", 8);
-        Add(content, EnemyAnimationState.Attack1, root, "Attack_1", 10);
-        Add(content, EnemyAnimationState.Attack2, root, "Attack_2", 10);
-        Add(content, EnemyAnimationState.Attack3, root, "Attack_3", 7);
-        Add(content, EnemyAnimationState.Hurt, root, "Hurt", 2);
-        Add(content, EnemyAnimationState.Dead, root, "Dead", 10);
-        Add(content, EnemyAnimationState.Jump, root, "Jump", 10);
-        Add(content, EnemyAnimationState.Special1, root, "Fire_1", 14);
-        Add(content, EnemyAnimationState.Special2, root, "Fire_2", 11);
+        var texture = content.Load<Texture2D>($"{root}/{assetName}");
+        _clips[state] = new AnimationClip(texture, GetFrameCount(texture));
     }
 
-    private void LoadSkeleton(ContentManager content)
+    private void AddOptional(ContentManager content, EnemyAnimationState state, string root, string assetName)
     {
-        const string root = "Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Warrior";
-        Add(content, EnemyAnimationState.Idle, root, "Idle", 7);
-        Add(content, EnemyAnimationState.Walk, root, "Walk", 7);
-        Add(content, EnemyAnimationState.Run, root, "Run", 8);
-        Add(content, EnemyAnimationState.Attack1, root, "Attack_1", 5);
-        Add(content, EnemyAnimationState.Attack2, root, "Attack_2", 6);
-        Add(content, EnemyAnimationState.Attack3, root, "Attack_3", 4);
-        Add(content, EnemyAnimationState.Hurt, root, "Hurt", 2);
-        Add(content, EnemyAnimationState.Dead, root, "Dead", 4);
-        Add(content, EnemyAnimationState.Special1, root, "Protect", 1);
-        Add(content, EnemyAnimationState.Special2, root, "Run+attack", 7);
+        if (assetName is not null)
+            Add(content, state, root, assetName);
     }
 
-    private void Add(ContentManager content, EnemyAnimationState state, string root, string assetName, int frameCount)
+    private static int GetFrameCount(Texture2D texture) =>
+        texture.Height > 0 && texture.Width % texture.Height == 0
+            ? Math.Max(1, texture.Width / texture.Height)
+            : 1;
+
+    public static bool IsBossType(string enemyType) =>
+        enemyType is "Minotaur_1" or "Minotaur_2" or "Minotaur_3" or
+            "Gorgon_1" or "Gorgon_2" or "Gorgon_3" or
+            "Fire Wizard" or "Lightning Mage" or "Wanderer Magican";
+
+    public static string DefaultBossVariant(string bossType) => bossType switch
     {
-        _clips[state] = new AnimationClip(content.Load<Texture2D>($"{root}/{assetName}"), frameCount);
-    }
+        "Minotaur" => "Minotaur_1",
+        "Gorgon" => "Gorgon_1",
+        "Wizard" => "Fire Wizard",
+        _ => throw new ArgumentOutOfRangeException(nameof(bossType), bossType, "Unknown boss type")
+    };
 }

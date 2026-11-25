@@ -51,6 +51,7 @@ internal sealed class GameLevel
 {
     private const float PlayerCollisionHalfWidth = 10f;
     private readonly List<Rectangle> _collisionPlatforms = new();
+    private readonly List<FootstepSurface> _collisionSurfaces = new();
     private readonly List<LevelObjectData> _gameplayObjects = new();
 
     private GameLevel(LevelDefinition definition, Tilemap tilemap, TilemapSpriteBatchRenderer renderer)
@@ -112,6 +113,33 @@ internal sealed class GameLevel
         return landingTop;
     }
 
+    /// <summary>Piso sob os pés do jogador, a partir do nome do objeto de colisão.</summary>
+    public FootstepSurface GetSurfaceAt(float playerX, float feetY)
+    {
+        for (var i = 0; i < _collisionPlatforms.Count; i++)
+        {
+            var platform = _collisionPlatforms[i];
+            if (playerX < platform.Left || playerX > platform.Right)
+                continue;
+
+            if (Math.Abs(platform.Top - feetY) <= 2f)
+                return _collisionSurfaces[i];
+        }
+
+        return FootstepSurface.Snow;
+    }
+
+    private static FootstepSurface SurfaceFromName(string name)
+    {
+        if (name is null)
+            return FootstepSurface.Snow;
+        if (name.StartsWith("HouseRoof", StringComparison.OrdinalIgnoreCase))
+            return FootstepSurface.Roof;
+        if (name.StartsWith("Platform", StringComparison.OrdinalIgnoreCase))
+            return FootstepSurface.Wood;
+        return FootstepSurface.Snow;
+    }
+
     private void LoadObjects()
     {
         using var mapStream = TitleContainer.OpenStream(Definition.MapAssetPath);
@@ -131,7 +159,10 @@ internal sealed class GameLevel
             {
                 var bounds = ReadBounds(objectElement);
                 if (bounds.Width > 0 && bounds.Height > 0)
+                {
                     _collisionPlatforms.Add(bounds);
+                    _collisionSurfaces.Add(SurfaceFromName((string)objectElement.Attribute("name")));
+                }
             }
         }
 

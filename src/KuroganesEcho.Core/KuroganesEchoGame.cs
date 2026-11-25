@@ -69,6 +69,7 @@ public class KuroganesEchoGame : Game
     private Texture2D _whiteTexture = null!;
     private PlayerCharacter _player = null!;
     private GameLevel _level = null!;
+    private AudioService _audio = null!;
     private readonly List<EnemyInstance> _enemies = new();
     private BoxingViewportAdapter _viewportAdapter = null!;
     private OrthographicCamera _camera = null!;
@@ -147,6 +148,7 @@ public class KuroganesEchoGame : Game
         _fontWide = Content.Load<SpriteFont>("Fonts/ArrayWide");
         _fontSemiboldWide = Content.Load<SpriteFont>("Fonts/ArraySemiboldWide");
         _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01);
+        _audio = AudioService.Load(Content);
         _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
         LoadEnemies();
 
@@ -301,6 +303,10 @@ public class KuroganesEchoGame : Game
             MoveOptionsSelection(-1);
         if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
             MoveOptionsSelection(1);
+        if (IsNewKeyPress(keyboard, Keys.Left) || IsNewGamepadLeft(gamePad))
+            AdjustSelectedAudioOption(-1);
+        if (IsNewKeyPress(keyboard, Keys.Right) || IsNewGamepadRight(gamePad))
+            AdjustSelectedAudioOption(1);
 
         var point = GetPressedPoint(touches);
         if (point.HasValue)
@@ -321,6 +327,27 @@ public class KuroganesEchoGame : Game
                 return;
             }
 
+            if (BgmVolumeButton().Contains(point.Value))
+            {
+                _optionsSelection = BgmVolumeOptionIndex;
+                SetAudioVolumeFromPoint(BgmVolumeButton(), point.Value, bgm: true);
+                return;
+            }
+
+            if (SfxVolumeButton().Contains(point.Value))
+            {
+                _optionsSelection = SfxVolumeOptionIndex;
+                SetAudioVolumeFromPoint(SfxVolumeButton(), point.Value, bgm: false);
+                return;
+            }
+
+            if (MuteButton().Contains(point.Value))
+            {
+                _optionsSelection = MuteOptionIndex;
+                _audio.ToggleMute();
+                return;
+            }
+
             if (IsDesktop && ControlsButton().Contains(point.Value))
             {
                 _optionsSelection = ControlsOptionIndex;
@@ -338,14 +365,42 @@ public class KuroganesEchoGame : Game
 
     private int ControlsOptionIndex => _languageCodes.Length;
 
-    private int BackOptionIndex => _languageCodes.Length + (IsDesktop ? 1 : 0);
+    private int BgmVolumeOptionIndex => _languageCodes.Length + (IsDesktop ? 1 : 0);
+
+    private int SfxVolumeOptionIndex => BgmVolumeOptionIndex + 1;
+
+    private int MuteOptionIndex => SfxVolumeOptionIndex + 1;
+
+    private int BackOptionIndex => MuteOptionIndex + 1;
+
+    private int OptionsOptionCount => BackOptionIndex + 1;
 
     private void MoveOptionsSelection(int direction)
     {
-        var optionCount = _languageCodes.Length + (IsDesktop ? 2 : 1);
+        var optionCount = OptionsOptionCount;
         _optionsSelection = (_optionsSelection + direction + optionCount) % optionCount;
         if (_optionsSelection < _languageCodes.Length)
             _languageSelection = _optionsSelection;
+    }
+
+    private void AdjustSelectedAudioOption(int direction)
+    {
+        const float step = 0.1f;
+        if (_optionsSelection == BgmVolumeOptionIndex)
+            _audio.SetBgmVolume(_audio.BgmVolume + direction * step);
+        else if (_optionsSelection == SfxVolumeOptionIndex)
+            _audio.SetSfxVolume(_audio.SfxVolume + direction * step);
+        else if (_optionsSelection == MuteOptionIndex)
+            _audio.ToggleMute();
+    }
+
+    private void SetAudioVolumeFromPoint(Rectangle bounds, Point point, bool bgm)
+    {
+        var volume = Math.Clamp((point.X - bounds.Left) / (float)bounds.Width, 0f, 1f);
+        if (bgm)
+            _audio.SetBgmVolume(volume);
+        else
+            _audio.SetSfxVolume(volume);
     }
 
     private void ActivateOptionsSelection()
@@ -362,7 +417,14 @@ public class KuroganesEchoGame : Game
             return;
         }
 
-        _screen = GameScreen.MainMenu;
+        if (_optionsSelection == MuteOptionIndex)
+        {
+            _audio.ToggleMute();
+            return;
+        }
+
+        if (_optionsSelection == BackOptionIndex)
+            _screen = GameScreen.MainMenu;
     }
 
     private void UpdateControls(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
@@ -619,7 +681,7 @@ public class KuroganesEchoGame : Game
             var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
                 ? configuredType
                 : string.Empty;
-            if (enemyType is not ("Black_Werewolf" or "Kitsune" or "Skeleton_Warrior"))
+            if (!EnemyCharacter.IsSupported(enemyType) || EnemyCharacter.IsBossType(enemyType))
                 continue;
 
             _enemies.Add(new EnemyInstance(EnemyCharacter.Load(Content, enemyType), spawn));
@@ -747,6 +809,13 @@ public class KuroganesEchoGame : Game
         if (_runRemaining > 0f)
             _runRemaining = Math.Max(0f, _runRemaining - elapsedSeconds);
         _player.Update(elapsedSeconds);
+        var footstep = _player.ConsumeFootstep();
+        if (footstep && _isGrounded && Math.Abs(_moveInput.X) > 0.05f)
+        {
+            _audio.PlayFootstep(
+                _level.GetSurfaceAt(_playerPosition.X, _playerPosition.Y),
+                _player.Animation == PlayerAnimationState.Run);
+        }
         foreach (var enemy in _enemies)
             enemy.Update(elapsedSeconds, _playerPosition, _level);
         ResolveCombat();
@@ -937,7 +1006,7 @@ public class KuroganesEchoGame : Game
         BeginUi();
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
         DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 27f), new Color(214, 191, 135), _fontSemibold, 1.2f);
-        DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 42f), new Color(156, 170, 169), 0.65f);
+        DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 38f), new Color(156, 170, 169), 0.55f);
 
         for (var index = 0; index < _languageCodes.Length; index++)
         {
@@ -951,7 +1020,7 @@ public class KuroganesEchoGame : Game
                 "en-US" => LocalizedText.Get("English"),
                 _ => LocalizedText.Get("French")
             };
-            DrawTextCentered($"{_languageCodes[index]} - {label}", bounds.Center.ToVector2(), Color.White, 0.62f);
+            DrawTextCentered($"{_languageCodes[index]} - {label}", bounds.Center.ToVector2(), Color.White, 0.55f);
         }
 
         if (IsDesktop)
@@ -960,16 +1029,32 @@ public class KuroganesEchoGame : Game
             var selected = _optionsSelection == ControlsOptionIndex;
             DrawRect(controls, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
             DrawRect(controls, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
-            DrawTextCentered(LocalizedText.Get("Controls"), controls.Center.ToVector2(), Color.White, 0.68f);
+            DrawTextCentered(LocalizedText.Get("Controls"), controls.Center.ToVector2(), Color.White, 0.58f);
         }
+
+        DrawAudioOption(BgmVolumeButton(), _optionsSelection == BgmVolumeOptionIndex,
+            $"{LocalizedText.Get("BgmVolume")}: {VolumePercent(_audio.BgmVolume)}");
+        DrawAudioOption(SfxVolumeButton(), _optionsSelection == SfxVolumeOptionIndex,
+            $"{LocalizedText.Get("SfxVolume")}: {VolumePercent(_audio.SfxVolume)}");
+        DrawAudioOption(MuteButton(), _optionsSelection == MuteOptionIndex,
+            $"{LocalizedText.Get("Mute")}: {(_audio.IsMuted ? LocalizedText.Get("On") : LocalizedText.Get("Off"))}");
 
         var back = OptionsBackButton();
         var backSelected = _optionsSelection == BackOptionIndex;
         DrawRect(back, backSelected ? new Color(78, 96, 105) : new Color(42, 53, 63));
         DrawRect(back, backSelected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
-        DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.72f);
+        DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.62f);
         EndUi();
     }
+
+    private void DrawAudioOption(Rectangle bounds, bool selected, string label)
+    {
+        DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+        DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+        DrawTextCentered(label, bounds.Center.ToVector2(), Color.White, 0.52f);
+    }
+
+    private string VolumePercent(float volume) => $"{(int)Math.Round(volume * 100f)}%";
 
     private void DrawControls()
     {
@@ -1230,7 +1315,7 @@ public class KuroganesEchoGame : Game
 
     private Rectangle MenuButton(int index) => new(80, 65 + index * 30, 160, 24);
 
-    private Rectangle LanguageButton(int index) => new(66, 49 + index * 19, 188, 16);
+    private Rectangle LanguageButton(int index) => new(66, 43 + index * 16, 188, 14);
 
     private Rectangle CharacterSelectionButton(int index) => new(8 + index * 104, 49, 96, 22);
 
@@ -1240,9 +1325,15 @@ public class KuroganesEchoGame : Game
 
     private Rectangle SelectionBackButton() => new(8, 148, 72, 18);
 
-    private Rectangle OptionsBackButton() => new(112, 153, 96, 18);
+    private Rectangle OptionsBackButton() => new(112, 160, 96, 16);
 
-    private Rectangle ControlsButton() => new(98, 118, 124, 20);
+    private Rectangle ControlsButton() => new(98, 92, 124, 14);
+
+    private Rectangle BgmVolumeButton() => new(16, 109, 288, 14);
+
+    private Rectangle SfxVolumeButton() => new(16, 125, 288, 14);
+
+    private Rectangle MuteButton() => new(16, 141, 288, 14);
 
     private Rectangle ControlsKeyboardButton() => new(8, 27, 148, 14);
 
@@ -1330,6 +1421,14 @@ public class KuroganesEchoGame : Game
     private bool IsNewGamepadRight(GamePadState current) =>
         (current.DPad.Right == ButtonState.Pressed && _previousGamePad.DPad.Right == ButtonState.Released) ||
         (current.ThumbSticks.Left.X > 0.5f && _previousGamePad.ThumbSticks.Left.X <= 0.5f);
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+            _audio?.Dispose();
+
+        base.Dispose(disposing);
+    }
 
     private enum GameScreen
     {

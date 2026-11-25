@@ -42,4 +42,9 @@
   <data name="Actions" xml:space="preserve"><value>AÇÕES</value></data>
   <data name="Move" xml:space="preserve"><value>MOVA O PERSONAGEM</value></data>
   <data name="ExitHint" xml:space="preserve"><value>ESC / VOLTAR</value></data>
+  <data name="BgmVolume" xml:space="preserve"><value>Volume BGM</value></data>
+  <data name="SfxVolume" xml:space="preserve"><value>Volume SFX</value></data>
+  <data name="Mute" xml:space="preserve"><value>Mudo</value></data>
+  <data name="On" xml:space="preserve"><value>Ligado</value></data>
+  <data name="Off" xml:space="preserve"><value>Desligado</value></data>
 </root>

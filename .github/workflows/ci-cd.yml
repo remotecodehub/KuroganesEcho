@@ -26,9 +26,9 @@ jobs:
             runner: macos-latest
             rid: osx-arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 11.0.x
 
@@ -36,7 +36,7 @@ jobs:
         run: dotnet publish src/KuroganesEcho.DesktopGL/KuroganesEcho.DesktopGL.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output artifacts/publish
 
       - name: Upload DesktopGL publish files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: desktopgl-${{ matrix.platform }}
           path: artifacts/publish/
@@ -61,9 +61,9 @@ jobs:
             project: src/KuroganesEcho.iOS/KuroganesEcho.iOS.csproj
             framework: net11.0-ios
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 11.0.x
 
@@ -74,13 +74,17 @@ jobs:
         if: matrix.platform == 'android'
         run: dotnet publish ${{ matrix.project }} --configuration Release --framework ${{ matrix.framework }} -p:AndroidPackageFormats=apk
 
+      - name: Select Xcode version
+        if: matrix.platform == 'ios'
+        run: sudo xcode-select -s /Applications/Xcode_27.2.app/Contents/Developer
+    
       - name: Build iOS simulator app
         if: matrix.platform == 'ios'
         run: dotnet build ${{ matrix.project }} --configuration Release --framework ${{ matrix.framework }} -p:RuntimeIdentifier=iossimulator-arm64 -p:EnableCodeSigning=false
 
       - name: Upload Android APK
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-apk
           path: src/KuroganesEcho.Android/bin/Release/net11.0-android/**/*.apk
@@ -89,7 +93,7 @@ jobs:
 
       - name: Upload iOS simulator app
         if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-simulator-app
           path: src/KuroganesEcho.iOS/bin/Release/net11.0-ios/iossimulator-arm64/*.app
@@ -111,7 +115,7 @@ jobs:
           - platform: macos
             runner: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v4
         with:
@@ -195,7 +199,7 @@ jobs:
           pkgbuild --root "$RUNNER_TEMP/pkgroot" --identifier com.companyname.KuroganesEcho --version 1.0.0 --install-location / artifacts/installer/KuroganesEcho-macos-arm64.pkg
 
       - name: Upload DesktopGL installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: desktopgl-installer-${{ matrix.platform }}
           path: artifacts/installer/

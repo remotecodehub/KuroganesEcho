@@ -10,6 +10,16 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)src\KuroganesEcho.Core\Content\Fonts\FontshareKit-2611002845.zip">
+      <Link>Content\Fonts\FontshareKit-2611002845.zip</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)src\KuroganesEcho.Core\Content\Fonts\Array\License\*.txt">
+      <Link>Content\Fonts\Array\License\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Include="$(KuroganesEchoTiledRoot)\Maps\**\*">
       <Link>Content\Tiled\Maps\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

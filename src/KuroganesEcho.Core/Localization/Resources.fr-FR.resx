@@ -166,4 +166,23 @@
   <data name="Mute" xml:space="preserve"><value>Sourdine</value></data>
   <data name="On" xml:space="preserve"><value>Oui</value></data>
   <data name="Off" xml:space="preserve"><value>Non</value></data>
+  <data name="Fullscreen" xml:space="preserve"><value>Plein écran</value></data>
+  <data name="Lives" xml:space="preserve"><value>Vies</value></data>
+  <data name="Stamina" xml:space="preserve"><value>Endurance</value></data>
+  <data name="GameOver" xml:space="preserve"><value>GAME OVER</value></data>
+  <data name="Victory" xml:space="preserve"><value>VICTOIRE</value></data>
+  <data name="PressToContinue" xml:space="preserve"><value>Appuyez pour continuer</value></data>
+  <data name="IntroLine01" xml:space="preserve"><value>Le clan Kurogane gardait le</value></data>
+  <data name="IntroLine02" xml:space="preserve"><value>Sceau des Cendres depuis trois générations.</value></data>
+  <data name="IntroLine03" xml:space="preserve"><value></value></data>
+  <data name="IntroLine04" xml:space="preserve"><value>Un talisman de fer forgé avec</value></data>
+  <data name="IntroLine05" xml:space="preserve"><value>le sang et la mémoire des</value></data>
+  <data name="IntroLine06" xml:space="preserve"><value>anciens maîtres ninjas.</value></data>
+  <data name="IntroLine07" xml:space="preserve"><value></value></data>
+  <data name="IntroLine08" xml:space="preserve"><value>La relique entretient la Flamme Silencieuse,</value></data>
+  <data name="IntroLine09" xml:space="preserve"><value>un lien spirituel qui empêche</value></data>
+  <data name="IntroLine10" xml:space="preserve"><value>les esprits sans repos et les gardiens</value></data>
+  <data name="IntroLine11" xml:space="preserve"><value>corrompus des montagnes</value></data>
+  <data name="IntroLine12" xml:space="preserve"><value>d'envahir le village du clan.</value></data>
+  <data name="IntroLine13" xml:space="preserve"><value></value></data>
 </root>

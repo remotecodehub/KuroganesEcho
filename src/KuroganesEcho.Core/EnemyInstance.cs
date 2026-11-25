@@ -11,7 +11,6 @@ internal sealed class EnemyInstance
 {
     private const float PatrolHalfWidth = 72f;
     private const float AttackDistance = 78f;
-    private const float EnemyScale = 0.75f;
     private const float Gravity = 480f;
     private const float EnemyHalfWidth = 10f;
     private const float EnemyHeight = 32f;
@@ -24,6 +23,7 @@ internal sealed class EnemyInstance
     private float _verticalVelocity;
     private bool _attackHitApplied;
     private int _facing = 1;
+    private GameDifficulty _difficulty = GameDifficulty.Normal;
 
     public EnemyInstance(EnemyCharacter character, LevelObjectData spawn)
     {
@@ -38,10 +38,16 @@ internal sealed class EnemyInstance
     public EnemyCharacter Character { get; }
     public LevelObjectData Spawn { get; }
     public Vector2 Position { get; private set; }
-    public int MaxHealth => CombatBalance.EnemyMaxHealth;
+    public int MaxHealth => CombatBalance.GetEnemyMaxHealth(_difficulty);
     public int Health { get; private set; }
     public bool IsAlive => Health > 0;
     public bool IsAttacking => IsAlive && _attackRemaining > 0f;
+
+    public void ConfigureDifficulty(GameDifficulty difficulty)
+    {
+        _difficulty = difficulty;
+        Health = Math.Min(Health, MaxHealth);
+    }
     public Rectangle Hitbox => new(
         (int)(Position.X - EnemyHalfWidth),
         (int)(Position.Y - EnemyHeight),
@@ -169,6 +175,12 @@ internal sealed class EnemyInstance
     public void Draw(SpriteBatch spriteBatch)
     {
         var effects = _facing < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-        Character.Draw(spriteBatch, Position, EnemyScale, effects);
+        var scale = _difficulty switch
+        {
+            GameDifficulty.Easy => 0.5f,
+            GameDifficulty.Hard => 0.7f,
+            _ => 0.6f
+        };
+        Character.Draw(spriteBatch, Position, scale, effects);
     }
 }

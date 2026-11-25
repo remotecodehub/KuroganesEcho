@@ -2,17 +2,18 @@
 
 ## Mapa
 
-`Maps/Act_01.tmx` é um mapa ortogonal de 320×24 blocos, com tiles de mapa de 16×16 px e viewport lógica de 320×180 px.
+`Maps/Act_01_A.tmx` e `Maps/Act_01_B.tmx` são mapas ortogonais de 320×24 blocos, com tiles de mapa de 16×16 px e viewport lógica de 320×180 px.
 
-O mapa contém:
+Os mapas contêm:
 
 - camadas visuais `Background`, `VillageBackdrop`, `Terrain` e `Act01Props`;
 - camada de objetos `Collision`, com chão e plataformas;
 - camada de objetos `Gameplay`, com `PlayerSpawn`, três checkpoints, pickups, inimigos e o encontro final;
-- tileset de ambiente `Tilesets/Act_01_Environment.tsx`;
+- tileset de ambiente feudal `Tilesets/Act_01_Feudal.tsx` no A;
+- tileset feudal japonês dark `Tilesets/Act_01_Feudal_Dark.tsx` no B;
 - os três tilesets de personagens vinculados como tilesets externos.
 
-O ambiente usa uma paleta limitada e formas sem suavização para manter o aspecto 16-bit: vila desbotada, lanternas apagadas, altar sem o selo, névoa, plataformas de madeira e arena do Guardião.
+O ambiente usa uma paleta limitada e formas sem suavização para manter o aspecto 16-bit: vila desbotada no A e templo feudal japonês escurecido no B. O A possui a saída para o B; o B reutiliza `Black_Werewolf` e `Skeleton_Warrior` e encerra com uma variante pré-definida de Minotaur.
 
 ## Personagens
 
@@ -33,6 +34,6 @@ Os frames recortados ficam em `Chars/GeneratedFrames/`. O script `.codex/generat
 Os spritesheets em `Enemies/` possuem tilesets animados correspondentes em `Tilesets/Enemies/`.
 O script `.codex/generate_tiled_enemy_assets.ps1` recorta os frames e recria esses `.tsx`.
 
-`Black_Werewolf`, `Kitsune` e `Skeleton_Warrior` continuam sendo inimigos regulares.
+`Black_Werewolf` e `Skeleton_Warrior` continuam sendo os inimigos regulares de Act_01_A e Act_01_B.
 `Minotaur`, `Gorgon` e `Wizard` são representados por `BossInstance`, com variantes selecionáveis
-por `BossVariant`; nenhum boss é instanciado em `Maps/Act_01.tmx`.
+por `BossVariant`; `Act_01_B` usa `Minotaur_2` no encontro final.

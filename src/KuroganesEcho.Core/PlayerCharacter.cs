@@ -200,7 +200,10 @@ internal sealed class PlayerCharacter
         "Ninja_Monk" => animation switch
         {
             PlayerAnimationState.Idle or PlayerAnimationState.Walk => 7,
-            PlayerAnimationState.Run or PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Cast => 5,
+            // Run.png is 768x96: eight 96px frames. Using five frames made the
+            // animation read as a clipped attack instead of a full run cycle.
+            PlayerAnimationState.Run => 8,
+            PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Cast => 5,
             PlayerAnimationState.Jump => 9,
             PlayerAnimationState.Dead => 5,
             _ => 1

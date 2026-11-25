@@ -26,21 +26,13 @@ internal sealed class DebugCheatCodeSystem
         Buttons.DPadLeft, Buttons.DPadRight
     };
 
-    private static readonly MobileSequenceButton[] MobileSequence =
-    {
-        MobileSequenceButton.X, MobileSequenceButton.Y, MobileSequenceButton.Z,
-        MobileSequenceButton.A, MobileSequenceButton.B, MobileSequenceButton.C,
-        MobileSequenceButton.Up, MobileSequenceButton.Down,
-        MobileSequenceButton.Up, MobileSequenceButton.Down
-    };
-
     private readonly List<DebugRow> _rows = new();
     private readonly List<string> _recentInputs = new();
     private int _sequenceIndex;
     private int _selectedRow;
     private int _scrollOffset;
     private bool _isOpen;
-    private bool _isMobileSequence;
+    private bool _isMobile;
     private string _lastInput = "-";
     private bool _restoreResourcesRequested;
     private CheckpointOption? _selectedCheckpoint;
@@ -52,18 +44,6 @@ internal sealed class DebugCheatCodeSystem
     public bool InfinitePower { get; private set; }
     public bool InfiniteLives { get; private set; }
 
-    public enum MobileSequenceButton
-    {
-        X,
-        Y,
-        Z,
-        A,
-        B,
-        C,
-        Up,
-        Down
-    }
-
     public readonly record struct CheckpointOption(int Id, string Name, Vector2 RespawnPosition);
 
     public bool Update(
@@ -72,11 +52,10 @@ internal sealed class DebugCheatCodeSystem
         TouchCollection touches,
         bool isMobile,
         Func<Vector2, Point> toVirtualPoint,
-        Func<Point, MobileSequenceButton?> resolveMobileButton,
         IReadOnlyList<CheckpointOption> checkpoints)
     {
         _checkpoints = checkpoints;
-        _isMobileSequence = isMobile;
+        _isMobile = isMobile;
 
         if (_isOpen)
         {
@@ -85,19 +64,7 @@ internal sealed class DebugCheatCodeSystem
             return true;
         }
 
-        if (isMobile)
-        {
-            foreach (var touch in touches)
-            {
-                if (touch.State != TouchLocationState.Pressed)
-                    continue;
-
-                var button = resolveMobileButton(toVirtualPoint(touch.Position));
-                if (button.HasValue)
-                    TrackMobileButton(button.Value);
-            }
-        }
-        else
+        if (!isMobile)
         {
             foreach (var button in DesktopSequence)
             {
@@ -165,7 +132,7 @@ internal sealed class DebugCheatCodeSystem
         DrawTextCentered(
             spriteBatch,
             font,
-            "GAMEPAD: D-PAD / A / B   TOUCH: TAP",
+            "GAMEPAD: D-PAD / A / B   TOUCH: LONG PRESS CONTINUE",
             new Vector2(VirtualWidth / 2f, 159f),
             new Color(156, 170, 169),
             0.35f);
@@ -177,9 +144,9 @@ internal sealed class DebugCheatCodeSystem
         DrawRect(spriteBatch, whiteTexture, hud, new Color(8, 14, 20, 240));
         DrawRect(spriteBatch, whiteTexture, hud, new Color(130, 190, 177), false, 1);
 
-        var mode = _isMobileSequence ? "TOUCH" : "GAMEPAD";
-        var expected = GetExpectedInputLabel();
-        var progress = $"DEBUG INPUT [{mode}]  {_sequenceIndex}/{DesktopSequence.Length}  LAST: {_lastInput}  NEXT: {expected}";
+        var progress = _isMobile
+            ? "DEBUG INPUT [TOUCH]  LONG PRESS CONTINUE"
+            : $"DEBUG INPUT [GAMEPAD]  {_sequenceIndex}/{DesktopSequence.Length}  LAST: {_lastInput}  NEXT: {GetExpectedInputLabel()}";
         DrawText(
             spriteBatch,
             font,
@@ -214,19 +181,6 @@ internal sealed class DebugCheatCodeSystem
             Open();
     }
 
-    private void TrackMobileButton(MobileSequenceButton button)
-    {
-        AddInputToHud(button.ToString().ToUpperInvariant());
-
-        if (button == MobileSequence[_sequenceIndex])
-            _sequenceIndex++;
-        else
-            _sequenceIndex = button == MobileSequence[0] ? 1 : 0;
-
-        if (_sequenceIndex >= MobileSequence.Length)
-            Open();
-    }
-
     private void AddInputToHud(string input)
     {
         _lastInput = input;
@@ -237,13 +191,6 @@ internal sealed class DebugCheatCodeSystem
 
     private string GetExpectedInputLabel()
     {
-        if (_isMobileSequence)
-        {
-            return _sequenceIndex < MobileSequence.Length
-                ? MobileSequence[_sequenceIndex].ToString().ToUpperInvariant()
-                : "-";
-        }
-
         return _sequenceIndex < DesktopSequence.Length
             ? GetDesktopButtonLabel(DesktopSequence[_sequenceIndex])
             : "-";
@@ -260,7 +207,7 @@ internal sealed class DebugCheatCodeSystem
         _ => button.ToString().ToUpperInvariant()
     };
 
-    private void Open()
+    public void Open()
     {
         _sequenceIndex = 0;
         _isOpen = true;

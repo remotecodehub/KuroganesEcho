@@ -138,6 +138,10 @@ public class KuroganesEchoGame : Game
     private string _currentLevelId = "Act_01_A";
 #if DEBUG
     private readonly DebugCheatCodeSystem _debugCheatCodes = new();
+    private const float MobileCheatLongPressDuration = 0.85f;
+    private int _mobileCheatLongPressTouchId = -1;
+    private float _mobileCheatLongPressElapsed;
+    private bool _mobileCheatLongPressTriggered;
 #endif
 
     public static bool IsMobile => OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
@@ -221,6 +225,7 @@ public class KuroganesEchoGame : Game
         var touchState = TouchPanel.GetState();
 
 #if DEBUG
+        var mobileDebugLongPressHandled = UpdateMobileDebugLongPress(gameTime, touchState);
         if (_screen == GameScreen.Paused)
         {
             var debugMenuHandled = _debugCheatCodes.Update(
@@ -229,10 +234,9 @@ public class KuroganesEchoGame : Game
                 touchState,
                 IsMobile,
                 ToVirtualPoint,
-                ResolveDebugMobileButton,
                 GetDebugCheckpointOptions());
             ApplyDebugCheatEffects();
-            if (debugMenuHandled)
+            if (debugMenuHandled || mobileDebugLongPressHandled)
             {
                 _previousKeyboard = keyboard;
                 _previousGamePad = gamePad;
@@ -248,7 +252,9 @@ public class KuroganesEchoGame : Game
 #endif
 
         if (_screen == GameScreen.Act01 &&
-            (IsNewButtonPress(gamePad, Buttons.Start) || backPressed))
+            (IsNewButtonPress(gamePad, Buttons.Start) ||
+             backPressed ||
+             (IsMobile && IsNewTouchPress(touchState, PauseTouchButton()))))
         {
             EnterPauseMenu();
         }
@@ -398,6 +404,11 @@ public class KuroganesEchoGame : Game
 
     private void UpdatePaused(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
+#if DEBUG
+        if (UpdateMobileDebugLongPressState(touches))
+            return;
+#endif
+
         if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
             _pauseSelection = (_pauseSelection + PauseOptionCount - 1) % PauseOptionCount;
         if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
@@ -1100,34 +1111,80 @@ public class KuroganesEchoGame : Game
             _livesRemaining = MaximumLives;
     }
 
-    private DebugCheatCodeSystem.MobileSequenceButton? ResolveDebugMobileButton(Point point)
+    private bool UpdateMobileDebugLongPress(GameTime gameTime, TouchCollection touches)
     {
-        for (var index = 0; index < 6; index++)
+#if DEBUG
+        if (!IsMobile || _screen != GameScreen.Paused)
         {
-            if (!ActionButtonBounds(index).Contains(point))
+            ResetMobileDebugLongPress();
+            return false;
+        }
+
+        TouchLocation? targetTouch = null;
+        foreach (var touch in touches)
+        {
+            if (touch.State is not (TouchLocationState.Pressed or TouchLocationState.Moved))
                 continue;
 
-            return index switch
+            if (PauseResumeButton().Contains(ToVirtualPoint(touch.Position)))
             {
-                0 => DebugCheatCodeSystem.MobileSequenceButton.A,
-                1 => DebugCheatCodeSystem.MobileSequenceButton.B,
-                2 => DebugCheatCodeSystem.MobileSequenceButton.C,
-                3 => DebugCheatCodeSystem.MobileSequenceButton.X,
-                4 => DebugCheatCodeSystem.MobileSequenceButton.Y,
-                _ => DebugCheatCodeSystem.MobileSequenceButton.Z
-            };
+                targetTouch = touch;
+                break;
+            }
         }
 
-        var analogCenter = AnalogCenter();
-        if (Vector2.Distance(point.ToVector2(), analogCenter) <= AnalogRadius + 12f)
+        if (!targetTouch.HasValue)
         {
-            if (point.Y <= analogCenter.Y - 8f)
-                return DebugCheatCodeSystem.MobileSequenceButton.Up;
-            if (point.Y >= analogCenter.Y + 8f)
-                return DebugCheatCodeSystem.MobileSequenceButton.Down;
+            var wasTracking = _mobileCheatLongPressTouchId >= 0;
+            var wasTriggered = _mobileCheatLongPressTriggered;
+            ResetMobileDebugLongPress();
+            return wasTracking && wasTriggered;
         }
 
-        return null;
+        if (_mobileCheatLongPressTouchId != targetTouch.Value.Id)
+        {
+            _mobileCheatLongPressTouchId = targetTouch.Value.Id;
+            _mobileCheatLongPressElapsed = 0f;
+            _mobileCheatLongPressTriggered = false;
+        }
+
+        _mobileCheatLongPressElapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        if (!_mobileCheatLongPressTriggered &&
+            _mobileCheatLongPressElapsed >= MobileCheatLongPressDuration)
+        {
+            _mobileCheatLongPressTriggered = true;
+            _debugCheatCodes.Open();
+        }
+
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    private bool UpdateMobileDebugLongPressState(TouchCollection touches)
+    {
+#if DEBUG
+        if (!IsMobile || _mobileCheatLongPressTouchId < 0)
+            return false;
+
+        foreach (var touch in touches)
+        {
+            if (touch.Id == _mobileCheatLongPressTouchId &&
+                touch.State is TouchLocationState.Pressed or TouchLocationState.Moved)
+                return true;
+        }
+#endif
+        return false;
+    }
+
+    private void ResetMobileDebugLongPress()
+    {
+#if DEBUG
+        _mobileCheatLongPressTouchId = -1;
+        _mobileCheatLongPressElapsed = 0f;
+        _mobileCheatLongPressTriggered = false;
+#endif
     }
 #endif
 
@@ -2181,6 +2238,7 @@ public class KuroganesEchoGame : Game
         {
             DrawAnalog();
             DrawActionButtons();
+            DrawTouchPauseButton();
         }
         EndUi();
         if (_levelBriefingRemaining > 0f)
@@ -2225,7 +2283,13 @@ public class KuroganesEchoGame : Game
         DrawTextCentered(LocalizedText.Get("Objective"), new Vector2(VirtualWidth / 2f, 66f), new Color(130, 190, 177), 0.5f);
         DrawTextCentered(LocalizedText.Get(_level.Definition.BriefingObjectiveKey), new Vector2(VirtualWidth / 2f, 81f), Color.White, 0.54f);
         DrawTextCentered(LocalizedText.Get("Tutorial"), new Vector2(VirtualWidth / 2f, 104f), new Color(130, 190, 177), 0.5f);
-        DrawTextCentered(LocalizedText.Get(_level.Definition.BriefingTutorialKey), new Vector2(VirtualWidth / 2f, 119f), Color.White, 0.46f);
+        DrawWrappedTextCentered(
+            LocalizedText.Get(_level.Definition.BriefingTutorialKey),
+            new Vector2(VirtualWidth / 2f, 119f),
+            264f,
+            Color.White,
+            0.46f,
+            10f);
         DrawTextCentered(LocalizedText.Get("LevelBriefingPrompt"), new Vector2(VirtualWidth / 2f, 143f), new Color(214, 191, 135), 0.48f);
         EndUi();
     }
@@ -2325,6 +2389,14 @@ public class KuroganesEchoGame : Game
         }
     }
 
+    private void DrawTouchPauseButton()
+    {
+        var bounds = PauseTouchButton();
+        DrawRect(bounds, new Color(42, 53, 63, 230));
+        DrawRect(bounds, new Color(214, 191, 135), false, 1);
+        DrawTextCentered("II", bounds.Center.ToVector2(), Color.White, 0.52f);
+    }
+
     private void BeginUi()
     {
         // UI fonts are rendered at the virtual resolution and then scaled to the
@@ -2357,6 +2429,47 @@ public class KuroganesEchoGame : Game
     {
         var size = font.MeasureString(text);
         _spriteBatch.DrawString(font, text, center, color, 0f, size / 2f, scale, SpriteEffects.None, 0f);
+    }
+
+    private void DrawWrappedTextCentered(string text, Vector2 center, float maxWidth, Color color, float scale, float lineHeight)
+    {
+        var lines = WrapText(text, _font, maxWidth, scale);
+        if (lines.Count == 0)
+            return;
+
+        var blockHeight = lines.Count * lineHeight;
+        for (var index = 0; index < lines.Count; index++)
+        {
+            var lineCenter = new Vector2(center.X, center.Y - blockHeight / 2f + lineHeight * (index + 0.5f));
+            DrawTextCentered(lines[index], lineCenter, color, scale);
+        }
+    }
+
+    private static List<string> WrapText(string text, SpriteFont font, float maxWidth, float scale)
+    {
+        var lines = new List<string>();
+        if (string.IsNullOrWhiteSpace(text))
+            return lines;
+
+        var current = string.Empty;
+        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var candidate = string.IsNullOrEmpty(current) ? word : $"{current} {word}";
+            if (!string.IsNullOrEmpty(current) && font.MeasureString(candidate).X * scale > maxWidth)
+            {
+                lines.Add(current);
+                current = word;
+            }
+            else
+            {
+                current = candidate;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(current))
+            lines.Add(current);
+
+        return lines;
     }
 
     private void DrawRect(Rectangle bounds, Color color, bool filled = true, int thickness = 1)
@@ -2406,6 +2519,8 @@ public class KuroganesEchoGame : Game
     }
 
     private Rectangle MenuButton(int index) => new(80, 52 + index * 25, 160, 21);
+
+    private Rectangle PauseTouchButton() => new(278, 4, 34, 16);
 
     private Rectangle PauseResumeButton() => new(64, 29, 192, 16);
 
@@ -2508,6 +2623,17 @@ public class KuroganesEchoGame : Game
             return ToVirtualPoint(mouse.Position.ToVector2());
 
         return null;
+    }
+
+    private bool IsNewTouchPress(TouchCollection touches, Rectangle bounds)
+    {
+        foreach (var touch in touches)
+        {
+            if (touch.State == TouchLocationState.Pressed && bounds.Contains(ToVirtualPoint(touch.Position)))
+                return true;
+        }
+
+        return false;
     }
 
     private Point ToVirtualPoint(Vector2 screenPosition)

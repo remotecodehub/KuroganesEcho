@@ -1274,3 +1274,81 @@
 /processor:TextureProcessor
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Walk.png
+
+#begin Audio/BGM/BGM_Along_The_Mountain_Path.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/BGM/BGM_Along_The_Mountain_Path.wav
+
+#begin Audio/BGM/BGM_Japan_Epic_Music.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/BGM/BGM_Japan_Epic_Music.wav
+
+#begin Audio/BGM/BGM_Japanese_Dark_Temple_Samurai.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/BGM/BGM_Japanese_Dark_Temple_Samurai.wav
+
+#begin Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow.wav
+
+#begin Audio/BGM/BGM_Samurai_and_horse.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/BGM/BGM_Samurai_and_horse.wav
+
+#begin Audio/SFX/SFX_Collectable_UI_Sound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Collectable_UI_Sound.wav
+
+#begin Audio/SFX/SFX_Flame_Spell_Impact.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Flame_Spell_Impact.wav
+
+#begin Audio/SFX/SFX_Game_Explosion.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Game_Explosion.wav
+
+#begin Audio/SFX/SFX_Interface_Click.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Interface_Click.wav
+
+#begin Audio/SFX/SFX_Magic_SFX_for_Games.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Magic_SFX_for_Games.wav
+
+#begin Audio/SFX/SFX_Sword_Slash_With_Metallic_Impact.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Sword_Slash_With_Metallic_Impact.wav
+
+#begin Audio/SFX/SFX_Sword_Sound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Sword_Sound.wav
+
+#begin Audio/SFX/SFX_Whoosh_Slash_Pitches_Vol2.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX_Whoosh_Slash_Pitches_Vol2.wav

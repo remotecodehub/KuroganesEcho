@@ -160,6 +160,7 @@ public class KuroganesEchoGame : Game
         _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01A);
         _level.ConfigureDifficulty(_selectedDifficulty);
         _audio = AudioService.Load(Content);
+        _audio.PlayIntroMusic();
         _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
         LoadEnemies();
 
@@ -169,6 +170,7 @@ public class KuroganesEchoGame : Game
 
     protected override void Update(GameTime gameTime)
     {
+        _audio?.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
         var keyboard = Keyboard.GetState();
         var gamePad = GamePad.GetState(PlayerIndex.One, GamePadDeadZone.IndependentAxes);
         _gamepadConnected = gamePad.IsConnected;
@@ -188,9 +190,15 @@ public class KuroganesEchoGame : Game
             else if (_screen == GameScreen.Controls)
                 _screen = GameScreen.Options;
             else if (_screen is GameScreen.GameOver or GameScreen.Victory)
+            {
                 _screen = GameScreen.MainMenu;
+                _audio.PlayMenuMusic();
+            }
             else
+            {
                 _screen = GameScreen.MainMenu;
+                _audio.PlayMenuMusic();
+            }
         }
         else if (_screen == GameScreen.MainMenu)
         {
@@ -299,11 +307,13 @@ public class KuroganesEchoGame : Game
         {
             _introScroll = 0f;
             _screen = GameScreen.MainMenu;
+            _audio.PlayMenuMusic();
         }
     }
 
     private void ActivateMainMenuSelection()
     {
+        _audio.PlayCue(AudioCue.UiClick, 0.65f);
         switch (_menuSelection)
         {
             case 0:
@@ -446,6 +456,7 @@ public class KuroganesEchoGame : Game
 
     private void ActivateOptionsSelection()
     {
+        _audio.PlayCue(AudioCue.UiClick, 0.65f);
         if (_optionsSelection < _languageCodes.Length)
         {
             SelectLanguage(_optionsSelection);
@@ -717,6 +728,7 @@ public class KuroganesEchoGame : Game
     {
         _screen = GameScreen.Act01;
         _currentLevelId = levelId;
+        _audio.PlayActMusic(_currentLevelId);
         _playerPosition = _level.PlayerSpawn;
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
@@ -933,6 +945,7 @@ public class KuroganesEchoGame : Game
             _saveProgress.UnlockedLevelId = "Act_01_B";
             SaveCurrentProgress();
             _screen = GameScreen.Victory;
+            _audio.PlayVictoryMusic();
             return;
         }
         UpdateCamera();
@@ -968,23 +981,33 @@ public class KuroganesEchoGame : Game
         {
             foreach (var enemy in _enemies)
             {
-                if (enemy.IsAlive && PlayerAttackHitbox.Intersects(enemy.Hitbox) &&
+                if (!_playerAttackHitApplied && enemy.IsAlive && PlayerAttackHitbox.Intersects(enemy.Hitbox) &&
                     enemy.TakeDamage(CombatBalance.PlayerAttackDamage, _playerPosition.X))
                 {
                     _playerAttackHitApplied = true;
+                    _audio.PlayCue(AudioCue.SlashImpact, 0.9f);
                     _effects.Spawn(enemy.Position - new Vector2(0f, 18f), CombatEffectKind.Impact, new Vector2(_playerFacing, -0.25f));
                     if (!enemy.IsAlive)
+                    {
+                        _audio.PlayCue(AudioCue.Explosion, 0.55f);
                         _effects.Spawn(enemy.Position - new Vector2(0f, 18f), CombatEffectKind.Death, Vector2.UnitY, 1.1f);
+                    }
+
+                    break;
                 }
             }
 
-            if (_boss is not null && _boss.IsAlive && PlayerAttackHitbox.Intersects(_boss.Hitbox) &&
+            if (!_playerAttackHitApplied && _boss is not null && _boss.IsAlive && PlayerAttackHitbox.Intersects(_boss.Hitbox) &&
                 _boss.TakeDamage(CombatBalance.PlayerAttackDamage, PlayerAttackHitbox.Center.Y))
             {
                 _playerAttackHitApplied = true;
+                _audio.PlayCue(AudioCue.SlashImpact, 1f);
                 _effects.Spawn(_boss.Position - new Vector2(0f, 26f), CombatEffectKind.Impact, new Vector2(_playerFacing, -0.25f), 1.3f);
                 if (!_boss.IsAlive)
+                {
+                    _audio.PlayCue(AudioCue.Explosion, 0.8f);
                     _effects.Spawn(_boss.Position - new Vector2(0f, 26f), CombatEffectKind.Death, Vector2.UnitY, 1.6f);
+                }
             }
         }
 
@@ -993,15 +1016,21 @@ public class KuroganesEchoGame : Game
         {
             if (enemy.TryConsumeAttackHit(playerHitbox))
             {
-                TakePlayerDamage(CombatBalance.EnemyAttackDamage, enemy.Position.X);
-                _effects.Spawn(_playerPosition - new Vector2(0f, 18f), CombatEffectKind.Impact, new Vector2(enemy.Position.X - _playerPosition.X, -0.1f));
+                if (TakePlayerDamage(CombatBalance.EnemyAttackDamage, enemy.Position.X))
+                {
+                    _audio.PlayCue(AudioCue.SlashImpact, 0.75f);
+                    _effects.Spawn(_playerPosition - new Vector2(0f, 18f), CombatEffectKind.Impact, new Vector2(enemy.Position.X - _playerPosition.X, -0.1f));
+                }
             }
         }
 
         if (_boss is not null && _boss.TryConsumeAttackHit(playerHitbox))
         {
-            TakePlayerDamage(CombatBalance.EnemyAttackDamage * 2, _boss.Position.X);
-            _effects.Spawn(_playerPosition - new Vector2(0f, 20f), CombatEffectKind.Impact, new Vector2(_boss.Position.X - _playerPosition.X, -0.1f), 1.3f);
+            if (TakePlayerDamage(CombatBalance.EnemyAttackDamage * 2, _boss.Position.X))
+            {
+                _audio.PlayCue(AudioCue.FlameImpact, 0.8f);
+                _effects.Spawn(_playerPosition - new Vector2(0f, 20f), CombatEffectKind.Impact, new Vector2(_boss.Position.X - _playerPosition.X, -0.1f), 1.3f);
+            }
         }
     }
 
@@ -1032,10 +1061,10 @@ public class KuroganesEchoGame : Game
         }
     }
 
-    private void TakePlayerDamage(int damage, float sourceX)
+    private bool TakePlayerDamage(int damage, float sourceX)
     {
         if (_playerInvulnerability > 0f || _playerHealth <= 0)
-            return;
+            return false;
 
         _playerHealth = Math.Max(0, _playerHealth - damage);
         _playerInvulnerability = 0.75f;
@@ -1045,6 +1074,8 @@ public class KuroganesEchoGame : Game
 
         if (_playerHealth == 0)
             _player.SetDead();
+
+        return true;
     }
 
     private void ResetPlayerAfterDefeat()
@@ -1053,6 +1084,7 @@ public class KuroganesEchoGame : Game
         {
             SaveCurrentProgress();
             _screen = GameScreen.GameOver;
+            _audio.PlayGameOverMusic();
             return;
         }
 
@@ -1082,10 +1114,21 @@ public class KuroganesEchoGame : Game
             _stamina = Math.Max(0f, _stamina - RunStaminaCost);
             _effects.Spawn(_playerPosition - new Vector2(0f, 2f), CombatEffectKind.Dust, new Vector2(-_playerFacing, 0f), 0.75f);
         }
-        else if (action is PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2)
+        else if (action == PlayerAnimationState.Attack1)
+        {
+            _audio.PlayCue(AudioCue.Sword, 0.8f);
             _effects.Spawn(_playerPosition - new Vector2(-_playerFacing * 10f, 18f), CombatEffectKind.Slash, new Vector2(_playerFacing, -0.2f));
+        }
+        else if (action == PlayerAnimationState.Attack2)
+        {
+            _audio.PlayCue(AudioCue.Whoosh, 0.65f);
+            _effects.Spawn(_playerPosition - new Vector2(-_playerFacing * 10f, 18f), CombatEffectKind.Slash, new Vector2(_playerFacing, -0.2f));
+        }
         else if (action == PlayerAnimationState.Cast)
+        {
+            _audio.PlayCue(AudioCue.Magic, 0.75f);
             _effects.Spawn(_playerPosition - new Vector2(-_playerFacing * 10f, 20f), CombatEffectKind.Magic, new Vector2(_playerFacing, 0f), 1.1f);
+        }
     }
 
     private void TryJump()

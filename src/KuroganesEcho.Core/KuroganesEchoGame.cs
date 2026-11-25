@@ -681,7 +681,7 @@ public class KuroganesEchoGame : Game
             var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
                 ? configuredType
                 : string.Empty;
-            if (enemyType is not ("Black_Werewolf" or "Kitsune" or "Skeleton_Warrior"))
+            if (!EnemyCharacter.IsSupported(enemyType) || EnemyCharacter.IsBossType(enemyType))
                 continue;
 
             _enemies.Add(new EnemyInstance(EnemyCharacter.Load(Content, enemyType), spawn));

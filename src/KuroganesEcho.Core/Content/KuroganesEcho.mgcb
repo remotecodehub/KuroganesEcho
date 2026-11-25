@@ -422,3 +422,855 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Audio/Steps/Roof_03.wav
++
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Attack.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Attack.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_1/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Attack.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Attack.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_2/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Attack.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Attack.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-170637-free-minotaur-sprite-sheet-pixel-art-pack/Minotaur_3/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Black_Werewolf/Run+Attack.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Black_Werewolf/Run+Attack.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Jump.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Run.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Run+Attack.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Run+Attack.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Red_Werewolf/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Jump.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Run.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Run+Attack.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Run+Attack.png
+
+#begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/White_Werewolf/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Idle_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Idle_2.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Run.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Special.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Special.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_1/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Idle_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Idle_2.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Run.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Special.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Special.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_2/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Idle_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Idle_2.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Run.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Special.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Special.png
+
+#begin Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-280097-free-gorgon-pixel-art-character-sprite-sheets/Gorgon_3/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Charge.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Charge.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Fireball.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Fireball.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Flame_jet.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Flame_jet.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Jump.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Run.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Charge.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Charge.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Jump.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Light_ball.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Light_ball.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Light_charge.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Light_charge.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Run.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Charge_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Charge_1.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Charge_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Charge_2.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Jump.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Magic_arrow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Magic_arrow.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Magic_sphere.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Magic_sphere.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Run.png
+
+#begin Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Idle_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Idle_2.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Jump.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Run.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Karasu_tengu/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Kitsune/Idle_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Kitsune/Idle_2.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Idle_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Idle_2.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Jump.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Jump.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Run.png
+
+#begin Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Arrow.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Arrow.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Attack_3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Attack_3.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Evasion.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Evasion.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Shot_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Shot_1.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Shot_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Shot_2.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer/Walk.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Attack_1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Attack_1.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Attack_2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Attack_2.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Dead.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Dead.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Fall.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Fall.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Hurt.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Idle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Idle.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Protect.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Protect.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Run.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Run.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Run+attack.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Run+attack.png
+
+#begin Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Walk.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman/Walk.png

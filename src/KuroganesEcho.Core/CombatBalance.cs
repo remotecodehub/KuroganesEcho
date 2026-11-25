@@ -7,6 +7,7 @@ internal static class CombatBalance
 {
     public const int PlayerMaxHealth = 100;
     public const int EnemyMaxHealth = 80;
+    public const int BossMaxHealth = 400;
     public const int PlayerAttackDamage = 8;
     public const int EnemyAttackDamage = 10;
 }

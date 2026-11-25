@@ -27,3 +27,12 @@ Cada estado cujo PNG é uma spritesheet horizontal possui um tile animado no pri
 Os frames recortados ficam em `Chars/GeneratedFrames/`. O script `.codex/generate_tiled_char_assets.ps1` pode regenerá-los caso os PNGs originais mudem.
 
 `Spine`, `Kunai` e `Dart` foram mantidos como assets especiais sem animação, pois não são spritesheets de estados de personagem.
+
+## Inimigos e bosses
+
+Os spritesheets em `Enemies/` possuem tilesets animados correspondentes em `Tilesets/Enemies/`.
+O script `.codex/generate_tiled_enemy_assets.ps1` recorta os frames e recria esses `.tsx`.
+
+`Black_Werewolf`, `Kitsune` e `Skeleton_Warrior` continuam sendo inimigos regulares.
+`Minotaur`, `Gorgon` e `Wizard` são representados por `BossInstance`, com variantes selecionáveis
+por `BossVariant`; nenhum boss é instanciado em `Maps/Act_01.tmx`.

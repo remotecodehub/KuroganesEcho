@@ -3,6 +3,7 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/src/" />
   <Folder Name="/src/Platforms/">
     <Project Path="src/KuroganesEcho.Android/KuroganesEcho.Android.csproj">
       <BuildType Solution="*|x64" Project="?" />
@@ -26,5 +27,8 @@
       <Platform Solution="*|x64" Project="?" />
       <Build Solution="*|x64" Project="false" />
     </Project>
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Audio16BitConverter/Audio16BitConverter.csproj" />
   </Folder>
 </Solution>

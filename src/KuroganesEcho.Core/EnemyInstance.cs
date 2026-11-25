@@ -11,7 +11,7 @@ internal sealed class EnemyInstance
 {
     private const float PatrolHalfWidth = 72f;
     private const float AttackDistance = 78f;
-    private const float EnemyScale = 0.5f;
+    private const float EnemyScale = 0.75f;
     private const float Gravity = 480f;
     private const float EnemyHalfWidth = 10f;
     private const float EnemyHeight = 32f;

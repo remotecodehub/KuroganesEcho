@@ -19,7 +19,7 @@ internal enum BossKind
 /// </summary>
 internal sealed class BossInstance
 {
-    private const float BossScale = 0.9f;
+    private const float BossScale = 0.85f;
     private const float AttackDistance = 112f;
     private const float AttackDuration = 0.8f;
     private const float AttackCooldown = 1.6f;
@@ -30,6 +30,7 @@ internal sealed class BossInstance
     private float _attackCooldown;
     private bool _attackHitApplied;
     private int _facing = 1;
+    private GameDifficulty _difficulty = GameDifficulty.Normal;
 
     public BossInstance(
         ContentManager content,
@@ -53,11 +54,17 @@ internal sealed class BossInstance
     public LevelObjectData Spawn { get; }
     public EnemyCharacter Character { get; }
     public Vector2 Position { get; private set; }
-    public int MaxHealth => CombatBalance.BossMaxHealth;
+    public int MaxHealth => CombatBalance.GetBossMaxHealth(_difficulty);
     public int Health { get; private set; }
     public bool IsAlive => Health > 0;
     public bool IsEnraged => IsAlive && Health <= MaxHealth / 2;
     public bool IsAttacking => IsAlive && _attackRemaining > 0f;
+
+    public void ConfigureDifficulty(GameDifficulty difficulty)
+    {
+        _difficulty = difficulty;
+        Health = Math.Min(Health, MaxHealth);
+    }
     public Rectangle Hitbox => new(
         (int)(Position.X - BossHalfWidth),
         (int)(Position.Y - BossHeight),
@@ -141,12 +148,14 @@ internal sealed class BossInstance
         return true;
     }
 
-    public bool TakeDamage(int damage)
+    public bool TakeDamage(int damage, float hitPointY)
     {
         if (!IsAlive)
             return false;
 
-        Health = Math.Max(0, Health - damage);
+        var hitHeight = Math.Clamp((Position.Y - hitPointY) / BossHeight, 0f, 1f);
+        var heightMultiplier = 0.75f + hitHeight * 0.5f;
+        Health = Math.Max(0, Health - Math.Max(1, (int)Math.Round(damage * heightMultiplier)));
         Character.SetAnimation(IsAlive ? EnemyAnimationState.Hurt : EnemyAnimationState.Dead);
         return true;
     }

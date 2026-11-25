@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$mapPath = Join-Path $PSScriptRoot '..\src\KuroganesEcho.Core\Content\Tiled\Maps\Act_01.tmx'
+$mapPath = Join-Path $PSScriptRoot '..\src\KuroganesEcho.Core\Content\Tiled\Maps\Act_01_A.tmx'
 $width = 320
 $height = 24
 $tileWidth = 16
@@ -156,13 +156,13 @@ $xml = [Collections.Generic.List[string]]::new()
 $xml.Add('<?xml version="1.0" encoding="UTF-8"?>')
 $xml.Add('<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="320" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="28">')
 $xml.Add('  <properties>')
-$xml.Add('    <property name="Act" value="Act_01"/>')
+$xml.Add('    <property name="Act" value="Act_01_A"/>')
 $xml.Add('    <property name="Title" value="A Trilha das Lanternas Apagadas"/>')
 $xml.Add('    <property name="VisualStyle" value="16-bit pixel art, desaturated village"/>')
 $xml.Add('    <property name="TileSize" type="int" value="16"/>')
 $xml.Add('    <property name="CharacterRenderScale" type="float" value="0.5"/>')
 $xml.Add('    <property name="CheckpointCount" type="int" value="3"/>')
-$xml.Add('    <property name="ActEnding" value="The player loses to the Guardian"/>')
+$xml.Add('    <property name="ActEnding" value="The trail continues into Act_01_B"/>')
 $xml.Add('  </properties>')
 $xml.Add('  <tileset firstgid="1" source="../Tilesets/Act_01_Environment.tsx"/>')
 foreach ($line in (Layer-Xml 1 'Background' $background)) { $xml.Add([string]$line) }
@@ -191,12 +191,19 @@ $xml.Add('    <object id="16" name="Checkpoint_03" type="Checkpoint" x="3840" y=
 $xml.Add('    <object id="17" name="HealthPickup_01" type="Pickup" x="1056" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>')
 $xml.Add('    <object id="18" name="HealthPickup_02" type="Pickup" x="2880" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>')
 $xml.Add('    <object id="19" name="HealthPickup_03" type="Pickup" x="4160" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>')
-$xml.Add('    <object id="20" name="EnemySpawn_01" type="EnemySpawn" x="1728" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Peasant"/></properties></object>')
-$xml.Add('    <object id="21" name="EnemySpawn_02" type="EnemySpawn" x="2320" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Monk"/></properties></object>')
-$xml.Add('    <object id="22" name="EnemySpawn_03" type="EnemySpawn" x="3328" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Peasant"/></properties></object>')
-$xml.Add('    <object id="23" name="EnemySpawn_04" type="EnemySpawn" x="4448" y="320" width="16" height="32"><properties><property name="EnemyType" value="Ninja_Monk"/></properties></object>')
-$xml.Add('    <object id="24" name="GuardianEncounter" type="BossEncounter" x="4800" y="256" width="256" height="96"><properties><property name="BossType" value="Guardian"/><property name="Outcome" value="LoseToGuardian"/><property name="Trigger" value="OnEnter"/></properties></object>')
-$xml.Add('    <object id="25" name="ActEnd" type="StoryBeat" x="4992" y="304" width="32" height="48"><properties><property name="Beat" value="The Guardian defeats the player"/><property name="NextAct" value="Locked"/></properties></object>')
+$xml.Add('    <object id="20" name="EnemySpawn_01" type="EnemySpawn" x="1728" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')
+$xml.Add('    <object id="21" name="EnemySpawn_02" type="EnemySpawn" x="2320" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>')
+$xml.Add('    <object id="22" name="EnemySpawn_03" type="EnemySpawn" x="3328" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')
+$xml.Add('    <object id="23" name="EnemySpawn_04" type="EnemySpawn" x="4448" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>')
+$xml.Add('    <object id="26" name="EnemySpawn_05" type="EnemySpawn" x="1808" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')
+$xml.Add('    <object id="27" name="EnemySpawn_06" type="EnemySpawn" x="1888" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>')
+$xml.Add('    <object id="36" name="EnemySpawn_07" type="EnemySpawn" x="2400" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')
+$xml.Add('    <object id="37" name="EnemySpawn_08" type="EnemySpawn" x="2480" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>')
+$xml.Add('    <object id="38" name="EnemySpawn_09" type="EnemySpawn" x="3408" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')
+$xml.Add('    <object id="39" name="EnemySpawn_10" type="EnemySpawn" x="3488" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>')
+$xml.Add('    <object id="40" name="EnemySpawn_11" type="EnemySpawn" x="4528" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')
+$xml.Add('    <object id="41" name="EnemySpawn_12" type="EnemySpawn" x="4608" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>')
+$xml.Add('    <object id="24" name="Act01BExit" type="LevelExit" x="4992" y="304" width="32" height="48"><properties><property name="NextLevelId" value="Act_01_B"/><property name="Trigger" value="OnEnter"/></properties></object>')
 $xml.Add('  </objectgroup>')
 $xml.Add('</map>')
 

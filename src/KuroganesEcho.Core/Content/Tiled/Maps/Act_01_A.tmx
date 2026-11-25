@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="320" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="42">
   <properties>
-    <property name="Act" value="Act_01"/>
+    <property name="Act" value="Act_01_A"/>
     <property name="Title" value="A Trilha das Lanternas Apagadas"/>
     <property name="VisualStyle" value="16-bit pixel art, desaturated village"/>
     <property name="TileSize" type="int" value="16"/>
     <property name="CharacterRenderScale" type="float" value="0.5"/>
     <property name="CheckpointCount" type="int" value="3"/>
-    <property name="ActEnding" value="The player loses to the Guardian"/>
+    <property name="ActEnding" value="The trail continues into Act_01_B"/>
   </properties>
   <tileset firstgid="1" source="../Tilesets/Act_01_Feudal.tsx"/>
   <layer id="1" name="Background" x="0" y="0" width="320" height="24">
@@ -82,7 +82,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     <object id="39" name="EnemySpawn_10" type="EnemySpawn" x="3488" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>
     <object id="40" name="EnemySpawn_11" type="EnemySpawn" x="4528" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>
     <object id="41" name="EnemySpawn_12" type="EnemySpawn" x="4608" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>
-    <object id="24" name="GuardianEncounter" type="BossEncounter" x="4800" y="256" width="256" height="96"><properties><property name="BossType" value="Guardian"/><property name="Outcome" value="LoseToGuardian"/><property name="Trigger" value="OnEnter"/></properties></object>
-    <object id="25" name="ActEnd" type="StoryBeat" x="4992" y="304" width="32" height="48"><properties><property name="Beat" value="The Guardian defeats the player"/><property name="NextAct" value="Locked"/></properties></object>
+<object id="24" name="Act01BExit" type="LevelExit" x="4992" y="304" width="32" height="48"><properties><property name="NextLevelId" value="Act_01_B"/><property name="Trigger" value="OnEnter"/></properties></object>
   </objectgroup>
 </map>

@@ -28,14 +28,32 @@ internal sealed class LevelDefinition
     public string CollisionObjectLayerName { get; init; } = "Collision";
     public string GameplayObjectLayerName { get; init; } = "Gameplay";
     public Vector2 PlayerSpawn { get; init; }
+    public string NextLevelId { get; init; }
 
-    public static LevelDefinition Act01 => new()
+    public static LevelDefinition Act01A => new()
     {
-        Id = "Act_01",
-        MapAssetPath = "Content/Tiled/Maps/Act_01.tmx",
+        Id = "Act_01_A",
+        MapAssetPath = "Content/Tiled/Maps/Act_01_A.tmx",
         CollisionObjectLayerName = "Collision",
         GameplayObjectLayerName = "Gameplay",
-        PlayerSpawn = new Vector2(64f, 352f)
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = "Act_01_B"
+    };
+
+    public static LevelDefinition Act01B => new()
+    {
+        Id = "Act_01_B",
+        MapAssetPath = "Content/Tiled/Maps/Act_01_B.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = null
+    };
+
+    public static LevelDefinition ForId(string id) => id switch
+    {
+        "Act_01_B" => Act01B,
+        _ => Act01A
     };
 }
 
@@ -70,6 +88,8 @@ internal sealed class GameLevel
     public IReadOnlyList<Rectangle> CollisionPlatforms => _collisionPlatforms;
     public IReadOnlyList<LevelObjectData> GameplayObjects => _gameplayObjects;
     public IEnumerable<LevelObjectData> EnemySpawns => _gameplayObjects.Where(item => item.Type == "EnemySpawn");
+    public IEnumerable<LevelObjectData> BossSpawns => _gameplayObjects.Where(item => item.Type == "BossSpawn");
+    public IEnumerable<LevelObjectData> LevelExits => _gameplayObjects.Where(item => item.Type == "LevelExit");
 
     public static GameLevel Load(GraphicsDevice graphicsDevice, LevelDefinition definition)
     {

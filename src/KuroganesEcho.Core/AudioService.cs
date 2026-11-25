@@ -13,19 +13,45 @@ internal enum FootstepSurface
     Roof
 }
 
+internal enum AudioCue
+{
+    UiClick,
+    Collectable,
+    Sword,
+    SlashImpact,
+    Whoosh,
+    Magic,
+    FlameImpact,
+    Explosion
+}
+
 /// <summary>
 /// Serviço central de áudio do jogo. Mantém os efeitos carregados, reproduz SFX
 /// pontuais e controla uma instância de BGM em loop quando houver um asset de música.
 /// </summary>
 internal sealed class AudioService : IDisposable
 {
+    private sealed class ActiveSfx
+    {
+        public ActiveSfx(SoundEffectInstance instance, float remainingSeconds)
+        {
+            Instance = instance;
+            RemainingSeconds = remainingSeconds;
+        }
+
+        public SoundEffectInstance Instance { get; }
+        public float RemainingSeconds { get; set; }
+    }
+
     private const int FootstepVariantsPerSurface = 3;
     private const float WalkVolume = 0.40f;
     private const float RunVolume = 0.60f;
+    private const float FootstepMaxDuration = 0.35f;
 
     private readonly ContentManager _content;
     private readonly SoundEffect[][] _footstepSounds;
     private readonly Dictionary<string, SoundEffect> _soundEffects = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<ActiveSfx> _activeSfx = new();
     private readonly Random _random = new();
     private int _lastFootstepVariant = -1;
     private SoundEffectInstance _bgmInstance;
@@ -60,9 +86,25 @@ internal sealed class AudioService : IDisposable
     /// <summary>Reproduz um SFX carregado pelo caminho lógico do Content.</summary>
     public void PlaySfx(string assetPath, float volume = 1f, float pitch = 0f, float pan = 0f)
     {
-        var effectiveVolume = IsMuted ? 0f : Math.Clamp(volume, 0f, 1f) * SfxVolume;
-        if (effectiveVolume > 0f)
-            LoadSoundEffect(assetPath).Play(effectiveVolume, pitch, pan);
+        PlaySfxInstance(assetPath, volume, pitch, pan, null);
+    }
+
+    public void PlayCue(AudioCue cue, float volume = 1f, float pitch = 0f, float pan = 0f)
+    {
+        var assetPath = cue switch
+        {
+            AudioCue.UiClick => "Audio/SFX/SFX_Interface_Click",
+            AudioCue.Collectable => "Audio/SFX/SFX_Collectable_UI_Sound",
+            AudioCue.Sword => "Audio/SFX/SFX_Sword_Sound",
+            AudioCue.SlashImpact => "Audio/SFX/SFX_Sword_Slash_With_Metallic_Impact",
+            AudioCue.Whoosh => "Audio/SFX/SFX_Whoosh_Slash_Pitches_Vol2",
+            AudioCue.Magic => "Audio/SFX/SFX_Magic_SFX_for_Games",
+            AudioCue.FlameImpact => "Audio/SFX/SFX_Flame_Spell_Impact",
+            AudioCue.Explosion => "Audio/SFX/SFX_Game_Explosion",
+            _ => throw new ArgumentOutOfRangeException(nameof(cue), cue, "Unknown audio cue")
+        };
+
+        PlaySfxInstance(assetPath, volume, pitch, pan, CueMaxDuration(cue));
     }
 
     /// <summary>Reproduz uma variação de passo sem repetir a última variação global.</summary>
@@ -79,7 +121,26 @@ internal sealed class AudioService : IDisposable
         var pitch = (float)(_random.NextDouble() * 0.2 - 0.1);
         var volume = (running ? RunVolume : WalkVolume) * SfxVolume;
         if (!IsMuted && volume > 0f)
-            set[variant].Play(volume, pitch, 0f);
+            PlaySfxInstance(set[variant], volume, pitch, 0f, FootstepMaxDuration);
+    }
+
+    /// <summary>
+    /// Atualiza e encerra instâncias pontuais. Alguns assets fornecidos são
+    /// bancos de efeitos ou têm caudas muito maiores que o efeito visual.
+    /// </summary>
+    public void Update(float elapsedSeconds)
+    {
+        for (var index = _activeSfx.Count - 1; index >= 0; index--)
+        {
+            var active = _activeSfx[index];
+            active.RemainingSeconds -= Math.Max(0f, elapsedSeconds);
+            if (active.RemainingSeconds <= 0f || active.Instance.State != SoundState.Playing)
+            {
+                active.Instance.Stop();
+                active.Instance.Dispose();
+                _activeSfx.RemoveAt(index);
+            }
+        }
     }
 
     public void SetBgmVolume(float volume)
@@ -101,12 +162,29 @@ internal sealed class AudioService : IDisposable
     /// <summary>Inicia ou troca a música de fundo em loop usando o volume configurado.</summary>
     public void PlayBgm(string assetPath)
     {
+        StopAllSfx();
         StopBgm();
         _bgmInstance = LoadSoundEffect(assetPath).CreateInstance();
         _bgmInstance.IsLooped = true;
         ApplyBgmVolume();
         _bgmInstance.Play();
     }
+
+    public void PlayIntroMusic() => PlayBgm("Audio/BGM/BGM_Japan_Epic_Music");
+
+    public void PlayMenuMusic() => PlayBgm("Audio/BGM/BGM_Samurai_and_horse");
+
+    public void PlayActMusic(string levelId)
+    {
+        var assetPath = string.Equals(levelId, "Act_01_B", StringComparison.OrdinalIgnoreCase)
+            ? "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai"
+            : "Audio/BGM/BGM_Along_The_Mountain_Path";
+        PlayBgm(assetPath);
+    }
+
+    public void PlayGameOverMusic() => PlayBgm("Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow");
+
+    public void PlayVictoryMusic() => PlayBgm("Audio/BGM/BGM_Japan_Epic_Music");
 
     public void StopBgm()
     {
@@ -118,7 +196,67 @@ internal sealed class AudioService : IDisposable
         _bgmInstance = null;
     }
 
-    public void Dispose() => StopBgm();
+    public void Dispose()
+    {
+        StopAllSfx();
+        StopBgm();
+    }
+
+    public void StopAllSfx()
+    {
+        foreach (var active in _activeSfx)
+        {
+            active.Instance.Stop();
+            active.Instance.Dispose();
+        }
+
+        _activeSfx.Clear();
+    }
+
+    private void PlaySfxInstance(
+        string assetPath,
+        float volume,
+        float pitch,
+        float pan,
+        float? maxDuration)
+    {
+        PlaySfxInstance(LoadSoundEffect(assetPath), volume, pitch, pan, maxDuration);
+    }
+
+    private void PlaySfxInstance(
+        SoundEffect soundEffect,
+        float volume,
+        float pitch,
+        float pan,
+        float? maxDuration)
+    {
+        var effectiveVolume = IsMuted ? 0f : Math.Clamp(volume, 0f, 1f) * SfxVolume;
+        if (effectiveVolume <= 0f)
+            return;
+
+        var instance = soundEffect.CreateInstance();
+        instance.Volume = effectiveVolume;
+        instance.Pitch = Math.Clamp(pitch, -1f, 1f);
+        instance.Pan = Math.Clamp(pan, -1f, 1f);
+        instance.Play();
+        _activeSfx.Add(new ActiveSfx(instance, maxDuration ?? 30f));
+    }
+
+    private static float CueMaxDuration(AudioCue cue) => cue switch
+    {
+        AudioCue.UiClick => 0.70f,
+        AudioCue.Collectable => 0.80f,
+        AudioCue.Sword => 0.50f,
+        AudioCue.SlashImpact => 0.45f,
+        // The source is a 16-second whoosh bank. The first whoosh ends near
+        // 0.30 s; stopping the instance prevents the later samples sounding
+        // like an echo after the attack effect has disappeared.
+        AudioCue.Whoosh => 0.36f,
+        AudioCue.Magic => 0.70f,
+        AudioCue.FlameImpact => 0.65f,
+        AudioCue.Explosion => 0.85f,
+        _ => 0.5f
+    };
 
     private SoundEffect LoadSoundEffect(string assetPath)
     {

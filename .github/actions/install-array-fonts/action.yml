@@ -59,7 +59,12 @@ runs:
           font_dir="$HOME/.local/share/fonts"
         fi
         mkdir -p "$font_dir"
-        cp "$source_dir"/*.ttf "$font_dir/"
         if [[ "$RUNNER_OS" == "Linux" ]]; then
+          cp "$source_dir"/*.ttf "$font_dir/"
           fc-cache -f "$font_dir"
+        else
+          cp "$source_dir/Array-Regular.ttf" "$font_dir/Array.ttf"
+          cp "$source_dir/Array-Semibold.ttf" "$font_dir/Array Semibold.ttf"
+          cp "$source_dir/Array-Wide.ttf" "$font_dir/Array Wide.ttf"
+          cp "$source_dir/Array-SemiboldWide.ttf" "$font_dir/Array Semibold Wide.ttf"
         fi

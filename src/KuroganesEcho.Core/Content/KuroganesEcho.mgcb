@@ -17,6 +17,34 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/Hud.spritefont
 
+#begin Fonts/ArrayRegular.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/ArrayRegular.spritefont
+
+#begin Fonts/ArraySemibold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/ArraySemibold.spritefont
+
+#begin Fonts/ArrayWide.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/ArrayWide.spritefont
+
+#begin Fonts/ArraySemiboldWide.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/ArraySemiboldWide.spritefont
+
 #begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Idle.png
 /importer:TextureImporter
 /processor:TextureProcessor

@@ -26,6 +26,24 @@ public class KuroganesEchoGame : Game
     private const float PlayerHalfWidth = 10f;
     private const int MaximumJumps = 2;
     private const float PlayerHeight = 32f;
+    private const float IntroScrollSpeed = 8f;
+    private const float IntroLineHeight = 13f;
+    private static readonly string[] IntroLines =
+    {
+        "O clã Kurogane guardava o",
+        "Selo de Cinzas há três gerações.",
+        "",
+        "Um talismã de ferro forjado",
+        "com o sangue e a memória dos",
+        "antigos mestres ninjas.",
+        "",
+        "A relíquia mantém acesa a",
+        "Chama Silenciosa, um vínculo",
+        "espiritual que impede os espíritos",
+        "sem descanso e os guardiões",
+        "corrompidos das montanhas de",
+        "invadirem a vila do clã."
+    };
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly string[] _languageCodes = { "pt-BR", "en-US", "fr-FR" };
@@ -45,6 +63,9 @@ public class KuroganesEchoGame : Game
 
     private SpriteBatch _spriteBatch = null!;
     private SpriteFont _font = null!;
+    private SpriteFont _fontSemibold = null!;
+    private SpriteFont _fontWide = null!;
+    private SpriteFont _fontSemiboldWide = null!;
     private Texture2D _whiteTexture = null!;
     private PlayerCharacter _player = null!;
     private GameLevel _level = null!;
@@ -53,7 +74,8 @@ public class KuroganesEchoGame : Game
     private OrthographicCamera _camera = null!;
     private readonly string[] _characterIds = { "Kunoichi", "Ninja_Monk", "Ninja_Peasant" };
 
-    private GameScreen _screen = GameScreen.MainMenu;
+    private GameScreen _screen = GameScreen.Intro;
+    private float _introScroll;
     private int _menuSelection;
     private int _languageSelection;
     private int _optionsSelection;
@@ -118,8 +140,12 @@ public class KuroganesEchoGame : Game
 
     protected override void LoadContent()
     {
+        FontInstaller.TryInstallBundledFonts();
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _font = Content.Load<SpriteFont>("Fonts/Hud");
+        _font = Content.Load<SpriteFont>("Fonts/ArrayRegular");
+        _fontSemibold = Content.Load<SpriteFont>("Fonts/ArraySemibold");
+        _fontWide = Content.Load<SpriteFont>("Fonts/ArrayWide");
+        _fontSemiboldWide = Content.Load<SpriteFont>("Fonts/ArraySemiboldWide");
         _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01);
         _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
         LoadEnemies();
@@ -153,6 +179,10 @@ public class KuroganesEchoGame : Game
         {
             UpdateMainMenu(keyboard, gamePad, touchState);
         }
+        else if (_screen == GameScreen.Intro)
+        {
+            UpdateIntro(gameTime, keyboard, gamePad, touchState);
+        }
         else if (_screen == GameScreen.Options)
         {
             UpdateOptions(keyboard, gamePad, touchState);
@@ -184,6 +214,8 @@ public class KuroganesEchoGame : Game
     {
         if (_screen == GameScreen.Act01)
             DrawAct01(gameTime);
+        else if (_screen == GameScreen.Intro)
+            DrawIntro();
         else if (_screen == GameScreen.Options)
             DrawOptions();
         else if (_screen == GameScreen.PlayerSelection)
@@ -221,6 +253,22 @@ public class KuroganesEchoGame : Game
 
         if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
             ActivateMainMenuSelection();
+    }
+
+    private void UpdateIntro(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    {
+        _introScroll += (float)gameTime.ElapsedGameTime.TotalSeconds * IntroScrollSpeed;
+        var introFinished = _introScroll >= VirtualHeight + IntroLines.Length * IntroLineHeight + 24f;
+        var skipRequested = IsNewKeyPress(keyboard, Keys.Enter) ||
+                            IsNewKeyPress(keyboard, Keys.Space) ||
+                            IsNewButtonPress(gamePad, Buttons.A) ||
+                            GetPressedPoint(touches).HasValue;
+
+        if (introFinished || skipRequested)
+        {
+            _introScroll = 0f;
+            _screen = GameScreen.MainMenu;
+        }
     }
 
     private void ActivateMainMenuSelection()
@@ -831,7 +879,7 @@ public class KuroganesEchoGame : Game
 
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
         DrawRect(new Rectangle(12, 12, VirtualWidth - 24, VirtualHeight - 24), new Color(25, 35, 45), false, 2);
-        DrawTextCentered(LocalizedText.Get("Title"), new Vector2(VirtualWidth / 2f, 30f), new Color(214, 191, 135), 1.25f);
+        DrawTextCentered(LocalizedText.Get("Title"), new Vector2(VirtualWidth / 2f, 30f), new Color(214, 191, 135), _fontSemiboldWide, 1.25f);
         DrawTextCentered(LocalizedText.Get("MenuSubtitle"), new Vector2(VirtualWidth / 2f, 50f), new Color(117, 143, 145), 0.55f);
 
         for (var index = 0; index < _menuKeys.Length; index++)
@@ -847,12 +895,48 @@ public class KuroganesEchoGame : Game
         EndUi();
     }
 
+    private void DrawIntro()
+    {
+        GraphicsDevice.Clear(new Color(3, 5, 9));
+        BeginUi();
+
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(3, 5, 9));
+
+        var startY = VirtualHeight - 20f - _introScroll;
+        for (var index = 0; index < IntroLines.Length; index++)
+        {
+            var line = IntroLines[index];
+            if (line.Length == 0)
+                continue;
+
+            var y = startY + index * IntroLineHeight;
+            if (y < -18f || y > VirtualHeight + 18f)
+                continue;
+
+            var depth = Math.Clamp((y + 18f) / (VirtualHeight + 36f), 0f, 1f);
+            var horizontalScale = 0.48f + depth * 0.55f;
+            var verticalScale = 0.62f;
+            var color = Color.Lerp(new Color(194, 158, 74), new Color(255, 224, 143), depth);
+            DrawTextCentered(
+                line,
+                new Vector2(VirtualWidth / 2f, y),
+                color,
+                _fontWide,
+                new Vector2(horizontalScale, verticalScale));
+        }
+
+        var fadeHeight = 22;
+        DrawRect(new Rectangle(0, 0, VirtualWidth, fadeHeight), new Color(3, 5, 9, 235));
+        DrawRect(new Rectangle(0, VirtualHeight - fadeHeight, VirtualWidth, fadeHeight), new Color(3, 5, 9, 235));
+        EndUi();
+    }
+
     private void DrawOptions()
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
-        DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 27f), new Color(214, 191, 135), 1.2f);
+        DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 27f), new Color(214, 191, 135), _fontSemibold, 1.2f);
         DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 42f), new Color(156, 170, 169), 0.65f);
 
         for (var index = 0; index < _languageCodes.Length; index++)
@@ -892,7 +976,7 @@ public class KuroganesEchoGame : Game
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
-        DrawTextCentered(LocalizedText.Get("Controls"), new Vector2(VirtualWidth / 2f, 13f), new Color(214, 191, 135), 0.95f);
+        DrawTextCentered(LocalizedText.Get("Controls"), new Vector2(VirtualWidth / 2f, 13f), new Color(214, 191, 135), _fontSemiboldWide, 0.95f);
 
         var keyboardButton = ControlsKeyboardButton();
         var gamepadButton = ControlsGamepadButton();
@@ -1086,6 +1170,18 @@ public class KuroganesEchoGame : Game
         DrawText(text, center - size / 2f, color, scale);
     }
 
+    private void DrawTextCentered(string text, Vector2 center, Color color, SpriteFont font, float scale)
+    {
+        var size = font.MeasureString(text) * scale;
+        _spriteBatch.DrawString(font, text, center, color, 0f, size / 2f, scale, SpriteEffects.None, 0f);
+    }
+
+    private void DrawTextCentered(string text, Vector2 center, Color color, SpriteFont font, Vector2 scale)
+    {
+        var size = font.MeasureString(text);
+        _spriteBatch.DrawString(font, text, center, color, 0f, size / 2f, scale, SpriteEffects.None, 0f);
+    }
+
     private void DrawRect(Rectangle bounds, Color color, bool filled = true, int thickness = 1)
     {
         if (filled)
@@ -1237,6 +1333,7 @@ public class KuroganesEchoGame : Game
 
     private enum GameScreen
     {
+        Intro,
         MainMenu,
         Options,
         PlayerSelection,

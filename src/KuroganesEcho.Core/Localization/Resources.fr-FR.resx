@@ -182,7 +182,15 @@
   <data name="Act01BTutorial" xml:space="preserve"><value>Utilisez les plateformes et les tuiles de vie.</value></data>
   <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTRÉE / A  CONTINUER</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSE</value></data>
-  <data name="PausePrompt" xml:space="preserve"><value>Appuyez sur START pour reprendre</value></data>
+  <data name="PausePrompt" xml:space="preserve"><value>ENTRÉE/A pour choisir ; ESC/START pour reprendre</value></data>
+  <data name="Resume" xml:space="preserve"><value>Reprendre</value></data>
+  <data name="MemoryCard" xml:space="preserve"><value>MEMORY CARD - SAUVER L'ÉTAT</value></data>
+  <data name="SlotEmpty" xml:space="preserve"><value>SLOT {0} - VIDE</value></data>
+  <data name="SlotOccupied" xml:space="preserve"><value>SLOT {0} - OCCUPÉ</value></data>
+  <data name="SaveComplete" xml:space="preserve"><value>État sauvegardé dans le slot {0}</value></data>
+  <data name="MainMenu" xml:space="preserve"><value>Menu principal</value></data>
+  <data name="SpecialPrimary" xml:space="preserve"><value>Spécial principal</value></data>
+  <data name="SpecialSecondary" xml:space="preserve"><value>Spécial secondaire</value></data>
   <data name="IntroLine01" xml:space="preserve"><value>Le clan Kurogane gardait le</value></data>
   <data name="IntroLine02" xml:space="preserve"><value>Sceau des Cendres depuis trois générations.</value></data>
   <data name="IntroLine03" xml:space="preserve"><value></value></data>
@@ -203,4 +211,7 @@
   <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (après un kill Blade)</value></data>
   <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limité)</value></data>
   <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (après un kill Shot)</value></data>
+  <data name="Act01CTitle" xml:space="preserve"><value>Le Sanctuaire en Ruines</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Vainquez le Minotaure et récupérez le talisman de fer.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>Traversez les runes corrompues et survivez au gardien final.</value></data>
 </root>

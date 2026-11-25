@@ -8,7 +8,6 @@ namespace KuroganesEcho.Core;
 internal enum BossKind
 {
     Minotaur,
-    Gorgon,
     Wizard
 }
 
@@ -169,7 +168,6 @@ internal sealed class BossInstance
     private static bool IsVariantOf(BossKind kind, string variant) => kind switch
     {
         BossKind.Minotaur => variant is "Minotaur_1" or "Minotaur_2" or "Minotaur_3",
-        BossKind.Gorgon => variant is "Gorgon_1" or "Gorgon_2" or "Gorgon_3",
         BossKind.Wizard => variant is "Fire Wizard" or "Lightning Mage" or "Wanderer Magican",
         _ => false
     };

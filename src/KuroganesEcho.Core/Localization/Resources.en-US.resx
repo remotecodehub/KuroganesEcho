@@ -63,7 +63,15 @@
   <data name="Act01BTutorial" xml:space="preserve"><value>Use the platforms and collect health and stamina tiles.</value></data>
   <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A  CONTINUE</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSED</value></data>
-  <data name="PausePrompt" xml:space="preserve"><value>Press START to resume</value></data>
+  <data name="PausePrompt" xml:space="preserve"><value>Use ENTER/A to choose; ESC/START to resume</value></data>
+  <data name="Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="MemoryCard" xml:space="preserve"><value>MEMORY CARD - SAVE STATE</value></data>
+  <data name="SlotEmpty" xml:space="preserve"><value>SLOT {0} - EMPTY</value></data>
+  <data name="SlotOccupied" xml:space="preserve"><value>SLOT {0} - OCCUPIED</value></data>
+  <data name="SaveComplete" xml:space="preserve"><value>State saved to slot {0}</value></data>
+  <data name="MainMenu" xml:space="preserve"><value>Main menu</value></data>
+  <data name="SpecialPrimary" xml:space="preserve"><value>Primary special</value></data>
+  <data name="SpecialSecondary" xml:space="preserve"><value>Secondary special</value></data>
   <data name="IntroLine01" xml:space="preserve"><value>The Kurogane clan guarded the</value></data>
   <data name="IntroLine02" xml:space="preserve"><value>Ash Seal for three generations.</value></data>
   <data name="IntroLine03" xml:space="preserve"><value></value></data>
@@ -84,4 +92,7 @@
   <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (unlocked after a blade kill)</value></data>
   <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limited)</value></data>
   <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (unlocked after a shot kill)</value></data>
+  <data name="Act01CTitle" xml:space="preserve"><value>The Ruined Sanctuary</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Defeat the Minotaur and recover the iron talisman.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>Cross the corrupted runes and survive the final guardian.</value></data>
 </root>

@@ -62,14 +62,28 @@ internal sealed class LevelDefinition
         CollisionObjectLayerName = "Collision",
         GameplayObjectLayerName = "Gameplay",
         PlayerSpawn = new Vector2(64f, 352f),
-        NextLevelId = null,
+        NextLevelId = "Act_01_C",
         BriefingTitleKey = "Act01BTitle",
         BriefingObjectiveKey = "Act01BObjective",
         BriefingTutorialKey = "Act01BTutorial"
     };
 
+    public static LevelDefinition Act01C => new()
+    {
+        Id = "Act_01_C",
+        MapAssetPath = "Content/Tiled/Maps/Act_01_C.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = null,
+        BriefingTitleKey = "Act01CTitle",
+        BriefingObjectiveKey = "Act01CObjective",
+        BriefingTutorialKey = "Act01CTutorial"
+    };
+
     public static LevelDefinition ForId(string id) => id switch
     {
+        "Act_01_C" => Act01C,
         "Act_01_B" => Act01B,
         _ => Act01A
     };
@@ -285,19 +299,25 @@ internal sealed class GameLevel
             : DefaultCollectibleTileFirstGid;
         var extraLifeTile = ReadTileCoordinate(root, "ExtraLifeTile");
         var powerFruitTile = ReadTileCoordinate(root, "PowerFruitTile");
+        var powerFruitTiles = ReadTileCoordinates(root, "PowerFruitTiles");
+        if (powerFruitTile.HasValue)
+            powerFruitTiles.Add(powerFruitTile.Value);
+        var ironTalismanTile = ReadTileCoordinate(root, "IronTalismanTile");
 
         var tileValues = ReadTileValues(data, width * height);
         for (var index = 0; index < tileValues.Count; index++)
         {
             var gid = tileValues[index];
             var tileCoordinate = new Point(index % width, index / width);
-            var kind = powerFruitTile.HasValue && powerFruitTile.Value == tileCoordinate
-                ? CollectibleKind.PowerFruit
-                : gid switch
+            var kind = ironTalismanTile.HasValue && ironTalismanTile.Value == tileCoordinate
+                ? CollectibleKind.IronTalismanThird
+                : powerFruitTiles.Contains(tileCoordinate)
+                    ? CollectibleKind.PowerFruit
+                    : gid switch
             {
                 _ when gid == collectibleFirstGid => CollectibleKind.Health,
                 _ when gid == collectibleFirstGid + 1 => CollectibleKind.Stamina,
-                _ when gid == collectibleFirstGid + 2 => CollectibleKind.IronTalismanThird,
+                _ when gid == collectibleFirstGid + 2 => CollectibleKind.PowerFruit,
                 _ => (CollectibleKind?)null
             };
             if (!kind.HasValue)
@@ -356,6 +376,30 @@ internal sealed class GameLevel
                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var y)
             ? new Point(x, y)
             : null;
+    }
+
+    private static List<Point> ReadTileCoordinates(XElement root, string propertyName)
+    {
+        var value = root.Element("properties")?.Elements("property")
+            .FirstOrDefault(property => string.Equals(
+                (string)property.Attribute("name"),
+                propertyName,
+                StringComparison.OrdinalIgnoreCase))?
+            .Attribute("value")?.Value;
+        var result = new List<Point>();
+        if (string.IsNullOrWhiteSpace(value))
+            return result;
+
+        foreach (var coordinate in value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = coordinate.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var x) &&
+                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var y))
+                result.Add(new Point(x, y));
+        }
+
+        return result;
     }
 
     private static List<uint> ReadTileValues(XElement data, int expectedCount)

@@ -176,7 +176,7 @@ internal sealed class AudioService : IDisposable
 
     public void PlayActMusic(string levelId)
     {
-        var assetPath = string.Equals(levelId, "Act_01_B", StringComparison.OrdinalIgnoreCase)
+        var assetPath = levelId is "Act_01_B" or "Act_01_C"
             ? "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai"
             : "Audio/BGM/BGM_Along_The_Mountain_Path";
         PlayBgm(assetPath);

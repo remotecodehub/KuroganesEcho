@@ -6,6 +6,7 @@ $height = 24
 $tileWidth = 16
 $tileHeight = 16
 $environmentFirstGid = 1
+$itemsFirstGid = 73
 
 $gid = @{
     GroundTop = $environmentFirstGid + 1
@@ -38,6 +39,9 @@ $gid = @{
     DistantMountain = $environmentFirstGid + 29
     WarningSign = $environmentFirstGid + 30
     DarkMarker = $environmentFirstGid + 31
+    HealthPickupTile = $itemsFirstGid
+    StaminaPickupTile = $itemsFirstGid + 1
+    IronTalismanThirdTile = $itemsFirstGid + 2
 }
 
 function New-Grid {
@@ -98,6 +102,7 @@ $background = New-Grid $width $height $gid.DimSky
 $backdrop = New-Grid $width $height
 $terrain = New-Grid $width $height
 $props = New-Grid $width $height
+$collectibles = New-Grid $width $height
 
 # Distant silhouettes and clouds create the desaturated, extinguished-village mood.
 foreach ($x in @(12, 43, 82, 131, 181, 235, 286)) { Set-Tile $background $x 5 $gid.Cloud }
@@ -152,9 +157,15 @@ Set-Tile $props 306 14 $gid.GuardianGate
 Set-Tile $props 286 21 $gid.WarningSign
 Set-Tile $props 310 21 $gid.DarkMarker
 
+# Collectibles are authored as tiles so their visual state and gameplay state
+# share the same map cell. The final talisman fragment becomes collectible
+# only after the boss is defeated by the runtime.
+foreach ($x in @(66, 180, 260)) { Set-Tile $collectibles $x 20 $gid.HealthPickupTile }
+foreach ($x in @(35, 128, 222)) { Set-Tile $collectibles $x 18 $gid.StaminaPickupTile }
+
 $xml = [Collections.Generic.List[string]]::new()
 $xml.Add('<?xml version="1.0" encoding="UTF-8"?>')
-$xml.Add('<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="320" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="28">')
+$xml.Add('<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="320" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="10" nextobjectid="28">')
 $xml.Add('  <properties>')
 $xml.Add('    <property name="Act" value="Act_01_A"/>')
 $xml.Add('    <property name="Title" value="A Trilha das Lanternas Apagadas"/>')
@@ -165,10 +176,12 @@ $xml.Add('    <property name="CheckpointCount" type="int" value="3"/>')
 $xml.Add('    <property name="ActEnding" value="The trail continues into Act_01_B"/>')
 $xml.Add('  </properties>')
 $xml.Add('  <tileset firstgid="1" source="../Tilesets/Act_01_Environment.tsx"/>')
+$xml.Add('  <tileset firstgid="73" source="../Tilesets/Act_01_Items.tsx"/>')
 foreach ($line in (Layer-Xml 1 'Background' $background)) { $xml.Add([string]$line) }
 foreach ($line in (Layer-Xml 2 'VillageBackdrop' $backdrop)) { $xml.Add([string]$line) }
 foreach ($line in (Layer-Xml 3 'Terrain' $terrain)) { $xml.Add([string]$line) }
 foreach ($line in (Layer-Xml 4 'Act01Props' $props)) { $xml.Add([string]$line) }
+foreach ($line in (Layer-Xml 9 'Collectibles' $collectibles)) { $xml.Add([string]$line) }
 $xml.Add('  <objectgroup id="5" name="Collision">')
 $xml.Add('    <object id="1" name="Ground" type="Collision" x="0" y="352" width="5120" height="32"/>')
 $xml.Add('    <object id="2" name="Platform_01" type="Collision" x="448" y="304" width="256" height="16"/>')
@@ -188,9 +201,6 @@ $xml.Add('    <object id="13" name="ChainTutorial" type="Tutorial" x="1424" y="2
 $xml.Add('    <object id="14" name="Checkpoint_01" type="Checkpoint" x="1280" y="320" width="16" height="32"><properties><property name="CheckpointId" type="int" value="1"/><property name="RespawnX" type="int" value="1280"/><property name="RespawnY" type="int" value="320"/></properties></object>')
 $xml.Add('    <object id="15" name="Checkpoint_02" type="Checkpoint" x="2560" y="320" width="16" height="32"><properties><property name="CheckpointId" type="int" value="2"/><property name="RespawnX" type="int" value="2560"/><property name="RespawnY" type="int" value="320"/></properties></object>')
 $xml.Add('    <object id="16" name="Checkpoint_03" type="Checkpoint" x="3840" y="320" width="16" height="32"><properties><property name="CheckpointId" type="int" value="3"/><property name="RespawnX" type="int" value="3840"/><property name="RespawnY" type="int" value="320"/></properties></object>')
-$xml.Add('    <object id="17" name="HealthPickup_01" type="Pickup" x="1056" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>')
-$xml.Add('    <object id="18" name="HealthPickup_02" type="Pickup" x="2880" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>')
-$xml.Add('    <object id="19" name="HealthPickup_03" type="Pickup" x="4160" y="320" width="16" height="16"><properties><property name="PickupKind" value="Edible"/><property name="RestoreHearts" type="int" value="1"/></properties></object>')
 $xml.Add('    <object id="20" name="EnemySpawn_01" type="EnemySpawn" x="1728" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')
 $xml.Add('    <object id="21" name="EnemySpawn_02" type="EnemySpawn" x="2320" y="320" width="16" height="32"><properties><property name="EnemyType" value="Skeleton_Warrior"/></properties></object>')
 $xml.Add('    <object id="22" name="EnemySpawn_03" type="EnemySpawn" x="3328" y="320" width="16" height="32"><properties><property name="EnemyType" value="Black_Werewolf"/></properties></object>')

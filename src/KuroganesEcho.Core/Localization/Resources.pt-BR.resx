@@ -6,7 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Title" xml:space="preserve"><value>Kuroganes Echo</value></data>
   <data name="Health" xml:space="preserve"><value>Vida</value></data>
-  <data name="MenuSubtitle" xml:space="preserve"><value>16-BIT // ATO 01</value></data>
+  <data name="MenuSubtitle" xml:space="preserve"><value>16-BIT</value></data>
   <data name="Play" xml:space="preserve"><value>Jogar</value></data>
   <data name="Options" xml:space="preserve"><value>Opções</value></data>
   <data name="Quit" xml:space="preserve"><value>Sair</value></data>
@@ -53,6 +53,17 @@
   <data name="GameOver" xml:space="preserve"><value>GAME OVER</value></data>
   <data name="Victory" xml:space="preserve"><value>VITÓRIA</value></data>
   <data name="PressToContinue" xml:space="preserve"><value>Pressione para continuar</value></data>
+  <data name="Objective" xml:space="preserve"><value>OBJETIVO</value></data>
+  <data name="Tutorial" xml:space="preserve"><value>TUTORIAL</value></data>
+  <data name="Act01ATitle" xml:space="preserve"><value>A Trilha das Lanternas Apagadas</value></data>
+  <data name="Act01AObjective" xml:space="preserve"><value>Atravesse a trilha e alcance o portão do templo.</value></data>
+  <data name="Act01ATutorial" xml:space="preserve"><value>Mova, pule, ataque e corra para conservar stamina.</value></data>
+  <data name="Act01BTitle" xml:space="preserve"><value>A Fortaleza do Templo Sem Lua</value></data>
+  <data name="Act01BObjective" xml:space="preserve"><value>Derrote o guardião final e recupere o talismã.</value></data>
+  <data name="Act01BTutorial" xml:space="preserve"><value>Use as plataformas e colete tiles de vida e stamina.</value></data>
+  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A / START  CONTINUAR</value></data>
+  <data name="Paused" xml:space="preserve"><value>PAUSADO</value></data>
+  <data name="PausePrompt" xml:space="preserve"><value>Pressione START para voltar</value></data>
   <data name="IntroLine01" xml:space="preserve"><value>O clã Kurogane guardava o</value></data>
   <data name="IntroLine02" xml:space="preserve"><value>Selo de Cinzas há três gerações.</value></data>
   <data name="IntroLine03" xml:space="preserve"><value></value></data>

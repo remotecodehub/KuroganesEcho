@@ -6,7 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Title" xml:space="preserve"><value>Kurogane's Echo</value></data>
   <data name="Health" xml:space="preserve"><value>Health</value></data>
-  <data name="MenuSubtitle" xml:space="preserve"><value>16-BIT // ACT 01</value></data>
+  <data name="MenuSubtitle" xml:space="preserve"><value>16-BIT</value></data>
   <data name="Play" xml:space="preserve"><value>Play</value></data>
   <data name="Options" xml:space="preserve"><value>Options</value></data>
   <data name="Quit" xml:space="preserve"><value>Quit</value></data>
@@ -53,6 +53,17 @@
   <data name="GameOver" xml:space="preserve"><value>GAME OVER</value></data>
   <data name="Victory" xml:space="preserve"><value>VICTORY</value></data>
   <data name="PressToContinue" xml:space="preserve"><value>Press a key to continue</value></data>
+  <data name="Objective" xml:space="preserve"><value>OBJECTIVE</value></data>
+  <data name="Tutorial" xml:space="preserve"><value>TUTORIAL</value></data>
+  <data name="Act01ATitle" xml:space="preserve"><value>The Trail of Extinguished Lanterns</value></data>
+  <data name="Act01AObjective" xml:space="preserve"><value>Cross the trail and reach the temple gate.</value></data>
+  <data name="Act01ATutorial" xml:space="preserve"><value>Move, jump, attack and run to conserve stamina.</value></data>
+  <data name="Act01BTitle" xml:space="preserve"><value>The Moonless Temple Fortress</value></data>
+  <data name="Act01BObjective" xml:space="preserve"><value>Defeat the final guardian and recover the talisman.</value></data>
+  <data name="Act01BTutorial" xml:space="preserve"><value>Use the platforms and collect health and stamina tiles.</value></data>
+  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A / START  CONTINUE</value></data>
+  <data name="Paused" xml:space="preserve"><value>PAUSED</value></data>
+  <data name="PausePrompt" xml:space="preserve"><value>Press START to resume</value></data>
   <data name="IntroLine01" xml:space="preserve"><value>The Kurogane clan guarded the</value></data>
   <data name="IntroLine02" xml:space="preserve"><value>Ash Seal for three generations.</value></data>
   <data name="IntroLine03" xml:space="preserve"><value></value></data>

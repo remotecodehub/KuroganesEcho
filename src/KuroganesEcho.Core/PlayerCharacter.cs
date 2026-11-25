@@ -28,6 +28,8 @@ internal sealed class PlayerCharacter
     private readonly Dictionary<PlayerAnimationState, Texture2D> _textures = new();
     private readonly Dictionary<PlayerAnimationState, int> _frameCounts = new();
     private float _animationClock;
+    private int _lastStepFrame = -1;
+    private bool _footstepPending;
 
     private const float DeadFrameRate = 3f;
 
@@ -78,6 +80,7 @@ internal sealed class PlayerCharacter
         Animation = animation;
         ActionRemaining = animation == PlayerAnimationState.Jump ? 0.9f : 0.65f;
         _animationClock = 0f;
+        _lastStepFrame = -1;
     }
 
     public void SetDead()
@@ -88,6 +91,8 @@ internal sealed class PlayerCharacter
         Animation = PlayerAnimationState.Dead;
         ActionRemaining = FrameCountForAnimation(PlayerAnimationState.Dead) / DeadFrameRate;
         _animationClock = 0f;
+        _lastStepFrame = -1;
+        _footstepPending = false;
     }
 
     public bool IsDeadAnimationComplete =>
@@ -100,7 +105,10 @@ internal sealed class PlayerCharacter
             return;
 
         if (Animation != animation)
+        {
             _animationClock = 0f;
+            _lastStepFrame = -1;
+        }
         Animation = animation;
     }
 
@@ -109,11 +117,22 @@ internal sealed class PlayerCharacter
         ActionRemaining = 0f;
         Animation = PlayerAnimationState.Idle;
         _animationClock = 0f;
+        _lastStepFrame = -1;
+        _footstepPending = false;
+    }
+
+    /// <summary>True uma vez por passo, quando o pé toca o chão ao andar ou correr.</summary>
+    public bool ConsumeFootstep()
+    {
+        var pending = _footstepPending;
+        _footstepPending = false;
+        return pending;
     }
 
     public void Update(float elapsedSeconds)
     {
         _animationClock += elapsedSeconds;
+        UpdateFootstep();
         if (ActionRemaining > 0f)
             ActionRemaining = Math.Max(0f, ActionRemaining - elapsedSeconds);
     }
@@ -132,6 +151,25 @@ internal sealed class PlayerCharacter
         var source = new Rectangle(frame * frameWidth, 0, frameWidth, texture.Height);
         var origin = new Vector2(frameWidth / 2f, texture.Height);
         spriteBatch.Draw(texture, position, source, Color.White, 0f, origin, scale, effects, 0f);
+    }
+
+    private void UpdateFootstep()
+    {
+        if (Animation is not (PlayerAnimationState.Walk or PlayerAnimationState.Run))
+        {
+            _lastStepFrame = -1;
+            return;
+        }
+
+        var frameCount = _frameCounts[Animation];
+        var frame = (int)(_animationClock * 10f) % frameCount;
+        if (frame == _lastStepFrame)
+            return;
+
+        _lastStepFrame = frame;
+        // Dois passos por ciclo: no frame inicial e no meio do ciclo.
+        if (frame == 0 || frame == frameCount / 2)
+            _footstepPending = true;
     }
 
     private void Add(ContentManager content, PlayerAnimationState animation, string asset, int frameCount)

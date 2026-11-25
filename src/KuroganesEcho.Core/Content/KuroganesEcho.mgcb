@@ -368,3 +368,57 @@
 /processor:TextureProcessor
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Warrior/Run+attack.png
+
+#begin Audio/Steps/Snow_01.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Snow_01.wav
+
+#begin Audio/Steps/Snow_02.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Snow_02.wav
+
+#begin Audio/Steps/Snow_03.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Snow_03.wav
+
+#begin Audio/Steps/Wood_01.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Wood_01.wav
+
+#begin Audio/Steps/Wood_02.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Wood_02.wav
+
+#begin Audio/Steps/Wood_03.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Wood_03.wav
+
+#begin Audio/Steps/Roof_01.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Roof_01.wav
+
+#begin Audio/Steps/Roof_02.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Roof_02.wav
+
+#begin Audio/Steps/Roof_03.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/Steps/Roof_03.wav

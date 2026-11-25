@@ -59,6 +59,7 @@ public class KuroganesEchoGame : Game
     private GameScreen _screen = GameScreen.MainMenu;
     private int _menuSelection;
     private int _languageSelection;
+    private int _optionsSelection;
     private int _characterSelection;
     private int _difficultySelection = 1;
     private GameDifficulty _selectedDifficulty = GameDifficulty.Normal;
@@ -82,6 +83,7 @@ public class KuroganesEchoGame : Game
     private bool _playerAttackHitApplied;
     private KeyboardState _previousKeyboard;
     private GamePadState _previousGamePad;
+    private bool _gamepadConnected;
     private MouseState _previousMouse;
 
     public static bool IsMobile => OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
@@ -132,8 +134,9 @@ public class KuroganesEchoGame : Game
     protected override void Update(GameTime gameTime)
     {
         var keyboard = Keyboard.GetState();
-        var gamePad = GamePad.GetState(PlayerIndex.One);
-        var backPressed = IsNewKeyPress(keyboard, Keys.Escape) || gamePad.Buttons.Back == ButtonState.Pressed;
+        var gamePad = GamePad.GetState(PlayerIndex.One, GamePadDeadZone.IndependentAxes);
+        _gamepadConnected = gamePad.IsConnected;
+        var backPressed = IsNewKeyPress(keyboard, Keys.Escape) || IsNewButtonPress(gamePad, Buttons.Back);
         var touchState = TouchPanel.GetState();
 
         if (backPressed)
@@ -151,19 +154,19 @@ public class KuroganesEchoGame : Game
         }
         else if (_screen == GameScreen.MainMenu)
         {
-            UpdateMainMenu(keyboard, touchState);
+            UpdateMainMenu(keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.Options)
         {
-            UpdateOptions(keyboard, touchState);
+            UpdateOptions(keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.PlayerSelection)
         {
-            UpdatePlayerSelection(keyboard, touchState);
+            UpdatePlayerSelection(keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.DifficultySelection)
         {
-            UpdateDifficultySelection(keyboard, touchState);
+            UpdateDifficultySelection(keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.Controls)
         {
@@ -198,11 +201,11 @@ public class KuroganesEchoGame : Game
         base.Draw(gameTime);
     }
 
-    private void UpdateMainMenu(KeyboardState keyboard, TouchCollection touches)
+    private void UpdateMainMenu(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
-        if (IsNewKeyPress(keyboard, Keys.Up))
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
             _menuSelection = (_menuSelection + _menuKeys.Length - 1) % _menuKeys.Length;
-        if (IsNewKeyPress(keyboard, Keys.Down))
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
             _menuSelection = (_menuSelection + 1) % _menuKeys.Length;
 
         var point = GetPressedPoint(touches);
@@ -219,7 +222,7 @@ public class KuroganesEchoGame : Game
             }
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
             ActivateMainMenuSelection();
     }
 
@@ -231,6 +234,7 @@ public class KuroganesEchoGame : Game
                 _screen = GameScreen.PlayerSelection;
                 break;
             case 1:
+                _optionsSelection = _languageSelection;
                 _screen = GameScreen.Options;
                 break;
             case 2:
@@ -239,18 +243,20 @@ public class KuroganesEchoGame : Game
         }
     }
 
-    private void UpdateOptions(KeyboardState keyboard, TouchCollection touches)
+    private void UpdateOptions(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
         if (IsDesktop && IsNewKeyPress(keyboard, Keys.Tab))
         {
+            _optionsSelection = ControlsOptionIndex;
             _screen = GameScreen.Controls;
             return;
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Up))
-            _languageSelection = (_languageSelection + _languageCodes.Length - 1) % _languageCodes.Length;
-        if (IsNewKeyPress(keyboard, Keys.Down))
-            _languageSelection = (_languageSelection + 1) % _languageCodes.Length;
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
+            MoveOptionsSelection(-1);
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
+            MoveOptionsSelection(1);
+
         var point = GetPressedPoint(touches);
         if (point.HasValue)
         {
@@ -258,6 +264,7 @@ public class KuroganesEchoGame : Game
             {
                 if (LanguageButton(index).Contains(point.Value))
                 {
+                    _optionsSelection = index;
                     SelectLanguage(index);
                     return;
                 }
@@ -271,14 +278,46 @@ public class KuroganesEchoGame : Game
 
             if (IsDesktop && ControlsButton().Contains(point.Value))
             {
+                _optionsSelection = ControlsOptionIndex;
                 _screen = GameScreen.Controls;
                 return;
             }
 
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
-            SelectLanguage(_languageSelection);
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
+            ActivateOptionsSelection();
+        if (IsNewButtonPress(gamePad, Buttons.B))
+            _screen = GameScreen.MainMenu;
+    }
+
+    private int ControlsOptionIndex => _languageCodes.Length;
+
+    private int BackOptionIndex => _languageCodes.Length + (IsDesktop ? 1 : 0);
+
+    private void MoveOptionsSelection(int direction)
+    {
+        var optionCount = _languageCodes.Length + (IsDesktop ? 2 : 1);
+        _optionsSelection = (_optionsSelection + direction + optionCount) % optionCount;
+        if (_optionsSelection < _languageCodes.Length)
+            _languageSelection = _optionsSelection;
+    }
+
+    private void ActivateOptionsSelection()
+    {
+        if (_optionsSelection < _languageCodes.Length)
+        {
+            SelectLanguage(_optionsSelection);
+            return;
+        }
+
+        if (IsDesktop && _optionsSelection == ControlsOptionIndex)
+        {
+            _screen = GameScreen.Controls;
+            return;
+        }
+
+        _screen = GameScreen.MainMenu;
     }
 
     private void UpdateControls(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
@@ -289,11 +328,11 @@ public class KuroganesEchoGame : Game
             return;
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Up))
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
             _controlSelection = (_controlSelection + _controlKeys.Length - 1) % _controlKeys.Length;
-        if (IsNewKeyPress(keyboard, Keys.Down))
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
             _controlSelection = (_controlSelection + 1) % _controlKeys.Length;
-        if (IsNewKeyPress(keyboard, Keys.Left) || IsNewKeyPress(keyboard, Keys.Right))
+        if (IsNewKeyPress(keyboard, Keys.Left) || IsNewKeyPress(keyboard, Keys.Right) || IsNewGamepadLeft(gamePad) || IsNewGamepadRight(gamePad))
             _bindingDevice = _bindingDevice == BindingDevice.Keyboard ? BindingDevice.Gamepad : BindingDevice.Keyboard;
 
         var point = GetPressedPoint(touches);
@@ -328,8 +367,10 @@ public class KuroganesEchoGame : Game
             }
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
             BeginBinding(keyboard, gamePad);
+        if (IsNewButtonPress(gamePad, Buttons.B))
+            _screen = GameScreen.Options;
     }
 
     private void BeginBinding(KeyboardState keyboard, GamePadState gamePad)
@@ -402,11 +443,11 @@ public class KuroganesEchoGame : Game
         }
     }
 
-    private void UpdatePlayerSelection(KeyboardState keyboard, TouchCollection touches)
+    private void UpdatePlayerSelection(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
-        if (IsNewKeyPress(keyboard, Keys.Left))
+        if (IsNewKeyPress(keyboard, Keys.Left) || IsNewGamepadLeft(gamePad))
             SelectCharacter(_characterSelection - 1);
-        if (IsNewKeyPress(keyboard, Keys.Right))
+        if (IsNewKeyPress(keyboard, Keys.Right) || IsNewGamepadRight(gamePad))
             SelectCharacter(_characterSelection + 1);
 
         var point = GetPressedPoint(touches);
@@ -434,8 +475,10 @@ public class KuroganesEchoGame : Game
             }
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
             OpenDifficultySelection();
+        if (IsNewButtonPress(gamePad, Buttons.B))
+            _screen = GameScreen.MainMenu;
     }
 
     private void OpenDifficultySelection()
@@ -444,11 +487,11 @@ public class KuroganesEchoGame : Game
         _screen = GameScreen.DifficultySelection;
     }
 
-    private void UpdateDifficultySelection(KeyboardState keyboard, TouchCollection touches)
+    private void UpdateDifficultySelection(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
-        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewKeyPress(keyboard, Keys.Left))
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewKeyPress(keyboard, Keys.Left) || IsNewGamepadUp(gamePad) || IsNewGamepadLeft(gamePad))
             _difficultySelection = (_difficultySelection + _difficultyKeys.Length - 1) % _difficultyKeys.Length;
-        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewKeyPress(keyboard, Keys.Right))
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewKeyPress(keyboard, Keys.Right) || IsNewGamepadDown(gamePad) || IsNewGamepadRight(gamePad))
             _difficultySelection = (_difficultySelection + 1) % _difficultyKeys.Length;
 
         var point = GetPressedPoint(touches);
@@ -476,8 +519,10 @@ public class KuroganesEchoGame : Game
             }
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
             ConfirmDifficulty();
+        if (IsNewButtonPress(gamePad, Buttons.B))
+            _screen = GameScreen.PlayerSelection;
     }
 
     private void ConfirmDifficulty()
@@ -806,7 +851,7 @@ public class KuroganesEchoGame : Game
 
         for (var index = 0; index < _languageCodes.Length; index++)
         {
-            var selected = index == _languageSelection;
+            var selected = index == _optionsSelection;
             var bounds = LanguageButton(index);
             DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
             DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
@@ -822,14 +867,16 @@ public class KuroganesEchoGame : Game
         if (IsDesktop)
         {
             var controls = ControlsButton();
-            DrawRect(controls, new Color(42, 53, 63));
-            DrawRect(controls, new Color(77, 91, 99), false, 1);
+            var selected = _optionsSelection == ControlsOptionIndex;
+            DrawRect(controls, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+            DrawRect(controls, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
             DrawTextCentered(LocalizedText.Get("Controls"), controls.Center.ToVector2(), Color.White, 0.68f);
         }
 
         var back = OptionsBackButton();
-        DrawRect(back, new Color(42, 53, 63));
-        DrawRect(back, new Color(77, 91, 99), false, 1);
+        var backSelected = _optionsSelection == BackOptionIndex;
+        DrawRect(back, backSelected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+        DrawRect(back, backSelected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
         DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.72f);
         EndUi();
     }
@@ -1165,6 +1212,22 @@ public class KuroganesEchoGame : Game
 
     private bool IsNewButtonPress(GamePadState current, Buttons button) =>
         current.IsButtonDown(button) && !_previousGamePad.IsButtonDown(button);
+
+    private bool IsNewGamepadUp(GamePadState current) =>
+        (current.DPad.Up == ButtonState.Pressed && _previousGamePad.DPad.Up == ButtonState.Released) ||
+        (current.ThumbSticks.Left.Y > 0.5f && _previousGamePad.ThumbSticks.Left.Y <= 0.5f);
+
+    private bool IsNewGamepadDown(GamePadState current) =>
+        (current.DPad.Down == ButtonState.Pressed && _previousGamePad.DPad.Down == ButtonState.Released) ||
+        (current.ThumbSticks.Left.Y < -0.5f && _previousGamePad.ThumbSticks.Left.Y >= -0.5f);
+
+    private bool IsNewGamepadLeft(GamePadState current) =>
+        (current.DPad.Left == ButtonState.Pressed && _previousGamePad.DPad.Left == ButtonState.Released) ||
+        (current.ThumbSticks.Left.X < -0.5f && _previousGamePad.ThumbSticks.Left.X >= -0.5f);
+
+    private bool IsNewGamepadRight(GamePadState current) =>
+        (current.DPad.Right == ButtonState.Pressed && _previousGamePad.DPad.Right == ButtonState.Released) ||
+        (current.ThumbSticks.Left.X > 0.5f && _previousGamePad.ThumbSticks.Left.X <= 0.5f);
 
     private enum GameScreen
     {

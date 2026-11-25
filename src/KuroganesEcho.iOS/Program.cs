@@ -10,23 +10,17 @@ namespace KuroganesEcho.iOS
         private static KuroganesEchoGame _game;
 
         /// <summary>
-        /// Initializes and starts the game by creating an instance of the 
-        /// Game class and calls its Run method.
+        /// Creates and starts the game for the connected iOS scene.
         /// </summary>
-        internal static void RunGame()
+        internal static KuroganesEchoGame RunGame()
         {
-            _game = new KuroganesEchoGame();
-            _game.Run();
-        }
+            if (_game == null)
+            {
+                _game = new KuroganesEchoGame();
+                _game.Run();
+            }
 
-        /// <summary>
-        /// Called when the application has finished launching. 
-        /// This method starts the game by calling RunGame.
-        /// </summary>
-        /// <param name="app">The UIApplication instance representing the application.</param>
-        public override void FinishedLaunching(UIApplication app)
-        {
-            RunGame();
+            return _game;
         }
 
         /// <summary>

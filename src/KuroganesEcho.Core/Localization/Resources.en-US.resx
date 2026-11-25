@@ -61,7 +61,7 @@
   <data name="Act01BTitle" xml:space="preserve"><value>The Moonless Temple Fortress</value></data>
   <data name="Act01BObjective" xml:space="preserve"><value>Defeat the final guardian and recover the talisman.</value></data>
   <data name="Act01BTutorial" xml:space="preserve"><value>Use the platforms and collect health and stamina tiles.</value></data>
-  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A / START  CONTINUE</value></data>
+  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A  CONTINUE</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSED</value></data>
   <data name="PausePrompt" xml:space="preserve"><value>Press START to resume</value></data>
   <data name="IntroLine01" xml:space="preserve"><value>The Kurogane clan guarded the</value></data>

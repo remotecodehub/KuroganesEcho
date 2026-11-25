@@ -25,6 +25,7 @@ internal enum CollectibleKind
 {
     Health,
     Stamina,
+    ExtraLife,
     IronTalismanThird
 }
 
@@ -105,6 +106,7 @@ internal sealed class GameLevel
     public IReadOnlyList<Rectangle> CollisionPlatforms => _collisionPlatforms;
     public IReadOnlyList<LevelObjectData> GameplayObjects => _gameplayObjects;
     public IEnumerable<LevelObjectData> Collectibles => _gameplayObjects.Where(item => item.Type == "Collectible");
+    public IEnumerable<LevelObjectData> Checkpoints => _gameplayObjects.Where(item => item.Type == "Checkpoint");
     public IEnumerable<LevelObjectData> EnemySpawns => _gameplayObjects.Where(item => item.Type == "EnemySpawn");
     public IEnumerable<LevelObjectData> BossSpawns => _gameplayObjects.Where(item => item.Type == "BossSpawn");
     public IEnumerable<LevelObjectData> LevelExits => _gameplayObjects.Where(item => item.Type == "LevelExit");
@@ -280,6 +282,7 @@ internal sealed class GameLevel
             out var configuredFirstGid)
             ? configuredFirstGid
             : DefaultCollectibleTileFirstGid;
+        var extraLifeTile = ReadTileCoordinate(root, "ExtraLifeTile");
 
         var tileValues = ReadTileValues(data, width * height);
         for (var index = 0; index < tileValues.Count; index++)
@@ -297,15 +300,22 @@ internal sealed class GameLevel
 
             var tileX = index % width;
             var tileY = index / width;
+            if (kind.Value == CollectibleKind.Health &&
+                extraLifeTile.HasValue &&
+                extraLifeTile.Value.X == tileX &&
+                extraLifeTile.Value.Y == tileY)
+                kind = CollectibleKind.ExtraLife;
             var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["PickupKind"] = kind.Value.ToString(),
                 ["TileGid"] = gid.ToString(CultureInfo.InvariantCulture)
             };
             if (kind.Value == CollectibleKind.Health)
-                properties["RestoreHealth"] = "1";
+                properties["RestoreHealth"] = "25";
             else if (kind.Value == CollectibleKind.Stamina)
                 properties["RestoreStamina"] = "2.5";
+            else if (kind.Value == CollectibleKind.ExtraLife)
+                properties["ExtraLife"] = "1";
             else
                 properties["UnlockAfterBoss"] = "true";
 
@@ -320,6 +330,25 @@ internal sealed class GameLevel
             if (kind.Value == CollectibleKind.IronTalismanThird)
                 tileLayer?.SetTile(tileX, tileY, null);
         }
+    }
+
+    private static Point? ReadTileCoordinate(XElement root, string propertyName)
+    {
+        var value = root.Element("properties")?.Elements("property")
+            .FirstOrDefault(property => string.Equals(
+                (string)property.Attribute("name"),
+                propertyName,
+                StringComparison.OrdinalIgnoreCase))?
+            .Attribute("value")?.Value;
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var parts = value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 2 &&
+               int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var x) &&
+               int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var y)
+            ? new Point(x, y)
+            : null;
     }
 
     private static List<uint> ReadTileValues(XElement data, int expectedCount)

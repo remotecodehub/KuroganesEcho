@@ -61,7 +61,7 @@
   <data name="Act01BTitle" xml:space="preserve"><value>A Fortaleza do Templo Sem Lua</value></data>
   <data name="Act01BObjective" xml:space="preserve"><value>Derrote o guardião final e recupere o talismã.</value></data>
   <data name="Act01BTutorial" xml:space="preserve"><value>Use as plataformas e colete tiles de vida e stamina.</value></data>
-  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A / START  CONTINUAR</value></data>
+  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A  CONTINUAR</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSADO</value></data>
   <data name="PausePrompt" xml:space="preserve"><value>Pressione START para voltar</value></data>
   <data name="IntroLine01" xml:space="preserve"><value>O clã Kurogane guardava o</value></data>

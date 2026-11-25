@@ -7,6 +7,7 @@
     <property name="TileSize" type="int" value="16" />
     <property name="CharacterRenderScale" type="float" value="0.5" />
     <property name="CheckpointCount" type="int" value="3" />
+    <property name="ExtraLifeTile" value="50,20" />
     <property name="ActEnding" value="The selected guardian is defeated" />
   </properties>
   <tileset firstgid="1" source="../Tilesets/Act_01_Feudal_Dark.tsx" />

@@ -180,7 +180,7 @@
   <data name="Act01BTitle" xml:space="preserve"><value>La Forteresse du Temple sans Lune</value></data>
   <data name="Act01BObjective" xml:space="preserve"><value>Vainquez le gardien final et récupérez le talisman.</value></data>
   <data name="Act01BTutorial" xml:space="preserve"><value>Utilisez les plateformes et les tuiles de vie.</value></data>
-  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTRÉE / A / START  CONTINUER</value></data>
+  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTRÉE / A  CONTINUER</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSE</value></data>
   <data name="PausePrompt" xml:space="preserve"><value>Appuyez sur START pour reprendre</value></data>
   <data name="IntroLine01" xml:space="preserve"><value>Le clan Kurogane gardait le</value></data>

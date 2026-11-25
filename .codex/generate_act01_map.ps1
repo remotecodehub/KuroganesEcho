@@ -173,6 +173,7 @@ $xml.Add('    <property name="VisualStyle" value="16-bit pixel art, desaturated 
 $xml.Add('    <property name="TileSize" type="int" value="16"/>')
 $xml.Add('    <property name="CharacterRenderScale" type="float" value="0.5"/>')
 $xml.Add('    <property name="CheckpointCount" type="int" value="3"/>')
+$xml.Add('    <property name="ExtraLifeTile" value="66,20"/>')
 $xml.Add('    <property name="ActEnding" value="The trail continues into Act_01_B"/>')
 $xml.Add('  </properties>')
 $xml.Add('  <tileset firstgid="1" source="../Tilesets/Act_01_Environment.tsx"/>')

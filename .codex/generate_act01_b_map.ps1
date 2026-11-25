@@ -14,6 +14,7 @@ foreach ($property in $map.properties.property) {
         'Title' { $property.value = 'A Fortaleza do Templo Sem Lua' }
         'VisualStyle' { $property.value = '16-bit pixel art, dark feudal Japanese temple' }
         'ActEnding' { $property.value = 'The selected guardian is defeated' }
+        'ExtraLifeTile' { $property.value = '50,20' }
     }
 }
 

@@ -136,6 +136,9 @@ public class KuroganesEchoGame : Game
     private MouseState _previousMouse;
     private bool _fullScreen;
     private string _currentLevelId = "Act_01_A";
+#if DEBUG
+    private readonly DebugCheatCodeSystem _debugCheatCodes = new();
+#endif
 
     public static bool IsMobile => OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
     public static bool IsDesktop => OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() || OperatingSystem.IsWindows();
@@ -216,6 +219,29 @@ public class KuroganesEchoGame : Game
             ToggleFullscreen();
         var backPressed = IsNewKeyPress(keyboard, Keys.Escape) || IsNewButtonPress(gamePad, Buttons.Back);
         var touchState = TouchPanel.GetState();
+
+#if DEBUG
+        if (_screen == GameScreen.Act01)
+        {
+            var debugMenuHandled = _debugCheatCodes.Update(
+                gamePad,
+                _previousGamePad,
+                touchState,
+                IsMobile,
+                ToVirtualPoint,
+                ResolveDebugMobileButton,
+                GetDebugCheckpointOptions());
+            ApplyDebugCheatEffects();
+            if (debugMenuHandled)
+            {
+                _previousKeyboard = keyboard;
+                _previousGamePad = gamePad;
+                _previousMouse = Mouse.GetState();
+                base.Update(gameTime);
+                return;
+            }
+        }
+#endif
 
         if (_screen == GameScreen.Act01 &&
             (IsNewButtonPress(gamePad, Buttons.Start) || backPressed))
@@ -319,6 +345,15 @@ public class KuroganesEchoGame : Game
         }
         else
             DrawMainMenu();
+
+#if DEBUG
+        if (_screen == GameScreen.Act01 && _debugCheatCodes.IsOpen)
+        {
+            BeginUi();
+            _debugCheatCodes.Draw(_spriteBatch, _whiteTexture, _font, _fontSemiboldWide);
+            EndUi();
+        }
+#endif
 
         base.Draw(gameTime);
     }
@@ -1003,6 +1038,93 @@ public class KuroganesEchoGame : Game
                int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
     }
 
+#if DEBUG
+    private IReadOnlyList<DebugCheatCodeSystem.CheckpointOption> GetDebugCheckpointOptions()
+    {
+        var checkpoints = new List<DebugCheatCodeSystem.CheckpointOption>();
+        foreach (var checkpoint in _level.Checkpoints)
+        {
+            if (!TryGetIntProperty(checkpoint, "CheckpointId", out var checkpointId))
+                continue;
+
+            checkpoints.Add(new DebugCheatCodeSystem.CheckpointOption(
+                checkpointId,
+                string.IsNullOrWhiteSpace(checkpoint.Name) ? $"Checkpoint {checkpointId}" : checkpoint.Name,
+                ReadRespawnPosition(checkpoint)));
+        }
+
+        checkpoints.Sort((left, right) => left.Id.CompareTo(right.Id));
+        return checkpoints;
+    }
+
+    private void ApplyDebugCheatEffects()
+    {
+        if (_debugCheatCodes.TryConsumeRestoreResources())
+        {
+            _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
+            _stamina = StaminaMaximum;
+            _power = CombatBalance.PlayerPowerMaximum;
+            _livesRemaining = MaximumLives;
+        }
+
+        if (_debugCheatCodes.TryConsumeCheckpoint(out var checkpoint))
+        {
+            _checkpointId = checkpoint.Id;
+            _checkpointPosition = checkpoint.RespawnPosition;
+            _playerPosition = checkpoint.RespawnPosition;
+            _verticalVelocity = 0f;
+            _playerKnockbackVelocity = 0f;
+            _isGrounded = true;
+            _jumpsUsed = 0;
+            _runRemaining = 0f;
+            _playerInvulnerability = 1f;
+            _projectiles.Clear();
+            _player.Reset();
+            SaveCurrentProgress();
+            UpdateCamera();
+        }
+
+        if (_debugCheatCodes.InfiniteHealth)
+            _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
+        if (_debugCheatCodes.InfiniteStamina)
+            _stamina = StaminaMaximum;
+        if (_debugCheatCodes.InfinitePower)
+            _power = CombatBalance.PlayerPowerMaximum;
+        if (_debugCheatCodes.InfiniteLives)
+            _livesRemaining = MaximumLives;
+    }
+
+    private DebugCheatCodeSystem.MobileSequenceButton? ResolveDebugMobileButton(Point point)
+    {
+        for (var index = 0; index < 6; index++)
+        {
+            if (!ActionButtonBounds(index).Contains(point))
+                continue;
+
+            return index switch
+            {
+                0 => DebugCheatCodeSystem.MobileSequenceButton.A,
+                1 => DebugCheatCodeSystem.MobileSequenceButton.B,
+                2 => DebugCheatCodeSystem.MobileSequenceButton.C,
+                3 => DebugCheatCodeSystem.MobileSequenceButton.X,
+                4 => DebugCheatCodeSystem.MobileSequenceButton.Y,
+                _ => DebugCheatCodeSystem.MobileSequenceButton.Z
+            };
+        }
+
+        var analogCenter = AnalogCenter();
+        if (Vector2.Distance(point.ToVector2(), analogCenter) <= AnalogRadius + 12f)
+        {
+            if (point.Y <= analogCenter.Y - 8f)
+                return DebugCheatCodeSystem.MobileSequenceButton.Up;
+            if (point.Y >= analogCenter.Y + 8f)
+                return DebugCheatCodeSystem.MobileSequenceButton.Down;
+        }
+
+        return null;
+    }
+#endif
+
     private void LoadLevel(string levelId)
     {
         _currentLevelId = levelId;
@@ -1417,7 +1539,12 @@ public class KuroganesEchoGame : Game
             if (_power < CombatBalance.SpecialPowerCost)
                 return;
 
+#if DEBUG
+            if (!_debugCheatCodes.InfinitePower)
+                _power -= CombatBalance.SpecialPowerCost;
+#else
             _power -= CombatBalance.SpecialPowerCost;
+#endif
             StartAction(PlayerAnimationState.Blade);
             _playerAttackHitApplied = false;
         }
@@ -1446,7 +1573,12 @@ public class KuroganesEchoGame : Game
         if (IsMonk || _power < CombatBalance.SpecialPowerCost)
             return;
 
+#if DEBUG
+        if (!_debugCheatCodes.InfinitePower)
+            _power -= CombatBalance.SpecialPowerCost;
+#else
         _power -= CombatBalance.SpecialPowerCost;
+#endif
         StartAction(PlayerAnimationState.Disguise);
     }
 
@@ -1616,6 +1748,11 @@ public class KuroganesEchoGame : Game
 
     private bool TakePlayerDamage(int damage, float sourceX)
     {
+#if DEBUG
+        if (_debugCheatCodes.InfiniteHealth)
+            return false;
+#endif
+
         if (_playerInvulnerability > 0f || _player.Animation == PlayerAnimationState.Disguise || _playerHealth <= 0)
             return false;
 
@@ -1667,7 +1804,12 @@ public class KuroganesEchoGame : Game
         _runRemaining = action == PlayerAnimationState.Run ? _player.ActionRemaining : 0f;
         if (action == PlayerAnimationState.Run)
         {
+#if DEBUG
+            if (!_debugCheatCodes.InfiniteStamina)
+                _stamina = Math.Max(0f, _stamina - RunStaminaCost);
+#else
             _stamina = Math.Max(0f, _stamina - RunStaminaCost);
+#endif
             _effects.Spawn(_playerPosition - new Vector2(0f, 2f), CombatEffectKind.Dust, new Vector2(-_playerFacing, 0f), 0.75f);
         }
         else if (action == PlayerAnimationState.Attack1)

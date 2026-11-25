@@ -77,4 +77,11 @@
   <data name="IntroLine11" xml:space="preserve"><value>sem descanso e os guardiões</value></data>
   <data name="IntroLine12" xml:space="preserve"><value>corrompidos das montanhas de</value></data>
   <data name="IntroLine13" xml:space="preserve"><value>invadirem a vila do clã.</value></data>
+  <data name="Power" xml:space="preserve"><value>Poder</value></data>
+  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Comer fruta (limitado)</value></data>
+  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast (liberado após comer fruta)</value></data>
+  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (limitado)</value></data>
+  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (liberado após matar com blade)</value></data>
+  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limitado)</value></data>
+  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (liberado após matar com shot)</value></data>
 </root>

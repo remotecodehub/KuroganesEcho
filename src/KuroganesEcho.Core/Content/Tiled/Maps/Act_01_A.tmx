@@ -7,7 +7,8 @@
     <property name="TileSize" type="int" value="16"/>
     <property name="CharacterRenderScale" type="float" value="0.5"/>
     <property name="CheckpointCount" type="int" value="3"/>
-    <property name="ExtraLifeTile" value="66,20"/>
+ <property name="ExtraLifeTile" value="66,20"/>
+ <property name="PowerFruitTile" value="180,21"/>
     <property name="ActEnding" value="The trail continues into Act_01_B"/>
   </properties>
   <tileset firstgid="1" source="../Tilesets/Act_01_Feudal.tsx"/>

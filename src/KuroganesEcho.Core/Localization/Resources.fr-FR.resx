@@ -196,4 +196,11 @@
   <data name="IntroLine11" xml:space="preserve"><value>corrompus des montagnes</value></data>
   <data name="IntroLine12" xml:space="preserve"><value>d'envahir le village du clan.</value></data>
   <data name="IntroLine13" xml:space="preserve"><value></value></data>
+  <data name="Power" xml:space="preserve"><value>Pouvoir</value></data>
+  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Manger un fruit (limité)</value></data>
+  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast (après le fruit)</value></data>
+  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (limité)</value></data>
+  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (après un kill Blade)</value></data>
+  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limité)</value></data>
+  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (après un kill Shot)</value></data>
 </root>

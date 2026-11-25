@@ -9,7 +9,10 @@ internal static class CombatBalance
     public const int EnemyMaxHealth = 80;
     public const int BossMaxHealth = 400;
     public const int PlayerAttackDamage = 8;
+    public const int SpecialAttackDamage = 14;
     public const int EnemyAttackDamage = 10;
+    public const int PlayerPowerMaximum = 3;
+    public const float SpecialPowerCost = 1f;
 
     public static int GetPlayerMaxHealth(GameDifficulty difficulty) => difficulty switch
     {

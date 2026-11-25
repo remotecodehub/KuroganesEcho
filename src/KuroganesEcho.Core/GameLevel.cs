@@ -25,6 +25,7 @@ internal enum CollectibleKind
 {
     Health,
     Stamina,
+    PowerFruit,
     ExtraLife,
     IronTalismanThird
 }
@@ -283,12 +284,16 @@ internal sealed class GameLevel
             ? configuredFirstGid
             : DefaultCollectibleTileFirstGid;
         var extraLifeTile = ReadTileCoordinate(root, "ExtraLifeTile");
+        var powerFruitTile = ReadTileCoordinate(root, "PowerFruitTile");
 
         var tileValues = ReadTileValues(data, width * height);
         for (var index = 0; index < tileValues.Count; index++)
         {
             var gid = tileValues[index];
-            var kind = gid switch
+            var tileCoordinate = new Point(index % width, index / width);
+            var kind = powerFruitTile.HasValue && powerFruitTile.Value == tileCoordinate
+                ? CollectibleKind.PowerFruit
+                : gid switch
             {
                 _ when gid == collectibleFirstGid => CollectibleKind.Health,
                 _ when gid == collectibleFirstGid + 1 => CollectibleKind.Stamina,
@@ -314,6 +319,8 @@ internal sealed class GameLevel
                 properties["RestoreHealth"] = "25";
             else if (kind.Value == CollectibleKind.Stamina)
                 properties["RestoreStamina"] = "2.5";
+            else if (kind.Value == CollectibleKind.PowerFruit)
+                properties["RestorePower"] = CombatBalance.PlayerPowerMaximum.ToString(CultureInfo.InvariantCulture);
             else if (kind.Value == CollectibleKind.ExtraLife)
                 properties["ExtraLife"] = "1";
             else

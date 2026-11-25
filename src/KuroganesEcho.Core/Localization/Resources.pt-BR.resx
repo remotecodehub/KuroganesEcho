@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>Kuroganes Echo</value></data>
+  <data name="Health" xml:space="preserve"><value>Vida</value></data>
+  <data name="MenuSubtitle" xml:space="preserve"><value>16-BIT // ATO 01</value></data>
+  <data name="Play" xml:space="preserve"><value>Jogar</value></data>
+  <data name="Options" xml:space="preserve"><value>Opções</value></data>
+  <data name="Quit" xml:space="preserve"><value>Sair</value></data>
+  <data name="Language" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Character" xml:space="preserve"><value>Personagem</value></data>
+  <data name="Controls" xml:space="preserve"><value>Controles</value></data>
+  <data name="Keyboard" xml:space="preserve"><value>Teclado</value></data>
+  <data name="Gamepad" xml:space="preserve"><value>Gamepad</value></data>
+  <data name="MoveLeft" xml:space="preserve"><value>Mover esquerda</value></data>
+  <data name="MoveRight" xml:space="preserve"><value>Mover direita</value></data>
+  <data name="Attack1" xml:space="preserve"><value>Ataque 1</value></data>
+  <data name="Attack2" xml:space="preserve"><value>Ataque 2</value></data>
+  <data name="Jump" xml:space="preserve"><value>Pulo</value></data>
+  <data name="Run" xml:space="preserve"><value>Correr</value></data>
+  <data name="PressKey" xml:space="preserve"><value>Pressione uma tecla ou botão</value></data>
+  <data name="Bind" xml:space="preserve"><value>Associar</value></data>
+  <data name="SelectPlayer" xml:space="preserve"><value>Escolha seu player</value></data>
+  <data name="SelectDifficulty" xml:space="preserve"><value>Escolha a dificuldade</value></data>
+  <data name="Difficulty" xml:space="preserve"><value>Dificuldade</value></data>
+  <data name="Easy" xml:space="preserve"><value>Fácil</value></data>
+  <data name="Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Hard" xml:space="preserve"><value>Difícil</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Kunoichi" xml:space="preserve"><value>Kunoichi</value></data>
+  <data name="Monk" xml:space="preserve"><value>Monge</value></data>
+  <data name="Peasant" xml:space="preserve"><value>Camponês</value></data>
+  <data name="Back" xml:space="preserve"><value>Voltar</value></data>
+  <data name="Portuguese" xml:space="preserve"><value>Português</value></data>
+  <data name="English" xml:space="preserve"><value>Inglês</value></data>
+  <data name="French" xml:space="preserve"><value>Francês</value></data>
+  <data name="Act01" xml:space="preserve"><value>Ato 1 - A Trilha das Lanternas Apagadas</value></data>
+  <data name="TestMode" xml:space="preserve"><value>MODO TESTE - MOVIMENTO</value></data>
+  <data name="Actions" xml:space="preserve"><value>AÇÕES</value></data>
+  <data name="Move" xml:space="preserve"><value>MOVA O PERSONAGEM</value></data>
+  <data name="ExitHint" xml:space="preserve"><value>ESC / VOLTAR</value></data>
+</root>

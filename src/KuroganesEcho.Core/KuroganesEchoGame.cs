@@ -25,11 +25,26 @@ public class KuroganesEchoGame : Game
     private const float JumpVelocity = -180f;
     private const float PlayerHalfWidth = 10f;
     private const int MaximumJumps = 2;
+    private const int PlayerMaxHealth = 100;
+    private const int PlayerAttackDamage = 10;
+    private const int EnemyAttackDamage = 8;
+    private const float PlayerHeight = 32f;
 
     private readonly GraphicsDeviceManager _graphics;
     private readonly string[] _languageCodes = { "pt-BR", "en-US", "fr-FR" };
     private readonly string[] _menuKeys = { "Play", "Options", "Quit" };
     private readonly string[] _difficultyKeys = { "Easy", "Normal", "Hard" };
+    private readonly string[] _controlKeys = { "MoveLeft", "MoveRight", "Attack1", "Attack2", "Jump", "Run" };
+    private readonly Keys[] _keyboardBindings = { Keys.A, Keys.D, Keys.Z, Keys.X, Keys.C, Keys.R };
+    private readonly Buttons[] _gamepadBindings = { Buttons.DPadLeft, Buttons.DPadRight, Buttons.A, Buttons.B, Buttons.X, Buttons.Y };
+    private static readonly Buttons[] ConfigurableGamepadButtons =
+    {
+        Buttons.A, Buttons.B, Buttons.X, Buttons.Y,
+        Buttons.LeftShoulder, Buttons.RightShoulder,
+        Buttons.LeftStick, Buttons.RightStick,
+        Buttons.DPadUp, Buttons.DPadDown, Buttons.DPadLeft, Buttons.DPadRight,
+        Buttons.Start, Buttons.Back
+    };
 
     private SpriteBatch _spriteBatch = null!;
     private SpriteFont _font = null!;
@@ -47,13 +62,24 @@ public class KuroganesEchoGame : Game
     private int _characterSelection;
     private int _difficultySelection = 1;
     private GameDifficulty _selectedDifficulty = GameDifficulty.Normal;
+    private int _controlSelection;
+    private BindingDevice _bindingDevice = BindingDevice.Keyboard;
+    private bool _waitingForBinding;
+    private bool _bindingReady;
+    private HashSet<Keys> _ignoredBindingKeys = new();
+    private HashSet<Buttons> _ignoredBindingButtons = new();
     private Vector2 _playerPosition = new(64f, 352f);
     private Vector2 _moveInput;
     private Vector2 _analogVisualInput;
     private float _verticalVelocity;
     private bool _isGrounded;
     private float _runRemaining;
+    private float _playerInvulnerability;
+    private float _playerKnockbackVelocity;
     private int _jumpsUsed;
+    private int _playerHealth = PlayerMaxHealth;
+    private int _playerFacing = 1;
+    private bool _playerAttackHitApplied;
     private KeyboardState _previousKeyboard;
     private GamePadState _previousGamePad;
     private MouseState _previousMouse;
@@ -118,6 +144,8 @@ public class KuroganesEchoGame : Game
                 _screen = GameScreen.PlayerSelection;
             else if (_screen == GameScreen.PlayerSelection)
                 _screen = GameScreen.MainMenu;
+            else if (_screen == GameScreen.Controls)
+                _screen = GameScreen.Options;
             else
                 _screen = GameScreen.MainMenu;
         }
@@ -136,6 +164,10 @@ public class KuroganesEchoGame : Game
         else if (_screen == GameScreen.DifficultySelection)
         {
             UpdateDifficultySelection(keyboard, touchState);
+        }
+        else if (_screen == GameScreen.Controls)
+        {
+            UpdateControls(keyboard, gamePad, touchState);
         }
         else
         {
@@ -158,6 +190,8 @@ public class KuroganesEchoGame : Game
             DrawPlayerSelection();
         else if (_screen == GameScreen.DifficultySelection)
             DrawDifficultySelection();
+        else if (_screen == GameScreen.Controls)
+            DrawControls();
         else
             DrawMainMenu();
 
@@ -207,6 +241,12 @@ public class KuroganesEchoGame : Game
 
     private void UpdateOptions(KeyboardState keyboard, TouchCollection touches)
     {
+        if (IsDesktop && IsNewKeyPress(keyboard, Keys.Tab))
+        {
+            _screen = GameScreen.Controls;
+            return;
+        }
+
         if (IsNewKeyPress(keyboard, Keys.Up))
             _languageSelection = (_languageSelection + _languageCodes.Length - 1) % _languageCodes.Length;
         if (IsNewKeyPress(keyboard, Keys.Down))
@@ -229,10 +269,137 @@ public class KuroganesEchoGame : Game
                 return;
             }
 
+            if (IsDesktop && ControlsButton().Contains(point.Value))
+            {
+                _screen = GameScreen.Controls;
+                return;
+            }
+
         }
 
         if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
             SelectLanguage(_languageSelection);
+    }
+
+    private void UpdateControls(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    {
+        if (_waitingForBinding)
+        {
+            CaptureBinding(keyboard, gamePad);
+            return;
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Up))
+            _controlSelection = (_controlSelection + _controlKeys.Length - 1) % _controlKeys.Length;
+        if (IsNewKeyPress(keyboard, Keys.Down))
+            _controlSelection = (_controlSelection + 1) % _controlKeys.Length;
+        if (IsNewKeyPress(keyboard, Keys.Left) || IsNewKeyPress(keyboard, Keys.Right))
+            _bindingDevice = _bindingDevice == BindingDevice.Keyboard ? BindingDevice.Gamepad : BindingDevice.Keyboard;
+
+        var point = GetPressedPoint(touches);
+        if (point.HasValue)
+        {
+            if (ControlsKeyboardButton().Contains(point.Value))
+            {
+                _bindingDevice = BindingDevice.Keyboard;
+                return;
+            }
+
+            if (ControlsGamepadButton().Contains(point.Value))
+            {
+                _bindingDevice = BindingDevice.Gamepad;
+                return;
+            }
+
+            for (var index = 0; index < _controlKeys.Length; index++)
+            {
+                if (ControlRow(index).Contains(point.Value))
+                {
+                    _controlSelection = index;
+                    BeginBinding(keyboard, gamePad);
+                    return;
+                }
+            }
+
+            if (ControlsBackButton().Contains(point.Value))
+            {
+                _screen = GameScreen.Options;
+                return;
+            }
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space))
+            BeginBinding(keyboard, gamePad);
+    }
+
+    private void BeginBinding(KeyboardState keyboard, GamePadState gamePad)
+    {
+        _waitingForBinding = true;
+        _bindingReady = false;
+        _ignoredBindingKeys = new HashSet<Keys>(keyboard.GetPressedKeys());
+        _ignoredBindingButtons = new HashSet<Buttons>();
+        foreach (var button in ConfigurableGamepadButtons)
+        {
+            if (gamePad.IsButtonDown(button))
+                _ignoredBindingButtons.Add(button);
+        }
+    }
+
+    private void CaptureBinding(KeyboardState keyboard, GamePadState gamePad)
+    {
+        if (!_bindingReady)
+        {
+            var keysReleased = true;
+            foreach (var key in _ignoredBindingKeys)
+            {
+                if (keyboard.IsKeyDown(key))
+                {
+                    keysReleased = false;
+                    break;
+                }
+            }
+
+            var buttonsReleased = true;
+            foreach (var button in _ignoredBindingButtons)
+            {
+                if (gamePad.IsButtonDown(button))
+                {
+                    buttonsReleased = false;
+                    break;
+                }
+            }
+
+            _bindingReady = keysReleased && buttonsReleased;
+            return;
+        }
+
+        if (_bindingDevice == BindingDevice.Keyboard)
+        {
+            foreach (var key in keyboard.GetPressedKeys())
+            {
+                if (key == Keys.Escape)
+                {
+                    _waitingForBinding = false;
+                    return;
+                }
+
+                _keyboardBindings[_controlSelection] = key;
+                _waitingForBinding = false;
+                return;
+            }
+        }
+        else
+        {
+            foreach (var button in ConfigurableGamepadButtons)
+            {
+                if (gamePad.IsButtonDown(button))
+                {
+                    _gamepadBindings[_controlSelection] = button;
+                    _waitingForBinding = false;
+                    return;
+                }
+            }
+        }
     }
 
     private void UpdatePlayerSelection(KeyboardState keyboard, TouchCollection touches)
@@ -343,6 +510,11 @@ public class KuroganesEchoGame : Game
         _isGrounded = true;
         _jumpsUsed = 0;
         _runRemaining = 0f;
+        _playerHealth = PlayerMaxHealth;
+        _playerInvulnerability = 0f;
+        _playerKnockbackVelocity = 0f;
+        _playerFacing = 1;
+        _playerAttackHitApplied = false;
         _player.Reset();
         foreach (var enemy in _enemies)
             enemy.Reset();
@@ -366,28 +538,30 @@ public class KuroganesEchoGame : Game
 
     private void UpdateAct01(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
+        var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _playerInvulnerability = Math.Max(0f, _playerInvulnerability - elapsedSeconds);
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
-        if (keyboard.IsKeyDown(Keys.Left) || keyboard.IsKeyDown(Keys.A))
+        if (IsKeyboardMoveDown(keyboard, 0))
             _moveInput.X -= 1f;
-        if (keyboard.IsKeyDown(Keys.Right) || keyboard.IsKeyDown(Keys.D))
+        if (IsKeyboardMoveDown(keyboard, 1))
             _moveInput.X += 1f;
-        if (gamePad.DPad.Left == ButtonState.Pressed)
+        if (gamePad.IsButtonDown(_gamepadBindings[0]))
             _moveInput.X -= 1f;
-        if (gamePad.DPad.Right == ButtonState.Pressed)
+        if (gamePad.IsButtonDown(_gamepadBindings[1]))
             _moveInput.X += 1f;
         if (gamePad.ThumbSticks.Left.Length() > 0.2f)
             _moveInput.X = gamePad.ThumbSticks.Left.X;
 
         if (IsDesktop)
         {
-            if (IsNewKeyPress(keyboard, Keys.Z) || IsNewButtonPress(gamePad, Buttons.A))
+            if (IsNewKeyPress(keyboard, _keyboardBindings[2]) || IsNewButtonPress(gamePad, _gamepadBindings[2]))
                 StartAction(PlayerAnimationState.Attack1);
-            else if (IsNewKeyPress(keyboard, Keys.X) || IsNewButtonPress(gamePad, Buttons.B))
+            else if (IsNewKeyPress(keyboard, _keyboardBindings[3]) || IsNewButtonPress(gamePad, _gamepadBindings[3]))
                 StartAction(PlayerAnimationState.Attack2);
-            else if (IsNewKeyPress(keyboard, Keys.C) || IsNewButtonPress(gamePad, Buttons.X))
+            else if (IsNewKeyPress(keyboard, _keyboardBindings[4]) || IsNewButtonPress(gamePad, _gamepadBindings[4]))
                 TryJump();
-            else if (IsNewKeyPress(keyboard, Keys.R) || IsNewButtonPress(gamePad, Buttons.Y))
+            else if (IsNewKeyPress(keyboard, _keyboardBindings[5]) || IsNewButtonPress(gamePad, _gamepadBindings[5]))
                 StartAction(PlayerAnimationState.Run);
         }
 
@@ -446,9 +620,11 @@ public class KuroganesEchoGame : Game
 
         if (_moveInput.LengthSquared() > 1f)
             _moveInput.Normalize();
-        var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        if (Math.Abs(_moveInput.X) > 0.05f)
+            _playerFacing = _moveInput.X < 0f ? -1 : 1;
         var movementSpeed = _runRemaining > 0f ? RunSpeed : PlayerSpeed;
-        _playerPosition.X += _moveInput.X * movementSpeed * elapsedSeconds;
+        _playerPosition.X += (_moveInput.X * movementSpeed + _playerKnockbackVelocity) * elapsedSeconds;
+        _playerKnockbackVelocity = MathHelper.Lerp(_playerKnockbackVelocity, 0f, Math.Min(1f, elapsedSeconds * 8f));
         _verticalVelocity += Gravity * elapsedSeconds;
         _playerPosition.Y += _verticalVelocity * elapsedSeconds;
         _playerPosition.X = Math.Clamp(_playerPosition.X, 32f, _level.WorldBounds.Width - 32f);
@@ -474,6 +650,8 @@ public class KuroganesEchoGame : Game
         _player.Update(elapsedSeconds);
         foreach (var enemy in _enemies)
             enemy.Update(elapsedSeconds, _playerPosition, _level);
+        ResolveCombat();
+        ResolvePlayerEnemyCollisions();
         if (!_player.IsActionActive)
         {
             var locomotion = !_isGrounded
@@ -484,9 +662,94 @@ public class KuroganesEchoGame : Game
         UpdateCamera();
     }
 
+    private Rectangle PlayerHitbox => new(
+        (int)(_playerPosition.X - PlayerHalfWidth),
+        (int)(_playerPosition.Y - PlayerHeight),
+        (int)(PlayerHalfWidth * 2f),
+        (int)PlayerHeight);
+
+    private Rectangle PlayerAttackHitbox => new(
+        (int)(_playerPosition.X + (_playerFacing > 0 ? 4f : -38f)),
+        (int)(_playerPosition.Y - 28f),
+        34,
+        22);
+
+    private void ResolveCombat()
+    {
+        if (!_playerAttackHitApplied && _player.IsActionActive &&
+            _player.Animation is PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2)
+        {
+            foreach (var enemy in _enemies)
+            {
+                if (enemy.IsAlive && PlayerAttackHitbox.Intersects(enemy.Hitbox) &&
+                    enemy.TakeDamage(PlayerAttackDamage, _playerPosition.X))
+                {
+                    _playerAttackHitApplied = true;
+                }
+            }
+        }
+
+        var playerHitbox = PlayerHitbox;
+        foreach (var enemy in _enemies)
+        {
+            if (enemy.TryConsumeAttackHit(playerHitbox))
+                TakePlayerDamage(EnemyAttackDamage, enemy.Position.X);
+        }
+    }
+
+    private void ResolvePlayerEnemyCollisions()
+    {
+        var playerHitbox = PlayerHitbox;
+        foreach (var enemy in _enemies)
+        {
+            if (!enemy.IsAlive || !playerHitbox.Intersects(enemy.Hitbox))
+                continue;
+
+            var playerCenter = playerHitbox.Center.X;
+            var enemyCenter = enemy.Hitbox.Center.X;
+            var direction = playerCenter < enemyCenter ? -1f : 1f;
+            var overlap = playerCenter < enemyCenter
+                ? playerHitbox.Right - enemy.Hitbox.Left
+                : enemy.Hitbox.Right - playerHitbox.Left;
+            var separation = Math.Max(1f, overlap + 1f);
+            _playerPosition.X += direction * separation;
+            enemy.PushHorizontally(-direction * separation * 0.5f);
+            _playerPosition.X = Math.Clamp(_playerPosition.X, 32f, _level.WorldBounds.Width - 32f);
+        }
+    }
+
+    private void TakePlayerDamage(int damage, float sourceX)
+    {
+        if (_playerInvulnerability > 0f || _playerHealth <= 0)
+            return;
+
+        _playerHealth = Math.Max(0, _playerHealth - damage);
+        _playerInvulnerability = 0.75f;
+        _playerKnockbackVelocity = _playerPosition.X < sourceX ? -96f : 96f;
+        _verticalVelocity = -110f;
+        _isGrounded = false;
+
+        if (_playerHealth == 0)
+            ResetPlayerAfterDefeat();
+    }
+
+    private void ResetPlayerAfterDefeat()
+    {
+        _playerHealth = PlayerMaxHealth;
+        _playerPosition = _level.PlayerSpawn;
+        _verticalVelocity = 0f;
+        _playerKnockbackVelocity = 0f;
+        _isGrounded = true;
+        _jumpsUsed = 0;
+        _playerInvulnerability = 1f;
+        _player.Reset();
+    }
+
     private void StartAction(PlayerAnimationState action)
     {
         _player.SetAction(action);
+        if (action is PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2)
+            _playerAttackHitApplied = false;
         _runRemaining = action == PlayerAnimationState.Run ? _player.ActionRemaining : 0f;
     }
 
@@ -518,7 +781,7 @@ public class KuroganesEchoGame : Game
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
         DrawRect(new Rectangle(12, 12, VirtualWidth - 24, VirtualHeight - 24), new Color(25, 35, 45), false, 2);
         DrawTextCentered(LocalizedText.Get("Title"), new Vector2(VirtualWidth / 2f, 30f), new Color(214, 191, 135), 1.25f);
-        DrawTextCentered("16-BIT // ACT 01", new Vector2(VirtualWidth / 2f, 50f), new Color(117, 143, 145), 0.55f);
+        DrawTextCentered(LocalizedText.Get("MenuSubtitle"), new Vector2(VirtualWidth / 2f, 50f), new Color(117, 143, 145), 0.55f);
 
         for (var index = 0; index < _menuKeys.Length; index++)
         {
@@ -556,10 +819,58 @@ public class KuroganesEchoGame : Game
             DrawTextCentered($"{_languageCodes[index]} - {label}", bounds.Center.ToVector2(), Color.White, 0.62f);
         }
 
+        if (IsDesktop)
+        {
+            var controls = ControlsButton();
+            DrawRect(controls, new Color(42, 53, 63));
+            DrawRect(controls, new Color(77, 91, 99), false, 1);
+            DrawTextCentered(LocalizedText.Get("Controls"), controls.Center.ToVector2(), Color.White, 0.68f);
+        }
+
         var back = OptionsBackButton();
         DrawRect(back, new Color(42, 53, 63));
         DrawRect(back, new Color(77, 91, 99), false, 1);
         DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.72f);
+        EndUi();
+    }
+
+    private void DrawControls()
+    {
+        GraphicsDevice.Clear(new Color(12, 16, 24));
+        BeginUi();
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawTextCentered(LocalizedText.Get("Controls"), new Vector2(VirtualWidth / 2f, 13f), new Color(214, 191, 135), 0.95f);
+
+        var keyboardButton = ControlsKeyboardButton();
+        var gamepadButton = ControlsGamepadButton();
+        DrawRect(keyboardButton, _bindingDevice == BindingDevice.Keyboard ? new Color(78, 96, 105) : new Color(42, 53, 63));
+        DrawRect(keyboardButton, _bindingDevice == BindingDevice.Keyboard ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+        DrawTextCentered(LocalizedText.Get("Keyboard"), keyboardButton.Center.ToVector2(), Color.White, 0.58f);
+        DrawRect(gamepadButton, _bindingDevice == BindingDevice.Gamepad ? new Color(78, 96, 105) : new Color(42, 53, 63));
+        DrawRect(gamepadButton, _bindingDevice == BindingDevice.Gamepad ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+        DrawTextCentered(LocalizedText.Get("Gamepad"), gamepadButton.Center.ToVector2(), Color.White, 0.58f);
+
+        for (var index = 0; index < _controlKeys.Length; index++)
+        {
+            var row = ControlRow(index);
+            var selected = index == _controlSelection;
+            DrawRect(row, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+            DrawRect(row, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+            var binding = _bindingDevice == BindingDevice.Keyboard
+                ? GetKeyboardBindingLabel(index)
+                : GetGamepadBindingLabel(index);
+            DrawTextCentered($"{LocalizedText.Get(_controlKeys[index])}: {binding}", row.Center.ToVector2(), Color.White, 0.5f);
+        }
+
+        var instruction = _waitingForBinding
+            ? LocalizedText.Get("PressKey")
+            : $"{LocalizedText.Get("Keyboard")}/{LocalizedText.Get("Gamepad")}  ENTER = {LocalizedText.Get("Bind")}";
+        DrawTextCentered(instruction, new Vector2(VirtualWidth / 2f, 145f), new Color(156, 170, 169), 0.45f);
+
+        var back = ControlsBackButton();
+        DrawRect(back, new Color(42, 53, 63));
+        DrawRect(back, new Color(77, 91, 99), false, 1);
+        DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.62f);
         EndUi();
     }
 
@@ -629,11 +940,15 @@ public class KuroganesEchoGame : Game
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: _camera.GetViewMatrix());
         foreach (var enemy in _enemies)
+        {
             enemy.Draw(_spriteBatch);
+            DrawWorldHealthBar(enemy.Position, enemy.Health, enemy.MaxHealth);
+        }
         DrawPlayer();
         _spriteBatch.End();
 
         BeginUi();
+        DrawPlayerHealthBar();
         if (IsMobile)
         {
             DrawAnalog();
@@ -644,8 +959,31 @@ public class KuroganesEchoGame : Game
 
     private void DrawPlayer()
     {
-        var effects = _moveInput.X < -0.05f ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+        var effects = _playerFacing < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
         _player.Draw(_spriteBatch, _playerPosition, PlayerScale, effects);
+    }
+
+    private void DrawPlayerHealthBar()
+    {
+        DrawText(LocalizedText.Get("Health"), new Vector2(8f, 5f), Color.White, 0.48f);
+        DrawHealthBar(new Rectangle(8, 17, 92, 7), _playerHealth, PlayerMaxHealth);
+    }
+
+    private void DrawWorldHealthBar(Vector2 feetPosition, int health, int maximumHealth)
+    {
+        var bounds = new Rectangle((int)feetPosition.X - 16, (int)feetPosition.Y - 40, 32, 4);
+        DrawHealthBar(bounds, health, maximumHealth);
+    }
+
+    private void DrawHealthBar(Rectangle bounds, int health, int maximumHealth)
+    {
+        var safeMaximum = Math.Max(1, maximumHealth);
+        var safeHealth = Math.Clamp(health, 0, safeMaximum);
+        DrawRect(bounds, new Color(42, 25, 30, 230));
+        var fillWidth = (int)Math.Round(bounds.Width * safeHealth / (float)safeMaximum);
+        if (fillWidth > 0)
+            DrawRect(new Rectangle(bounds.Left, bounds.Top, fillWidth, bounds.Height), safeHealth > safeMaximum / 3 ? new Color(76, 177, 84) : new Color(204, 70, 64));
+        DrawRect(bounds, new Color(214, 191, 135), false, 1);
     }
 
     private void DrawAnalog()
@@ -755,6 +1093,26 @@ public class KuroganesEchoGame : Game
 
     private Rectangle OptionsBackButton() => new(112, 153, 96, 18);
 
+    private Rectangle ControlsButton() => new(98, 118, 124, 20);
+
+    private Rectangle ControlsKeyboardButton() => new(8, 27, 148, 14);
+
+    private Rectangle ControlsGamepadButton() => new(164, 27, 148, 14);
+
+    private Rectangle ControlRow(int index) => new(16, 42 + index * 16, 288, 15);
+
+    private Rectangle ControlsBackButton() => new(112, 160, 96, 16);
+
+    private bool IsKeyboardMoveDown(KeyboardState keyboard, int index)
+    {
+        var fallback = index == 0 ? Keys.Left : Keys.Right;
+        return keyboard.IsKeyDown(_keyboardBindings[index]) || keyboard.IsKeyDown(fallback);
+    }
+
+    private string GetKeyboardBindingLabel(int index) => _keyboardBindings[index].ToString();
+
+    private string GetGamepadBindingLabel(int index) => _gamepadBindings[index].ToString();
+
     private string CharacterLabel(int index) => _characterIds[index] switch
     {
         "Kunoichi" => LocalizedText.Get("Kunoichi"),
@@ -814,7 +1172,14 @@ public class KuroganesEchoGame : Game
         Options,
         PlayerSelection,
         DifficultySelection,
+        Controls,
         Act01
+    }
+
+    private enum BindingDevice
+    {
+        Keyboard,
+        Gamepad
     }
 
 }

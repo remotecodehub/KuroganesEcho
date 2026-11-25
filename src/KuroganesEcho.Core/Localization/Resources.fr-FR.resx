@@ -123,4 +123,42 @@
   <data name="ClickAnywhere" xml:space="preserve">
     <value>Click Anywhere</value>
   </data>
+  <data name="Title" xml:space="preserve"><value>L'Écho de Kurogane</value></data>
+  <data name="Health" xml:space="preserve"><value>Vie</value></data>
+  <data name="MenuSubtitle" xml:space="preserve"><value>16-BIT // ACTE 01</value></data>
+  <data name="Play" xml:space="preserve"><value>Jouer</value></data>
+  <data name="Options" xml:space="preserve"><value>Options</value></data>
+  <data name="Quit" xml:space="preserve"><value>Quitter</value></data>
+  <data name="Language" xml:space="preserve"><value>Langue</value></data>
+  <data name="Character" xml:space="preserve"><value>Personnage</value></data>
+  <data name="Controls" xml:space="preserve"><value>Commandes</value></data>
+  <data name="Keyboard" xml:space="preserve"><value>Clavier</value></data>
+  <data name="Gamepad" xml:space="preserve"><value>Manette</value></data>
+  <data name="MoveLeft" xml:space="preserve"><value>Déplacer à gauche</value></data>
+  <data name="MoveRight" xml:space="preserve"><value>Déplacer à droite</value></data>
+  <data name="Attack1" xml:space="preserve"><value>Attaque 1</value></data>
+  <data name="Attack2" xml:space="preserve"><value>Attaque 2</value></data>
+  <data name="Jump" xml:space="preserve"><value>Saut</value></data>
+  <data name="Run" xml:space="preserve"><value>Courir</value></data>
+  <data name="PressKey" xml:space="preserve"><value>Appuyez sur une touche ou un bouton</value></data>
+  <data name="Bind" xml:space="preserve"><value>Associer</value></data>
+  <data name="SelectPlayer" xml:space="preserve"><value>Choisissez votre joueur</value></data>
+  <data name="SelectDifficulty" xml:space="preserve"><value>Choisissez la difficulté</value></data>
+  <data name="Difficulty" xml:space="preserve"><value>Difficulté</value></data>
+  <data name="Easy" xml:space="preserve"><value>Facile</value></data>
+  <data name="Normal" xml:space="preserve"><value>Normale</value></data>
+  <data name="Hard" xml:space="preserve"><value>Difficile</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continuer</value></data>
+  <data name="Kunoichi" xml:space="preserve"><value>Kunoichi</value></data>
+  <data name="Monk" xml:space="preserve"><value>Moine</value></data>
+  <data name="Peasant" xml:space="preserve"><value>Paysan</value></data>
+  <data name="Back" xml:space="preserve"><value>Retour</value></data>
+  <data name="Portuguese" xml:space="preserve"><value>Portugais</value></data>
+  <data name="English" xml:space="preserve"><value>Anglais</value></data>
+  <data name="French" xml:space="preserve"><value>Français</value></data>
+  <data name="Act01" xml:space="preserve"><value>Acte 1 - Le Sentier des Lanternes Éteintes</value></data>
+  <data name="TestMode" xml:space="preserve"><value>MODE TEST - MOUVEMENT</value></data>
+  <data name="Actions" xml:space="preserve"><value>ACTIONS</value></data>
+  <data name="Move" xml:space="preserve"><value>DÉPLACEZ LE PERSONNAGE</value></data>
+  <data name="ExitHint" xml:space="preserve"><value>ESC / RETOUR</value></data>
 </root>

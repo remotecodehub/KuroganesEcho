@@ -24,7 +24,8 @@ public class KuroganesEchoGame : Game
     private const float PlayerScale = 0.5f;
     private const float Gravity = 480f;
     private const float JumpVelocity = -180f;
-    private const float DoubleJumpVelocity = -320f;
+    private const float DoubleJumpVelocity = -180f;
+    private const float RunningDoubleJumpVelocity = -304f;
     private const float PlayerHalfWidth = 10f;
     private const int MaximumJumps = 2;
     private const float PlayerHeight = 32f;
@@ -1337,7 +1338,9 @@ public class KuroganesEchoGame : Game
         if (_jumpsUsed >= MaximumJumps)
             return;
 
-        _verticalVelocity = _jumpsUsed == 0 ? JumpVelocity : DoubleJumpVelocity;
+        _verticalVelocity = _jumpsUsed == 0
+            ? JumpVelocity
+            : (_runRemaining > 0f ? RunningDoubleJumpVelocity : DoubleJumpVelocity);
         _isGrounded = false;
         _jumpsUsed++;
         StartAction(PlayerAnimationState.Jump);

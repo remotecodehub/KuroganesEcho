@@ -1,5 +1,5 @@
 {
-    "activeFile": "",
+    "activeFile": "Maps/Act_02_A.tmx",
     "expandedProjectPaths": [
     ],
     "file.lastUsedOpenFilter": "Todos os Ficheiros (*)",
@@ -8,8 +8,48 @@
             "scale": 1,
             "selectedLayer": 0,
             "viewCenter": {
+                "x": 2594,
+                "y": 191.5
+            }
+        },
+        "Maps/Act_01_B.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2518,
+                "y": 191.5
+            }
+        },
+        "Maps/Act_01_C.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 7,
+            "viewCenter": {
                 "x": 2560,
-                "y": 191
+                "y": 191.66666666666669
+            }
+        },
+        "Maps/Act_02_A.tmx": {
+            "scale": 3,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 1052.6666666666665,
+                "y": 130.66666666666666
+            }
+        },
+        "Maps/Act_02_B.tmx": {
+            "scale": 0.25568359375,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2561.759987777863,
+                "y": 191.64311358948908
+            }
+        },
+        "Maps/Act_02_C.tmx": {
+            "scale": 0.25568359375,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2561.759987777863,
+                "y": 191.64311358948908
             }
         },
         "Maps/KuroganesEcho_320x24.tmx": {
@@ -23,7 +63,16 @@
         "Tilesets/Act_01_Environment.tsx": {
             "scaleInDock": 2
         },
+        "Tilesets/Act_01_Feudal.tsx": {
+            "scaleInDock": 11
+        },
         "Tilesets/Act_01_Feudal_Dark.tsx": {
+            "scaleInDock": 2
+        },
+        "Tilesets/Act_01_Items.tsx": {
+            "scaleInDock": 4
+        },
+        "Tilesets/Act_02_Feudal_Sun.tsx": {
             "scaleInDock": 1
         },
         "Tilesets/Kunoichi.tsx": {
@@ -41,10 +90,20 @@
         }
     },
     "openFiles": [
+        "Maps/Act_01_A.tmx",
+        "Maps/Act_01_B.tmx",
+        "Maps/Act_01_C.tmx",
+        "Maps/Act_02_A.tmx"
     ],
     "project": "KuroganesEcho.tiled-project",
     "recentFiles": [
+        "Maps/Act_01_A.tmx",
+        "Maps/Act_01_B.tmx",
+        "Maps/Act_01_C.tmx",
+        "Maps/Act_02_A.tmx",
         "Tilesets/Kunoichi.tsx",
+        "Maps/Act_02_C.tmx",
+        "Maps/Act_02_B.tmx",
         "Tilesets/Ninja_Monk.tsx",
         "Tilesets/Ninja_Peasant.tsx",
         "Maps/KuroganesEcho_320x24.tmx"

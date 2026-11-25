@@ -2301,9 +2301,7 @@ public class KuroganesEchoGame : Game
     private void DrawAtmosphere()
     {
         BeginUi();
-        if (_currentLevelId == "Act_02_A")
-            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(255, 205, 142, 24));
-        else if (_currentLevelId == "Act_02_B")
+        if (_currentLevelId == "Act_02_B")
             DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(255, 174, 118, 36));
         else if (_currentLevelId == "Act_02_C")
             DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 8, 25, 152));

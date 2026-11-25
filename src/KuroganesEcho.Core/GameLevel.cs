@@ -160,6 +160,8 @@ internal sealed class GameLevel
     public TilemapSpriteBatchRenderer Renderer { get; }
     public RectangleF WorldBounds => Tilemap.WorldBounds;
     public Vector2 PlayerSpawn => Definition.PlayerSpawn;
+    public IReadOnlyDictionary<string, string> MapProperties { get; private set; } =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     public GameDifficulty Difficulty { get; private set; } = GameDifficulty.Normal;
     public IReadOnlyList<Rectangle> CollisionPlatforms => _collisionPlatforms;
     public IReadOnlyList<LevelObjectData> GameplayObjects => _gameplayObjects;
@@ -245,6 +247,8 @@ internal sealed class GameLevel
         var root = document.Root;
         if (root is null)
             return;
+
+        MapProperties = ReadProperties(root);
 
         var collisionLayer = root.Elements("objectgroup")
             .FirstOrDefault(layer => string.Equals(

@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net11.0-android</TargetFramework>
     <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
-    <ApplicationId>com.companyname.KuroganesEcho</ApplicationId>
+    <ApplicationId>com.remotecodehub.kuroganesecho</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AssemblyName>KuroganesEcho</AssemblyName>

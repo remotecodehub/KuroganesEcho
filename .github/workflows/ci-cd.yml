@@ -56,7 +56,7 @@ jobs:
             project: src/KuroganesEcho.Android/KuroganesEcho.Android.csproj
             framework: net11.0-android
           - platform: ios
-            runner: macos-latest
+            runner: xcode-27
             workload: ios
             project: src/KuroganesEcho.iOS/KuroganesEcho.iOS.csproj
             framework: net11.0-ios

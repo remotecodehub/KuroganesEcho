@@ -22,15 +22,13 @@ internal sealed class PlayerProjectile
         Rectangle source,
         Vector2 position,
         int direction,
-        PlayerProjectileKind kind,
-        bool unlocksSecondary)
+        PlayerProjectileKind kind)
     {
         Texture = texture;
         _source = source;
         Position = position;
         Direction = direction < 0 ? -1 : 1;
         Kind = kind;
-        UnlocksSecondary = unlocksSecondary;
         Speed = kind switch
         {
             PlayerProjectileKind.Spine => 250f,
@@ -58,7 +56,6 @@ internal sealed class PlayerProjectile
     public float Scale { get; }
     public PlayerProjectileKind Kind { get; }
     public bool IsExpired => _remaining <= 0f;
-    public bool UnlocksSecondary { get; }
 
     public Rectangle Hitbox => new(
         (int)(Position.X - _hitboxSize.X / 2f),

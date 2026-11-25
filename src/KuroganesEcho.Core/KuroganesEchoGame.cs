@@ -930,7 +930,7 @@ public class KuroganesEchoGame : Game
         _jumpsUsed = 0;
         _runRemaining = 0f;
         _stamina = StaminaMaximum;
-        _power = IsKunoichi ? 0f : CombatBalance.PlayerPowerMaximum;
+        _power = 0f;
         _secondaryPowerUnlocked = false;
         _projectiles.Clear();
         _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
@@ -1065,6 +1065,9 @@ public class KuroganesEchoGame : Game
         _playerInvulnerability = Math.Max(0f, _playerInvulnerability - elapsedSeconds);
         if (_runRemaining <= 0f)
             _stamina = Math.Min(StaminaMaximum, _stamina + StaminaRecoveryPerSecond * elapsedSeconds);
+        _power = Math.Min(
+            CombatBalance.PlayerPowerMaximum,
+            _power + CombatBalance.PlayerPowerRecoveryPerSecond * elapsedSeconds);
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
         if (IsKeyboardMoveDown(keyboard, 0))
@@ -1327,10 +1330,11 @@ public class KuroganesEchoGame : Game
 
     private bool TryCollectPowerFruit(LevelObjectData collectible)
     {
-        if (_power >= CombatBalance.PlayerPowerMaximum)
+        if ((IsKunoichi && _power < CombatBalance.SpecialPowerCost) ||
+            (!IsKunoichi && _power >= CombatBalance.PlayerPowerMaximum))
             return false;
 
-        var restore = (float)CombatBalance.PlayerPowerMaximum;
+        var restore = CombatBalance.PowerFruitRestore;
         if (collectible.Properties.TryGetValue("RestorePower", out var configuredRestore) &&
             float.TryParse(configuredRestore, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedRestore))
             restore = Math.Max(0.1f, parsedRestore);
@@ -1339,10 +1343,34 @@ public class KuroganesEchoGame : Game
         if (IsKunoichi)
         {
             _secondaryPowerUnlocked = true;
+            ConsumeKunoichiFruit();
             if (CanStartAction())
                 StartAction(PlayerAnimationState.Eating);
         }
         return true;
+    }
+
+    private void ConsumeKunoichiFruit()
+    {
+        if (_stamina < StaminaMaximum)
+        {
+            _stamina = Math.Min(
+                StaminaMaximum,
+                _stamina + CombatBalance.KunoichiFruitStaminaRestore);
+            return;
+        }
+
+        var maximumHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
+        if (_playerHealth < maximumHealth)
+        {
+            var restore = Math.Max(
+                1,
+                (int)Math.Ceiling(maximumHealth * CombatBalance.KunoichiFruitHealthRestoreFraction));
+            _playerHealth = Math.Min(maximumHealth, _playerHealth + restore);
+            return;
+        }
+
+        TryCollectExtraLife();
     }
 
     private bool TryCollectTalismanThird()
@@ -1377,45 +1405,54 @@ public class KuroganesEchoGame : Game
 
         if (IsKunoichi)
         {
+            if (_power < CombatBalance.SpecialPowerCost)
+                return;
+
             StartAction(PlayerAnimationState.Eating);
             return;
         }
 
-        if (_power < CombatBalance.SpecialPowerCost)
-            return;
-
-        _power -= CombatBalance.SpecialPowerCost;
         if (IsMonk)
         {
+            if (_power < CombatBalance.SpecialPowerCost)
+                return;
+
+            _power -= CombatBalance.SpecialPowerCost;
             StartAction(PlayerAnimationState.Blade);
             _playerAttackHitApplied = false;
         }
         else
         {
             StartAction(PlayerAnimationState.Shot);
-            SpawnSpecialProjectile(PlayerProjectileKind.Dart, unlocksSecondary: true);
+            SpawnSpecialProjectile(PlayerProjectileKind.Dart);
         }
     }
 
     private void StartSecondarySpecial()
     {
-        if (!CanStartAction() || !_secondaryPowerUnlocked || _power < CombatBalance.SpecialPowerCost)
+        if (!CanStartAction())
             return;
 
-        _power -= CombatBalance.SpecialPowerCost;
-        if (IsKunoichi || IsMonk)
+        if (IsKunoichi)
         {
+            if (!_secondaryPowerUnlocked)
+                return;
+
             StartAction(PlayerAnimationState.Cast);
-            SpawnSpecialProjectile(IsKunoichi ? PlayerProjectileKind.Spine : PlayerProjectileKind.Kunai);
+            SpawnSpecialProjectile(PlayerProjectileKind.Spine);
             return;
         }
 
+        if (IsMonk || _power < CombatBalance.SpecialPowerCost)
+            return;
+
+        _power -= CombatBalance.SpecialPowerCost;
         StartAction(PlayerAnimationState.Disguise);
     }
 
     private bool CanStartAction() => !_player.IsActionActive && _player.Animation != PlayerAnimationState.Dead;
 
-    private void SpawnSpecialProjectile(PlayerProjectileKind kind, bool unlocksSecondary = false)
+    private void SpawnSpecialProjectile(PlayerProjectileKind kind)
     {
         var texture = kind switch
         {
@@ -1427,7 +1464,7 @@ public class KuroganesEchoGame : Game
             ? new Rectangle(0, 0, Math.Min(16, texture.Width), Math.Min(16, texture.Height))
             : new Rectangle(0, 0, texture.Width, texture.Height);
         var position = _playerPosition + new Vector2(_playerFacing * 20f, -20f);
-        _projectiles.Add(new PlayerProjectile(texture, source, position, _playerFacing, kind, unlocksSecondary));
+        _projectiles.Add(new PlayerProjectile(texture, source, position, _playerFacing, kind));
     }
 
     private void UpdateProjectiles(float elapsedSeconds)
@@ -1480,14 +1517,6 @@ public class KuroganesEchoGame : Game
 
         _effects.Spawn(effectPosition, CombatEffectKind.Death, Vector2.UnitY, 1.1f);
         _audio.PlayCue(AudioCue.Explosion, 0.55f);
-        if (projectile.UnlocksSecondary)
-            UnlockSecondaryAfterPrimaryKill();
-    }
-
-    private void UnlockSecondaryAfterPrimaryKill()
-    {
-        _secondaryPowerUnlocked = true;
-        _power = Math.Min(CombatBalance.PlayerPowerMaximum, _power + 1f);
     }
 
     private void ResolveCombat()
@@ -1500,7 +1529,7 @@ public class KuroganesEchoGame : Game
                 if (!_playerAttackHitApplied && enemy.IsAlive && PlayerAttackHitbox.Intersects(enemy.Hitbox) &&
                     enemy.TakeDamage(
                         _player.Animation == PlayerAnimationState.Blade
-                            ? CombatBalance.SpecialAttackDamage
+                            ? CombatBalance.MonkBladeDamage
                             : CombatBalance.PlayerAttackDamage,
                         _playerPosition.X))
                 {
@@ -1511,8 +1540,6 @@ public class KuroganesEchoGame : Game
                     {
                         _audio.PlayCue(AudioCue.Explosion, 0.55f);
                         _effects.Spawn(enemy.Position - new Vector2(0f, 18f), CombatEffectKind.Death, Vector2.UnitY, 1.1f);
-                        if (_player.Animation == PlayerAnimationState.Blade)
-                            UnlockSecondaryAfterPrimaryKill();
                     }
 
                     break;
@@ -1522,7 +1549,7 @@ public class KuroganesEchoGame : Game
             if (!_playerAttackHitApplied && _boss is not null && _boss.IsAlive && PlayerAttackHitbox.Intersects(_boss.Hitbox) &&
                 _boss.TakeDamage(
                     _player.Animation == PlayerAnimationState.Blade
-                        ? CombatBalance.SpecialAttackDamage
+                        ? CombatBalance.MonkBladeDamage
                         : CombatBalance.PlayerAttackDamage,
                     PlayerAttackHitbox.Center.Y))
             {
@@ -1533,8 +1560,6 @@ public class KuroganesEchoGame : Game
                 {
                     _audio.PlayCue(AudioCue.Explosion, 0.8f);
                     _effects.Spawn(_boss.Position - new Vector2(0f, 26f), CombatEffectKind.Death, Vector2.UnitY, 1.6f);
-                    if (_player.Animation == PlayerAnimationState.Blade)
-                        UnlockSecondaryAfterPrimaryKill();
                 }
             }
         }

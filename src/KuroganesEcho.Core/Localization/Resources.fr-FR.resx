@@ -205,12 +205,12 @@
   <data name="IntroLine12" xml:space="preserve"><value>d'envahir le village du clan.</value></data>
   <data name="IntroLine13" xml:space="preserve"><value></value></data>
   <data name="Power" xml:space="preserve"><value>Pouvoir</value></data>
-  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Manger un fruit (limité)</value></data>
-  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast (après le fruit)</value></data>
-  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (limité)</value></data>
-  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (après un kill Blade)</value></data>
-  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limité)</value></data>
-  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (après un kill Shot)</value></data>
+  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Manger un fruit (requiert du pouvoir; restaure l'endurance, la vie ou une vie supplémentaire)</value></data>
+  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast: lance Spine (sans coût après le fruit)</value></data>
+  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (coûte du pouvoir; dégâts élevés)</value></data>
+  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Aucune attaque secondaire</value></data>
+  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lance Dart (sans coût de pouvoir)</value></data>
+  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: immunité aux dégâts (coûte du pouvoir)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>Le Sanctuaire en Ruines</value></data>
   <data name="Act01CObjective" xml:space="preserve"><value>Vainquez le Minotaure et récupérez le talisman de fer.</value></data>
   <data name="Act01CTutorial" xml:space="preserve"><value>Traversez les runes corrompues et survivez au gardien final.</value></data>

@@ -1,6 +1,6 @@
 # Kuroganes Echo
 
-## CI/CD
+## 🛠️ CI/CD
 
 The GitHub Actions workflow builds the DesktopGL project for Windows, Linux, and macOS, builds the Android APK and iOS simulator app, and packages native DesktopGL installers. Each build and installer is published as a downloadable workflow artifact.
 

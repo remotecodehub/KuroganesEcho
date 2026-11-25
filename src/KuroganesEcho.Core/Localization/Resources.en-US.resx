@@ -86,12 +86,12 @@
   <data name="IntroLine12" xml:space="preserve"><value>from invading the clan village.</value></data>
   <data name="IntroLine13" xml:space="preserve"><value></value></data>
   <data name="Power" xml:space="preserve"><value>Power</value></data>
-  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Eat fruit (limited)</value></data>
-  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast (unlocked after eating fruit)</value></data>
-  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (limited)</value></data>
-  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (unlocked after a blade kill)</value></data>
-  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limited)</value></data>
-  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (unlocked after a shot kill)</value></data>
+  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Eat fruit (requires power; restores stamina, health or an extra life)</value></data>
+  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast: launches Spine (no power cost after eating fruit)</value></data>
+  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (uses power; high damage)</value></data>
+  <data name="MonkSpecialSecondary" xml:space="preserve"><value>No secondary attack</value></data>
+  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: launches Dart (no power cost)</value></data>
+  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: damage immunity (uses power)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>The Ruined Sanctuary</value></data>
   <data name="Act01CObjective" xml:space="preserve"><value>Defeat the Minotaur and recover the iron talisman.</value></data>
   <data name="Act01CTutorial" xml:space="preserve"><value>Cross the corrupted runes and survive the final guardian.</value></data>

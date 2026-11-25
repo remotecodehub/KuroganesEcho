@@ -86,12 +86,12 @@
   <data name="IntroLine12" xml:space="preserve"><value>corrompidos das montanhas de</value></data>
   <data name="IntroLine13" xml:space="preserve"><value>invadirem a vila do clã.</value></data>
   <data name="Power" xml:space="preserve"><value>Poder</value></data>
-  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Comer fruta (limitado)</value></data>
-  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast (liberado após comer fruta)</value></data>
-  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (limitado)</value></data>
-  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (liberado após matar com blade)</value></data>
-  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limitado)</value></data>
-  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (liberado após matar com shot)</value></data>
+  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Comer fruta (requer poder; restaura stamina, vida ou vida extra)</value></data>
+  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast: lança Spine (sem gastar poder, após comer fruta)</value></data>
+  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (gasta poder; dano alto)</value></data>
+  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Sem ataque secundário</value></data>
+  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lança Dart (sem gastar poder)</value></data>
+  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: defesa sem dano (gasta poder)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>O Santuário em Ruínas</value></data>
   <data name="Act01CObjective" xml:space="preserve"><value>Derrote o Minotauro e recupere o talismã de ferro.</value></data>
   <data name="Act01CTutorial" xml:space="preserve"><value>Atravesse as runas corrompidas e sobreviva ao guardião final.</value></data>

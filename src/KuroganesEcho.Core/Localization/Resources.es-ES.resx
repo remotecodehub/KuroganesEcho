@@ -124,12 +124,12 @@
     <value>Click Anywhere</value>
   </data>
   <data name="Power" xml:space="preserve"><value>Poder</value></data>
-  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Comer fruta (limitado)</value></data>
-  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast (tras comer fruta)</value></data>
-  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (limitado)</value></data>
-  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Cast (tras matar con Blade)</value></data>
-  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot (limitado)</value></data>
-  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise (tras matar con Shot)</value></data>
+  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Comer fruta (requiere poder; restaura stamina, vida o vida extra)</value></data>
+  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast: lanza Spine (sin gastar poder tras comer fruta)</value></data>
+  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (gasta poder; daño alto)</value></data>
+  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Sin ataque secundario</value></data>
+  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lanza Dart (sin gastar poder)</value></data>
+  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: defensa sin daño (gasta poder)</value></data>
   <data name="Act01CTitle" xml:space="preserve"><value>El Santuario en Ruinas</value></data>
   <data name="Act01CObjective" xml:space="preserve"><value>Derrota al Minotauro y recupera el talismán de hierro.</value></data>
   <data name="Act01CTutorial" xml:space="preserve"><value>Atraviesa las runas corruptas y sobrevive al guardián final.</value></data>

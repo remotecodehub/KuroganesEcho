@@ -340,7 +340,7 @@ internal sealed class GameLevel
             else if (kind.Value == CollectibleKind.Stamina)
                 properties["RestoreStamina"] = "2.5";
             else if (kind.Value == CollectibleKind.PowerFruit)
-                properties["RestorePower"] = CombatBalance.PlayerPowerMaximum.ToString(CultureInfo.InvariantCulture);
+                properties["RestorePower"] = CombatBalance.PowerFruitRestore.ToString(CultureInfo.InvariantCulture);
             else if (kind.Value == CollectibleKind.ExtraLife)
                 properties["ExtraLife"] = "1";
             else

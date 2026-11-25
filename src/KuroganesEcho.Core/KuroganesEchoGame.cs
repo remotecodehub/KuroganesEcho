@@ -74,6 +74,8 @@ public class KuroganesEchoGame : Game
     private SpriteFont _fontWide = null!;
     private SpriteFont _fontSemiboldWide = null!;
     private Texture2D _whiteTexture = null!;
+    private Texture2D _mainBackground = null!;
+    private Texture2D _gameplayBackground = null!;
     private PlayerCharacter _player = null!;
     private GameLevel _level = null!;
     private AudioService _audio = null!;
@@ -188,6 +190,8 @@ public class KuroganesEchoGame : Game
         _fontSemibold = Content.Load<SpriteFont>("Fonts/ArraySemibold");
         _fontWide = Content.Load<SpriteFont>("Fonts/ArrayWide");
         _fontSemiboldWide = Content.Load<SpriteFont>("Fonts/ArraySemiboldWide");
+        _mainBackground = Content.Load<Texture2D>("MAIN_BG");
+        _gameplayBackground = Content.Load<Texture2D>("GAMEPLAY_BG");
         _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01A);
         _level.ConfigureDifficulty(_selectedDifficulty);
         _audio = AudioService.Load(Content);
@@ -1719,9 +1723,11 @@ public class KuroganesEchoGame : Game
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
 
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawMenuBackground();
         DrawRect(new Rectangle(12, 12, VirtualWidth - 24, VirtualHeight - 24), new Color(25, 35, 45), false, 2);
-        DrawTextCentered(LocalizedText.Get("Title"), new Vector2(VirtualWidth / 2f, 30f), new Color(214, 191, 135), _fontSemiboldWide, 1.25f);
+        var title = LocalizedText.Get("Title").ToUpperInvariant();
+        var titleScale = Math.Min(1.25f, (VirtualWidth - 32f) / Math.Max(1f, _fontSemiboldWide.MeasureString(title).X));
+        DrawTextCentered(title, new Vector2(VirtualWidth * 0.5f, 30f), new Color(214, 191, 135), _fontSemiboldWide, titleScale);
         for (var index = 0; index < _menuKeys.Length; index++)
         {
             var selected = index == _menuSelection;
@@ -1794,7 +1800,7 @@ public class KuroganesEchoGame : Game
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawMenuBackground();
         DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 27f), new Color(214, 191, 135), _fontSemibold, 1.2f);
         DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 38f), new Color(156, 170, 169), 0.55f);
 
@@ -1850,13 +1856,25 @@ public class KuroganesEchoGame : Game
         DrawTextCentered(label, bounds.Center.ToVector2(), Color.White, 0.52f);
     }
 
+    private void DrawMenuBackground()
+    {
+        _spriteBatch.Draw(_mainBackground, new Rectangle(0, 0, VirtualWidth, VirtualHeight), Color.White);
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(7, 14, 23, 112));
+    }
+
+    private void DrawGameplayBackground()
+    {
+        _spriteBatch.Draw(_gameplayBackground, new Rectangle(0, 0, VirtualWidth, VirtualHeight), Color.White);
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(7, 14, 23, 96));
+    }
+
     private string VolumePercent(float volume) => $"{(int)Math.Round(volume * 100f)}%";
 
     private void DrawControls()
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawMenuBackground();
         DrawTextCentered(LocalizedText.Get("Controls"), new Vector2(VirtualWidth / 2f, 13f), new Color(214, 191, 135), _fontSemiboldWide, 0.95f);
 
         var keyboardButton = ControlsKeyboardButton();
@@ -1899,7 +1917,7 @@ public class KuroganesEchoGame : Game
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawGameplayBackground();
         DrawTextCentered(LocalizedText.Get("SelectPlayer"), new Vector2(VirtualWidth / 2f, 20f), new Color(214, 191, 135), 1f);
         DrawTextCentered("<  >", new Vector2(VirtualWidth / 2f, 38f), new Color(130, 145, 149), 0.72f);
 
@@ -1926,7 +1944,7 @@ public class KuroganesEchoGame : Game
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawGameplayBackground();
         DrawTextCentered(LocalizedText.Get("SelectDifficulty"), new Vector2(VirtualWidth / 2f, 24f), new Color(214, 191, 135), 0.95f);
 
         for (var index = 0; index < _difficultyKeys.Length; index++)
@@ -2136,7 +2154,11 @@ public class KuroganesEchoGame : Game
 
     private void BeginUi()
     {
-        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: _viewportAdapter.GetScaleMatrix());
+        // UI fonts are rendered at the virtual resolution and then scaled to the
+        // window. Linear sampling prevents a horizontal atlas seam from cutting
+        // through the Array glyphs while preserving the pixel-art sampler for
+        // the world and character sprites.
+        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, transformMatrix: _viewportAdapter.GetScaleMatrix());
     }
 
     private void EndUi() => _spriteBatch.End();

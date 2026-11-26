@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewBox="0 0 128 64" shape-rendering="crispEdges">
+  <defs><style>.ink{fill:#292638}.wall{fill:#777070}.wall2{fill:#a29a8a}.wood{fill:#754a3d}.roof{fill:#3c2f42}.roof2{fill:#654354}.red{fill:#9c4e43}.gold{fill:#d29b55}.paper{fill:#e7d9aa}.jade{fill:#6f8758}.shadow{fill:#4a4252}.stone{fill:#5d5961}</style></defs>
+  <!-- ruined Japanese castle kit, 8x4 tiles -->
+  <g transform="translate(0 0)"><rect class="wall" width="16" height="16"/><path class="wall2" d="M0 3h4v3H0zM8 1h5v3H8zM4 11h5v3H4z"/><path class="ink" d="M0 15h16v1H0z"/></g>
+  <g transform="translate(16 0)"><rect class="wall2" width="16" height="16"/><path class="wall" d="M0 4h16v3H0zM3 11h13v3H3z"/><path class="ink" d="M0 15h16v1H0z"/></g>
+  <g transform="translate(32 0)"><rect class="wall" width="16" height="16"/><path class="stone" d="M0 3h6v3H0zM9 1h7v4H9zM2 10h5v4H2zM10 11h6v3h-6z"/></g>
+  <g transform="translate(48 0)"><path class="roof" d="M0 4h16v4H0zM3 1h10v3H3z"/><path class="roof2" d="M1 8h14v3H1z"/><rect class="wall" x="3" y="11" width="10" height="5"/></g>
+  <g transform="translate(64 0)"><path class="roof2" d="M0 5h16v3H0zM3 2h10v3H3z"/><path class="roof" d="M1 8h14v3H1z"/><rect class="wall2" x="3" y="11" width="10" height="5"/></g>
+  <g transform="translate(80 0)"><rect class="wall" x="2" y="3" width="12" height="13"/><path class="roof" d="M0 3h16v3H0z"/><rect class="ink" x="6" y="8" width="4" height="5"/></g>
+  <g transform="translate(96 0)"><path class="roof" d="M0 4h16v3H0zM3 1h10v3H3z"/><rect class="wall" x="4" y="7" width="8" height="9"/><path class="paper" d="M6 9h4v4H6z"/></g>
+  <g transform="translate(112 0)"><path class="roof2" d="M0 4h16v3H0zM3 1h10v3H3z"/><rect class="wall2" x="4" y="7" width="8" height="9"/><path class="ink" d="M6 9h4v4H6z"/></g>
+  <g transform="translate(0 16)"><rect class="wall" width="16" height="16"/><path class="ink" d="M3 0v16M12 0v16"/><path class="wall2" d="M0 3h4v2H0zM8 9h4v2H8z"/></g>
+  <g transform="translate(16 16)"><rect class="wall2" width="16" height="16"/><path class="ink" d="M4 0v16M12 0v16"/><path class="wall" d="M0 6h4v2H0zM8 12h4v2H8z"/></g>
+  <g transform="translate(32 16)"><rect class="wall" width="16" height="16"/><path class="stone" d="M0 3h5v3H0zM8 8h8v3H8zM2 13h6v3H2z"/></g>
+  <g transform="translate(48 16)"><rect class="wall2" width="16" height="16"/><path class="wall" d="M0 4h16v3H0zM0 12h10v3H0z"/><rect class="ink" x="11" y="8" width="5" height="8"/></g>
+  <g transform="translate(64 16)"><rect class="ink" x="3" y="4" width="2" height="12"/><rect class="ink" x="11" y="4" width="2" height="12"/><rect class="red" x="1" y="3" width="14" height="2"/><rect class="red" x="4" y="1" width="8" height="2"/></g>
+  <g transform="translate(80 16)"><rect class="ink" x="2" y="4" width="2" height="12"/><rect class="ink" x="12" y="4" width="2" height="12"/><rect class="gold" x="0" y="3" width="16" height="2"/><rect class="red" x="4" y="1" width="8" height="2"/></g>
+  <g transform="translate(96 16)"><path class="red" d="M2 1h12v3H2zM6 4h4v12H6z"/><path class="gold" d="M0 8h16v2H0z"/></g>
+  <g transform="translate(112 16)"><path class="red" d="M1 4h14v3H1zM5 7h6v9H5z"/><path class="gold" d="M0 3h16v2H0z"/></g>
+  <g transform="translate(0 32)"><path class="stone" d="M0 11l4-5 4 3 3-6 5 5v8H0z"/><path class="wall2" d="M0 14h16v2H0z"/></g>
+  <g transform="translate(16 32)"><path class="wall" d="M0 9l4-4 4 3 3-5 5 4v9H0z"/><path class="stone" d="M0 14h16v2H0z"/></g>
+  <g transform="translate(32 32)"><path class="shadow" d="M0 16V4l4 2 4-4 4 4 4-2v12z"/><path class="ink" d="M0 12h16v4H0z"/></g>
+  <g transform="translate(48 32)"><path class="wall2" d="M0 16V5h5v3h3V5h5v3h3v8z"/><path class="ink" d="M0 14h16v2H0z"/></g>
+  <g transform="translate(64 32)"><path class="wood" d="M1 15l3-8 4 2 3-6 4 5v7z"/><path class="ink" d="M0 14h16v2H0z"/></g>
+  <g transform="translate(80 32)"><path class="wood" d="M0 12l4-3 3 2 4-5 5 4v6H0z"/><path class="ink" d="M0 14h16v2H0z"/></g>
+  <g transform="translate(96 32)"><rect class="stone" x="3" y="4" width="10" height="12"/><rect class="wall2" x="1" y="2" width="14" height="3"/><rect class="ink" x="7" y="8" width="2" height="5"/></g>
+  <g transform="translate(112 32)"><rect class="wall2" x="3" y="5" width="10" height="11"/><rect class="stone" x="1" y="3" width="14" height="3"/><rect class="ink" x="7" y="9" width="2" height="5"/></g>
+  <g transform="translate(0 48)"><rect class="wall" width="16" height="16"/><path class="wall2" d="M0 3h5v3H0zM9 2h7v4H9zM3 11h7v3H3z"/></g>
+  <g transform="translate(16 48)"><rect class="wall2" width="16" height="16"/><path class="stone" d="M0 2h7v3H0zM9 9h7v4H9zM2 14h5v2H2z"/></g>
+</svg>

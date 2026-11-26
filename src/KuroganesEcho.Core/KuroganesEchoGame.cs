@@ -80,6 +80,7 @@ public class KuroganesEchoGame : Game
     private GameLevel _level = null!;
     private AudioService _audio = null!;
     private readonly List<EnemyInstance> _enemies = new();
+    private readonly List<LevelObjectData> _pendingEnemySpawns = new();
     private readonly List<PlayerProjectile> _projectiles = new();
     private BossInstance _boss;
     private readonly CombatEffectSystem _effects = new();
@@ -1348,22 +1349,27 @@ public class KuroganesEchoGame : Game
     private void LoadEnemies()
     {
         _enemies.Clear();
+        _pendingEnemySpawns.Clear();
         _boss = null;
         foreach (var spawn in _level.EnemySpawns)
         {
-            if (spawn.Properties.TryGetValue("SpawnOnly", out var spawnOnly) &&
-                bool.TryParse(spawnOnly, out var isSpawnOnly) && isSpawnOnly)
-                continue;
-
             var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
                 ? configuredType
                 : string.Empty;
-            if (!EnemyCharacter.IsSupported(enemyType) || EnemyCharacter.IsBossType(enemyType))
+            if (spawn.Properties.TryGetValue("SpawnOnly", out var spawnOnly) &&
+                bool.TryParse(spawnOnly, out var isSpawnOnly) && isSpawnOnly)
+            {
+                _pendingEnemySpawns.Add(spawn);
                 continue;
+            }
 
-            var enemy = new EnemyInstance(EnemyCharacter.Load(Content, enemyType), spawn);
-            enemy.ConfigureDifficulty(_selectedDifficulty);
-            _enemies.Add(enemy);
+            if (string.Equals(enemyType, "PendingGroup", StringComparison.OrdinalIgnoreCase))
+            {
+                LoadEnemyGroup(spawn);
+                continue;
+            }
+
+            CreateEnemy(spawn, enemyType);
         }
 
         foreach (var spawn in _level.BossSpawns)
@@ -1374,6 +1380,65 @@ public class KuroganesEchoGame : Game
                 _boss = boss;
                 break;
             }
+        }
+    }
+
+    private void ActivatePendingEnemySpawns()
+    {
+        for (var index = _pendingEnemySpawns.Count - 1; index >= 0; index--)
+        {
+            var spawn = _pendingEnemySpawns[index];
+            if (Math.Abs(_playerPosition.X - spawn.Bounds.Center.X) > 128f)
+                continue;
+
+            _pendingEnemySpawns.RemoveAt(index);
+            var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
+                ? configuredType
+                : string.Empty;
+            if (string.Equals(enemyType, "PendingGroup", StringComparison.OrdinalIgnoreCase))
+                LoadEnemyGroup(spawn);
+            else
+                CreateEnemy(spawn, enemyType);
+        }
+    }
+
+    private void CreateEnemy(LevelObjectData spawn, string enemyType)
+    {
+        if (!EnemyCharacter.IsSupported(enemyType) || EnemyCharacter.IsBossType(enemyType))
+            return;
+
+        var enemy = new EnemyInstance(EnemyCharacter.Load(Content, enemyType), spawn);
+        enemy.ConfigureDifficulty(_selectedDifficulty);
+        _enemies.Add(enemy);
+    }
+
+    private void LoadEnemyGroup(LevelObjectData groupSpawn)
+    {
+        var groupCount = TryGetIntProperty(groupSpawn, "GroupCount", out var configuredCount)
+            ? Math.Clamp(configuredCount, 1, 12)
+            : 1;
+        var groupEnemyType = groupSpawn.Properties.TryGetValue("GroupEnemyType", out var configuredType) &&
+                             EnemyCharacter.IsSupported(configuredType) &&
+                             !EnemyCharacter.IsBossType(configuredType)
+            ? configuredType
+            : "Skeleton_Warrior";
+
+        for (var index = 0; index < groupCount; index++)
+        {
+            var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in groupSpawn.Properties)
+                properties[pair.Key] = pair.Value;
+            properties["EnemyType"] = groupEnemyType;
+            var spawn = new LevelObjectData
+            {
+                Name = $"{groupSpawn.Name}_{index + 1}",
+                Type = "EnemySpawn",
+                Bounds = new Rectangle(groupSpawn.Bounds.X + index * 28, groupSpawn.Bounds.Y, groupSpawn.Bounds.Width, groupSpawn.Bounds.Height),
+                Properties = properties
+            };
+            var enemy = new EnemyInstance(EnemyCharacter.Load(Content, groupEnemyType), spawn);
+            enemy.ConfigureDifficulty(_selectedDifficulty);
+            _enemies.Add(enemy);
         }
     }
 
@@ -1526,6 +1591,7 @@ public class KuroganesEchoGame : Game
                 _level.GetSurfaceAt(_playerPosition.X, _playerPosition.Y),
                 _player.Animation == PlayerAnimationState.Run);
         }
+        ActivatePendingEnemySpawns();
         foreach (var enemy in _enemies)
             enemy.Update(elapsedSeconds, _playerPosition, _level);
         _boss?.Update(elapsedSeconds, _playerPosition);
@@ -1539,7 +1605,8 @@ public class KuroganesEchoGame : Game
             foreach (var collectible in _level.Collectibles)
             {
                 if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
-                    (string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
+                    (string.Equals(pickupKind, nameof(CollectibleKind.SealRubyPart), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase)))
                     _level.RevealCollectibleTile(collectible);
             }
@@ -1553,32 +1620,12 @@ public class KuroganesEchoGame : Game
                 : (_moveInput.Length() > 0.05f ? PlayerAnimationState.Walk : PlayerAnimationState.Idle);
             _player.SetLocomotion(locomotion);
         }
-        if (_currentLevelId == "Act_01_A" && PlayerAtLevelExit())
+        if (PlayerAtLevelExit() && !string.IsNullOrWhiteSpace(_level.NextLevelId))
         {
-            LoadLevel("Act_01_B");
-            _saveProgress.UnlockedLevelId = "Act_01_B";
-            StartAct01("Act_01_B");
-            return;
-        }
-        if (_currentLevelId == "Act_01_B" && PlayerAtLevelExit())
-        {
-            LoadLevel("Act_01_C");
-            _saveProgress.UnlockedLevelId = "Act_01_C";
-            StartAct01("Act_01_C");
-            return;
-        }
-        if (_currentLevelId == "Act_02_A" && PlayerAtLevelExit())
-        {
-            LoadLevel("Act_02_B");
-            _saveProgress.UnlockedLevelId = "Act_02_B";
-            StartAct01("Act_02_B");
-            return;
-        }
-        if (_currentLevelId == "Act_02_B" && PlayerAtLevelExit())
-        {
-            LoadLevel("Act_02_C");
-            _saveProgress.UnlockedLevelId = "Act_02_C";
-            StartAct01("Act_02_C");
+            var nextLevelId = _level.NextLevelId;
+            LoadLevel(nextLevelId);
+            _saveProgress.UnlockedLevelId = nextLevelId;
+            StartAct01(nextLevelId);
             return;
         }
         if (_currentLevelId == "Act_01_C" && _finalBossDefeated && _finalBossRewardCollected)
@@ -1588,7 +1635,10 @@ public class KuroganesEchoGame : Game
             StartAct01("Act_02_A");
             return;
         }
-        if (_currentLevelId == "Act_02_C" && _finalBossDefeated && _finalBossRewardCollected)
+        if (_currentLevelId == "Act_02_C" &&
+            _finalBossDefeated &&
+            _finalBossRewardCollected &&
+            _saveProgress.SealAshesParts >= 4)
         {
             _saveProgress.CurrentLevelId = "Act_02_C";
             _saveProgress.UnlockedLevelId = "Act_02_C";
@@ -1623,7 +1673,7 @@ public class KuroganesEchoGame : Game
                 !Enum.TryParse<CollectibleKind>(pickupKind, true, out var kind))
                 continue;
 
-            if ((kind is CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart) && !_finalBossDefeated)
+            if ((kind is CollectibleKind.SealRubyPart or CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart) && !_finalBossDefeated)
                 continue;
 
             var collected = kind switch
@@ -1632,8 +1682,7 @@ public class KuroganesEchoGame : Game
                 CollectibleKind.Stamina => TryCollectStamina(collectible, maximumHealth),
                 CollectibleKind.PowerFruit => TryCollectPowerFruit(collectible),
                 CollectibleKind.ExtraLife => TryCollectExtraLife(),
-                CollectibleKind.IronTalismanThird => TryCollectTalismanThird(),
-                CollectibleKind.SealAshesPart => TryCollectSealAshesPart(),
+                CollectibleKind.SealRubyPart or CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart => TryCollectSealRubyPart(collectible),
                 _ => false
             };
             if (!collected)
@@ -1746,17 +1795,19 @@ public class KuroganesEchoGame : Game
         TryCollectExtraLife();
     }
 
-    private bool TryCollectTalismanThird()
+    private bool TryCollectSealRubyPart(LevelObjectData collectible)
     {
         if (_finalBossRewardCollected)
             return false;
 
         _finalBossRewardCollected = true;
-        _saveProgress.SealAshesParts = Math.Min(3, _saveProgress.SealAshesParts + 1);
+        var partIndex = 1;
+        if (collectible.Properties.TryGetValue("SealPartIndex", out var configuredPart) &&
+            int.TryParse(configuredPart, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPart))
+            partIndex = Math.Clamp(parsedPart, 1, 4);
+        _saveProgress.SealAshesParts = Math.Clamp(Math.Max(_saveProgress.SealAshesParts, partIndex), 0, 4);
         return true;
     }
-
-    private bool TryCollectSealAshesPart() => TryCollectTalismanThird();
 
     private bool IsBossRewardLevel =>
         string.Equals(_currentLevelId, "Act_01_C", StringComparison.OrdinalIgnoreCase) ||
@@ -2490,35 +2541,30 @@ public class KuroganesEchoGame : Game
 
     private void DrawSealAshesVisual()
     {
-        if (_currentLevelId != "Act_02_C" || !_finalBossDefeated || _finalBossRewardCollected)
+        if (!IsBossRewardLevel || !_finalBossDefeated || _finalBossRewardCollected)
             return;
 
-        LevelObjectData anchor = null;
         foreach (var collectible in _level.Collectibles)
         {
             if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
-                string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase))
+                (string.Equals(pickupKind, nameof(CollectibleKind.SealRubyPart), StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase)))
             {
-                anchor = collectible;
-                break;
+                DrawSealRubyTile(collectible.Bounds);
             }
         }
+    }
 
-        if (anchor is null)
-            return;
-
-        // The pickup remains four 16x16 map cells for collision/progression. This
-        // pixel-art overlay gives the revealed 2x2 fragment a single readable seal
-        // silhouette without introducing an enemy or a damage collider.
-        var x = anchor.Bounds.X;
-        var y = anchor.Bounds.Y;
-        DrawRect(new Rectangle(x, y, 32, 32), new Color(20, 15, 24, 220));
-        DrawRect(new Rectangle(x + 2, y + 2, 28, 28), new Color(116, 73, 38, 210), false, 1);
-        DrawRect(new Rectangle(x + 7, y + 7, 18, 18), new Color(214, 170, 75, 230), false, 2);
-        DrawLine(new Vector2(x + 8, y + 23), new Vector2(x + 16, y + 8), 2f, new Color(241, 208, 112, 230));
-        DrawLine(new Vector2(x + 16, y + 8), new Vector2(x + 24, y + 23), 2f, new Color(241, 208, 112, 230));
-        DrawLine(new Vector2(x + 11, y + 16), new Vector2(x + 21, y + 16), 2f, new Color(241, 208, 112, 230));
-        DrawRect(new Rectangle(x + 14, y + 13, 4, 6), new Color(79, 33, 43, 240));
+    private void DrawSealRubyTile(Rectangle bounds)
+    {
+        var x = bounds.X;
+        var y = bounds.Y;
+        DrawRect(new Rectangle(x, y, bounds.Width, bounds.Height), new Color(42, 7, 22, 235));
+        DrawRect(new Rectangle(x + 2, y + 2, Math.Max(1, bounds.Width - 4), Math.Max(1, bounds.Height - 4)), new Color(145, 12, 36, 245));
+        DrawLine(new Vector2(x + 3, y + bounds.Height - 4), new Vector2(x + bounds.Width / 2f, y + 3), 2f, new Color(255, 86, 97, 245));
+        DrawLine(new Vector2(x + bounds.Width / 2f, y + 3), new Vector2(x + bounds.Width - 3, y + bounds.Height - 4), 2f, new Color(95, 4, 28, 245));
+        DrawRect(new Rectangle(x + 5, y + 4, 3, 3), new Color(255, 218, 190, 235));
     }
 
     private void DrawPlayer()

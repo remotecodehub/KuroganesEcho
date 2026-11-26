@@ -9,10 +9,11 @@
     <property name="CheckpointCount" type="int" value="3" />
     <property name="ExtraLifeTile" value="50,20" />
     <property name="PowerFruitTile" value="" />
-    <property name="ActEnding" value="The Minotaur falls and the iron talisman is reclaimed" />
+    <property name="ActEnding" value="The Minotaur falls and releases the first red ruby seal tile" />
     <property name="NextLevelId" value="" />
     <property name="PowerFruitTiles" value="32,20;80,20;128,20;176,20;224,20;272,20" />
-    <property name="IronTalismanTile" value="300,20" />
+    <property name="SealRubyPartTiles" value="300,20" />
+    <property name="SealPartIndex" type="int" value="1" />
   </properties>
   <tileset firstgid="1" source="../Tilesets/Act_01_Feudal_Dark.tsx" />
   <tileset firstgid="73" source="../Tilesets/Act_01_Items.tsx" />

@@ -27,6 +27,8 @@ internal enum CollectibleKind
     Stamina,
     PowerFruit,
     ExtraLife,
+    SealRubyPart,
+    // Compatibility with maps created before the ruby reward contract.
     IronTalismanThird,
     SealAshesPart
 }
@@ -153,13 +155,30 @@ internal sealed class GameLevel
         Definition = definition;
         Tilemap = tilemap;
         Renderer = renderer;
+        _playerSpawn = definition.PlayerSpawn;
     }
+
+    private Vector2 _playerSpawn;
 
     public LevelDefinition Definition { get; }
     public Tilemap Tilemap { get; }
     public TilemapSpriteBatchRenderer Renderer { get; }
     public RectangleF WorldBounds => Tilemap.WorldBounds;
-    public Vector2 PlayerSpawn => Definition.PlayerSpawn;
+    public Vector2 PlayerSpawn => _playerSpawn;
+    public string NextLevelId
+    {
+        get
+        {
+            foreach (var exit in LevelExits)
+            {
+                if (exit.Properties.TryGetValue("NextLevelId", out var nextLevelId) &&
+                    !string.IsNullOrWhiteSpace(nextLevelId))
+                    return nextLevelId;
+            }
+
+            return Definition.NextLevelId;
+        }
+    }
     public IReadOnlyDictionary<string, string> MapProperties { get; private set; } =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     public GameDifficulty Difficulty { get; private set; } = GameDifficulty.Normal;
@@ -277,13 +296,18 @@ internal sealed class GameLevel
         {
             foreach (var objectElement in gameplayLayer.Elements("object"))
             {
-                _gameplayObjects.Add(new LevelObjectData
+                var gameplayObject = new LevelObjectData
                 {
                     Name = (string)objectElement.Attribute("name") ?? string.Empty,
                     Type = (string)objectElement.Attribute("type") ?? string.Empty,
                     Bounds = ReadBounds(objectElement),
                     Properties = ReadProperties(objectElement)
-                });
+                };
+                _gameplayObjects.Add(gameplayObject);
+
+                if (string.Equals(gameplayObject.Name, "PlayerSpawn", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(gameplayObject.Type, "PlayerSpawn", StringComparison.OrdinalIgnoreCase))
+                    _playerSpawn = new Vector2(gameplayObject.Bounds.X, gameplayObject.Bounds.Bottom);
             }
         }
 
@@ -349,18 +373,29 @@ internal sealed class GameLevel
         var powerFruitTiles = ReadTileCoordinates(root, "PowerFruitTiles");
         if (powerFruitTile.HasValue)
             powerFruitTiles.Add(powerFruitTile.Value);
-        var ironTalismanTile = ReadTileCoordinate(root, "IronTalismanTile");
-        var sealAshesPartTiles = ReadTileCoordinates(root, "SealAshesPartTiles");
+        var sealRubyPartTiles = ReadTileCoordinates(root, "SealRubyPartTiles");
+        if (sealRubyPartTiles.Count == 0)
+            sealRubyPartTiles = ReadTileCoordinates(root, "SealAshesPartTiles");
+
+        // Act 01 C existed before the ruby metadata was introduced. Accept its
+        // old single-tile coordinate so the reward cannot disappear on upgrade.
+        var legacyIronTalismanTile = ReadTileCoordinate(root, "IronTalismanTile");
+        if (sealRubyPartTiles.Count == 0 && legacyIronTalismanTile.HasValue)
+            sealRubyPartTiles.Add(legacyIronTalismanTile.Value);
+        var sealPartIndex = ReadIntProperty(root, "SealPartIndex") ?? 1;
 
         var tileValues = ReadTileValues(data, width * height);
         for (var index = 0; index < tileValues.Count; index++)
         {
             var gid = tileValues[index];
             var tileCoordinate = new Point(index % width, index / width);
-            var kind = sealAshesPartTiles.Contains(tileCoordinate)
-                ? CollectibleKind.SealAshesPart
-                : ironTalismanTile.HasValue && ironTalismanTile.Value == tileCoordinate
-                    ? CollectibleKind.IronTalismanThird
+            var staleSealTile = sealRubyPartTiles.Count == 1 &&
+                                gid == collectibleFirstGid + 2 &&
+                                !sealRubyPartTiles.Contains(tileCoordinate);
+            var kind = staleSealTile
+                ? (CollectibleKind?)null
+                : sealRubyPartTiles.Contains(tileCoordinate)
+                ? CollectibleKind.SealRubyPart
                 : powerFruitTiles.Contains(tileCoordinate)
                     ? CollectibleKind.PowerFruit
                     : gid switch
@@ -393,10 +428,12 @@ internal sealed class GameLevel
                 properties["RestorePower"] = CombatBalance.PowerFruitRestore.ToString(CultureInfo.InvariantCulture);
             else if (kind.Value == CollectibleKind.ExtraLife)
                 properties["ExtraLife"] = "1";
-            else if (kind.Value is CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart)
+            else if (kind.Value == CollectibleKind.SealRubyPart)
             {
                 properties["UnlockAfterBoss"] = "true";
-                properties["PickupGroup"] = "SealAshesPart";
+                properties["SealPartIndex"] = sealPartIndex.ToString(CultureInfo.InvariantCulture);
+                if (sealRubyPartTiles.Count > 1)
+                    properties["PickupGroup"] = "SealRubyPart";
             }
 
             _gameplayObjects.Add(new LevelObjectData
@@ -407,9 +444,38 @@ internal sealed class GameLevel
                 Properties = properties
             });
 
-            if (kind.Value is CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart)
+            if (kind.Value == CollectibleKind.SealRubyPart)
                 tileLayer?.SetTile(tileX, tileY, null);
         }
+
+        // Refactored Act 02 C maps may still contain the four old talisman gids
+        // in the layer while only one coordinate is the part released by this
+        // boss. Hide those stale visual tiles instead of exposing a full reward.
+        if (sealRubyPartTiles.Count == 1 && tileLayer is not null)
+        {
+            for (var index = 0; index < tileValues.Count; index++)
+            {
+                if (tileValues[index] != collectibleFirstGid + 2)
+                    continue;
+
+                var tileCoordinate = new Point(index % width, index / width);
+                if (!sealRubyPartTiles.Contains(tileCoordinate))
+                    tileLayer.SetTile(tileCoordinate.X, tileCoordinate.Y, null);
+            }
+        }
+    }
+
+    private static int? ReadIntProperty(XElement root, string propertyName)
+    {
+        var value = root.Element("properties")?.Elements("property")
+            .FirstOrDefault(property => string.Equals(
+                (string)property.Attribute("name"),
+                propertyName,
+                StringComparison.OrdinalIgnoreCase))?
+            .Attribute("value")?.Value;
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : null;
     }
 
     private static Point? ReadTileCoordinate(XElement root, string propertyName)

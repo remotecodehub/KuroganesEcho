@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.0" name="Kitsune" tilewidth="128" tileheight="128" tilecount="81" columns="0" objectalignment="bottom">
+<tileset version="1.10" tiledversion="1.11.0" name="Kitsune" tilewidth="128" tileheight="128" tilecount="73" columns="0" objectalignment="bottom">
   <grid orientation="orthogonal" width="128" height="128"/>
     <tile id="0">
       <properties>
@@ -184,68 +184,20 @@
     <tile id="37">
       <properties>
         <property name="Character" value="Kitsune"/>
-        <property name="State" value="Fire_1"/>
-        <property name="AssetKind" value="Special"/>
-      </properties>
-      <image width="896" height="64" source="../../Enemies/GeneratedFrames/Kitsune/Fire_1.png"/>
-    </tile>
-    <tile id="38">
-      <properties>
-        <property name="Character" value="Kitsune"/>
-        <property name="State" value="Fire_2"/>
-        <property name="AssetKind" value="Special"/>
-      </properties>
-      <image width="704" height="64" source="../../Enemies/GeneratedFrames/Kitsune/Fire_2.png"/>
-    </tile>
-    <tile id="39">
-      <properties>
-        <property name="Character" value="Kitsune"/>
         <property name="State" value="Hurt"/>
         <property name="RenderScale" type="float" value="0.75"/>
         <property name="Loop" type="bool" value="false"/>
       </properties>
       <animation>
-        <frame tileid="39" duration="100"/>
-        <frame tileid="40" duration="100"/>
+        <frame tileid="37" duration="100"/>
+        <frame tileid="38" duration="100"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Hurt_00.png"/>
     </tile>
-    <tile id="40">
+    <tile id="38">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Hurt_01.png"/>
     </tile>
-    <tile id="41">
-      <properties>
-        <property name="Character" value="Kitsune"/>
-        <property name="State" value="Idle_2"/>
-        <property name="RenderScale" type="float" value="0.75"/>
-        <property name="Loop" type="bool" value="true"/>
-      </properties>
-      <animation>
-        <frame tileid="41" duration="120"/>
-        <frame tileid="42" duration="120"/>
-        <frame tileid="43" duration="120"/>
-        <frame tileid="44" duration="120"/>
-        <frame tileid="45" duration="120"/>
-        <frame tileid="46" duration="120"/>
-      </animation>
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_2_00.png"/>
-    </tile>
-    <tile id="42">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_2_01.png"/>
-    </tile>
-    <tile id="43">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_2_02.png"/>
-    </tile>
-    <tile id="44">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_2_03.png"/>
-    </tile>
-    <tile id="45">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_2_04.png"/>
-    </tile>
-    <tile id="46">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_2_05.png"/>
-    </tile>
-    <tile id="47">
+    <tile id="39">
       <properties>
         <property name="Character" value="Kitsune"/>
         <property name="State" value="Idle"/>
@@ -253,39 +205,39 @@
         <property name="Loop" type="bool" value="true"/>
       </properties>
       <animation>
-        <frame tileid="47" duration="120"/>
-        <frame tileid="48" duration="120"/>
-        <frame tileid="49" duration="120"/>
-        <frame tileid="50" duration="120"/>
-        <frame tileid="51" duration="120"/>
-        <frame tileid="52" duration="120"/>
-        <frame tileid="53" duration="120"/>
-        <frame tileid="54" duration="120"/>
+        <frame tileid="39" duration="120"/>
+        <frame tileid="40" duration="120"/>
+        <frame tileid="41" duration="120"/>
+        <frame tileid="42" duration="120"/>
+        <frame tileid="43" duration="120"/>
+        <frame tileid="44" duration="120"/>
+        <frame tileid="45" duration="120"/>
+        <frame tileid="46" duration="120"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_00.png"/>
     </tile>
-    <tile id="48">
+    <tile id="40">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_01.png"/>
     </tile>
-    <tile id="49">
+    <tile id="41">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_02.png"/>
     </tile>
-    <tile id="50">
+    <tile id="42">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_03.png"/>
     </tile>
-    <tile id="51">
+    <tile id="43">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_04.png"/>
     </tile>
-    <tile id="52">
+    <tile id="44">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_05.png"/>
     </tile>
-    <tile id="53">
+    <tile id="45">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_06.png"/>
     </tile>
-    <tile id="54">
+    <tile id="46">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Idle_07.png"/>
     </tile>
-    <tile id="55">
+    <tile id="47">
       <properties>
         <property name="Character" value="Kitsune"/>
         <property name="State" value="Jump"/>
@@ -293,47 +245,47 @@
         <property name="Loop" type="bool" value="true"/>
       </properties>
       <animation>
+        <frame tileid="47" duration="110"/>
+        <frame tileid="48" duration="110"/>
+        <frame tileid="49" duration="110"/>
+        <frame tileid="50" duration="110"/>
+        <frame tileid="51" duration="110"/>
+        <frame tileid="52" duration="110"/>
+        <frame tileid="53" duration="110"/>
+        <frame tileid="54" duration="110"/>
         <frame tileid="55" duration="110"/>
         <frame tileid="56" duration="110"/>
-        <frame tileid="57" duration="110"/>
-        <frame tileid="58" duration="110"/>
-        <frame tileid="59" duration="110"/>
-        <frame tileid="60" duration="110"/>
-        <frame tileid="61" duration="110"/>
-        <frame tileid="62" duration="110"/>
-        <frame tileid="63" duration="110"/>
-        <frame tileid="64" duration="110"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_00.png"/>
     </tile>
-    <tile id="56">
+    <tile id="48">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_01.png"/>
     </tile>
-    <tile id="57">
+    <tile id="49">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_02.png"/>
     </tile>
-    <tile id="58">
+    <tile id="50">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_03.png"/>
     </tile>
-    <tile id="59">
+    <tile id="51">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_04.png"/>
     </tile>
-    <tile id="60">
+    <tile id="52">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_05.png"/>
     </tile>
-    <tile id="61">
+    <tile id="53">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_06.png"/>
     </tile>
-    <tile id="62">
+    <tile id="54">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_07.png"/>
     </tile>
-    <tile id="63">
+    <tile id="55">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_08.png"/>
     </tile>
-    <tile id="64">
+    <tile id="56">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Jump_09.png"/>
     </tile>
-    <tile id="65">
+    <tile id="57">
       <properties>
         <property name="Character" value="Kitsune"/>
         <property name="State" value="Run"/>
@@ -341,39 +293,39 @@
         <property name="Loop" type="bool" value="true"/>
       </properties>
       <animation>
-        <frame tileid="65" duration="80"/>
-        <frame tileid="66" duration="80"/>
-        <frame tileid="67" duration="80"/>
-        <frame tileid="68" duration="80"/>
-        <frame tileid="69" duration="80"/>
-        <frame tileid="70" duration="80"/>
-        <frame tileid="71" duration="80"/>
-        <frame tileid="72" duration="80"/>
+        <frame tileid="57" duration="80"/>
+        <frame tileid="58" duration="80"/>
+        <frame tileid="59" duration="80"/>
+        <frame tileid="60" duration="80"/>
+        <frame tileid="61" duration="80"/>
+        <frame tileid="62" duration="80"/>
+        <frame tileid="63" duration="80"/>
+        <frame tileid="64" duration="80"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_00.png"/>
     </tile>
-    <tile id="66">
+    <tile id="58">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_01.png"/>
     </tile>
-    <tile id="67">
+    <tile id="59">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_02.png"/>
     </tile>
-    <tile id="68">
+    <tile id="60">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_03.png"/>
     </tile>
-    <tile id="69">
+    <tile id="61">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_04.png"/>
     </tile>
-    <tile id="70">
+    <tile id="62">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_05.png"/>
     </tile>
-    <tile id="71">
+    <tile id="63">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_06.png"/>
     </tile>
-    <tile id="72">
+    <tile id="64">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Run_07.png"/>
     </tile>
-    <tile id="73">
+    <tile id="65">
       <properties>
         <property name="Character" value="Kitsune"/>
         <property name="State" value="Walk"/>
@@ -381,36 +333,36 @@
         <property name="Loop" type="bool" value="true"/>
       </properties>
       <animation>
-        <frame tileid="73" duration="100"/>
-        <frame tileid="74" duration="100"/>
-        <frame tileid="75" duration="100"/>
-        <frame tileid="76" duration="100"/>
-        <frame tileid="77" duration="100"/>
-        <frame tileid="78" duration="100"/>
-        <frame tileid="79" duration="100"/>
-        <frame tileid="80" duration="100"/>
+        <frame tileid="65" duration="100"/>
+        <frame tileid="66" duration="100"/>
+        <frame tileid="67" duration="100"/>
+        <frame tileid="68" duration="100"/>
+        <frame tileid="69" duration="100"/>
+        <frame tileid="70" duration="100"/>
+        <frame tileid="71" duration="100"/>
+        <frame tileid="72" duration="100"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_00.png"/>
     </tile>
-    <tile id="74">
+    <tile id="66">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_01.png"/>
     </tile>
-    <tile id="75">
+    <tile id="67">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_02.png"/>
     </tile>
-    <tile id="76">
+    <tile id="68">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_03.png"/>
     </tile>
-    <tile id="77">
+    <tile id="69">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_04.png"/>
     </tile>
-    <tile id="78">
+    <tile id="70">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_05.png"/>
     </tile>
-    <tile id="79">
+    <tile id="71">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_06.png"/>
     </tile>
-    <tile id="80">
+    <tile id="72">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Kitsune/Walk_07.png"/>
     </tile>
 </tileset>

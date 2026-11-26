@@ -43,6 +43,7 @@ internal sealed class DebugCheatCodeSystem
     public bool InfiniteStamina { get; private set; }
     public bool InfinitePower { get; private set; }
     public bool InfiniteLives { get; private set; }
+    public bool OneHitDamage { get; private set; }
 
     public readonly record struct CheckpointOption(int Id, string Name, Vector2 RespawnPosition);
 
@@ -223,6 +224,7 @@ internal sealed class DebugCheatCodeSystem
         _rows.Add(new DebugRow(DebugRowKind.InfiniteStamina));
         _rows.Add(new DebugRow(DebugRowKind.InfinitePower));
         _rows.Add(new DebugRow(DebugRowKind.InfiniteLives));
+        _rows.Add(new DebugRow(DebugRowKind.OneHitDamage));
         _rows.Add(new DebugRow(DebugRowKind.RestoreResources));
         for (var index = 0; index < _checkpoints.Count; index++)
             _rows.Add(new DebugRow(DebugRowKind.Checkpoint, index));
@@ -308,6 +310,9 @@ internal sealed class DebugCheatCodeSystem
             case DebugRowKind.InfiniteLives:
                 InfiniteLives = !InfiniteLives;
                 break;
+            case DebugRowKind.OneHitDamage:
+                OneHitDamage = !OneHitDamage;
+                break;
             case DebugRowKind.RestoreResources:
                 _restoreResourcesRequested = true;
                 break;
@@ -332,6 +337,7 @@ internal sealed class DebugCheatCodeSystem
             DebugRowKind.InfiniteStamina => $"Infinite stamina: {(InfiniteStamina ? "ON" : "OFF")}",
             DebugRowKind.InfinitePower => $"Infinite power: {(InfinitePower ? "ON" : "OFF")}",
             DebugRowKind.InfiniteLives => $"Infinite lives: {(InfiniteLives ? "ON" : "OFF")}",
+            DebugRowKind.OneHitDamage => $"One-hit 100% damage: {(OneHitDamage ? "ON" : "OFF")}",
             DebugRowKind.RestoreResources => "Restore all resources",
             DebugRowKind.Checkpoint => GetCheckpointLabel(row.CheckpointIndex),
             _ => "Close"
@@ -389,6 +395,7 @@ internal sealed class DebugCheatCodeSystem
         InfiniteStamina,
         InfinitePower,
         InfiniteLives,
+        OneHitDamage,
         RestoreResources,
         Checkpoint,
         Close

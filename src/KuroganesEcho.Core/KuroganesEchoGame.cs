@@ -1219,6 +1219,18 @@ public class KuroganesEchoGame : Game
                 ReadRespawnPosition(checkpoint)));
         }
 
+        foreach (var bossSpawn in _level.BossSpawns)
+        {
+            var bossPosition = new Vector2(
+                Math.Max(32f, bossSpawn.Bounds.Center.X - 48f),
+                bossSpawn.Bounds.Bottom);
+            checkpoints.Add(new DebugCheatCodeSystem.CheckpointOption(
+                int.MaxValue,
+                "Final boss / end of level",
+                bossPosition));
+            break;
+        }
+
         checkpoints.Sort((left, right) => left.Id.CompareTo(right.Id));
         return checkpoints;
     }
@@ -1968,9 +1980,7 @@ public class KuroganesEchoGame : Game
             {
                 if (!_playerAttackHitApplied && enemy.IsAlive && PlayerAttackHitbox.Intersects(enemy.Hitbox) &&
                     enemy.TakeDamage(
-                        _player.Animation == PlayerAnimationState.Blade
-                            ? CombatBalance.MonkBladeDamage
-                            : CombatBalance.PlayerAttackDamage,
+                        GetPlayerAttackDamage(enemy.MaxHealth),
                         _playerPosition.X))
                 {
                     _playerAttackHitApplied = true;
@@ -1988,9 +1998,7 @@ public class KuroganesEchoGame : Game
 
             if (!_playerAttackHitApplied && _boss is not null && _boss.IsAlive && PlayerAttackHitbox.Intersects(_boss.Hitbox) &&
                 _boss.TakeDamage(
-                    _player.Animation == PlayerAnimationState.Blade
-                        ? CombatBalance.MonkBladeDamage
-                        : CombatBalance.PlayerAttackDamage,
+                    GetPlayerAttackDamage(_boss.MaxHealth),
                     PlayerAttackHitbox.Center.Y))
             {
                 _playerAttackHitApplied = true;
@@ -2025,6 +2033,22 @@ public class KuroganesEchoGame : Game
                 _effects.Spawn(_playerPosition - new Vector2(0f, 20f), CombatEffectKind.Impact, new Vector2(_boss.Position.X - _playerPosition.X, -0.1f), 1.3f);
             }
         }
+    }
+
+    private int GetPlayerAttackDamage(int targetMaxHealth)
+    {
+        var damage = _player.Animation == PlayerAnimationState.Blade
+            ? CombatBalance.MonkBladeDamage
+            : CombatBalance.PlayerAttackDamage;
+#if DEBUG
+        if (_debugCheatCodes.OneHitDamage)
+        {
+            // Boss damage is scaled by hit height, so use a value that still
+            // guarantees 100% damage at the minimum 0.75x multiplier.
+            damage = (int)Math.Ceiling(targetMaxHealth / 0.75f);
+        }
+#endif
+        return damage;
     }
 
     private void ResolvePlayerEnemyCollisions()
@@ -2495,9 +2519,7 @@ public class KuroganesEchoGame : Game
     private void DrawAtmosphere()
     {
         BeginUi();
-        if (_currentLevelId == "Act_02_B")
-            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(255, 174, 118, 36));
-        else if (_currentLevelId == "Act_02_C")
+        if (_currentLevelId == "Act_02_C")
             DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 8, 25, 152));
 
         if (_currentLevelId == "Act_01_A")

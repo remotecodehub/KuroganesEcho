@@ -1,69 +1,78 @@
 {
-    "activeFile": "Maps/Act_03_C.tmx",
+    "activeFile": "Tilesets/Act_03.tsx",
     "expandedProjectPaths": [
     ],
     "file.lastUsedOpenFilter": "Todos os Ficheiros (*)",
     "fileStates": {
         "Maps/Act_01_A.tmx": {
-            "scale": 1,
-            "selectedLayer": 0,
+            "expandedObjectLayers": [
+                6,
+                5
+            ],
+            "scale": 3,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 2594,
-                "y": 401
+                "x": 914.6666666666665,
+                "y": 287
             }
         },
         "Maps/Act_01_B.tmx": {
             "expandedObjectLayers": [
-                5,
-                6
+                6,
+                5
             ],
-            "scale": 1,
-            "selectedLayer": 7,
+            "scale": 4,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 2518,
-                "y": 191
+                "x": 4013,
+                "y": 274
             }
         },
         "Maps/Act_01_C.tmx": {
             "expandedObjectLayers": [
-                5,
-                6
+                6,
+                5
             ],
             "scale": 2,
-            "selectedLayer": 7,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 2560,
+                "x": 316,
                 "y": 192.5
             }
         },
         "Maps/Act_02_A.tmx": {
             "expandedObjectLayers": [
+                22,
                 21
             ],
-            "scale": 3,
-            "selectedLayer": 1,
+            "scale": 1,
+            "selectedLayer": 8,
             "viewCenter": {
-                "x": 1200,
-                "y": 68.33333333333333
+                "x": 2826,
+                "y": 286
             }
         },
         "Maps/Act_02_B.tmx": {
+            "expandedObjectLayers": [
+                20
+            ],
             "scale": 2,
-            "selectedLayer": 3,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 2521,
-                "y": 208.5
+                "x": 1093,
+                "y": 313.5
             }
         },
         "Maps/Act_02_C.tmx": {
             "expandedObjectLayers": [
-                20
+                20,
+                19
             ],
-            "scale": 3,
-            "selectedLayer": 12,
+            "scale": 2,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": 2560,
-                "y": 208.33333333333331
+                "x": 2581,
+                "y": 258
             }
         },
         "Maps/Act_03_A.tmx": {
@@ -72,10 +81,10 @@
                 8
             ],
             "scale": 1.5,
-            "selectedLayer": 6,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 2546.6666666666665,
-                "y": 277.3333333333333
+                "x": 3906.666666666666,
+                "y": 137.33333333333331
             }
         },
         "Maps/Act_03_B.tmx": {
@@ -83,19 +92,19 @@
                 9,
                 8
             ],
-            "scale": 2,
+            "scale": 1,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 2103.5,
-                "y": 148
+                "x": 3308,
+                "y": 298
             }
         },
         "Maps/Act_03_C.tmx": {
             "scale": 2,
-            "selectedLayer": 0,
+            "selectedLayer": 7,
             "viewCenter": {
-                "x": 87.5,
-                "y": 167.5
+                "x": 210.5,
+                "y": 184.5
             }
         },
         "Maps/KuroganesEcho_320x24.tmx": {
@@ -110,29 +119,37 @@
             "scaleInDock": 1,
             "scaleInEditor": 2
         },
+        "Tilesets/Act_01.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 3,
+            "scaleInEditor": 5.5
+        },
         "Tilesets/Act_01_Environment.tsx": {
             "scaleInDock": 2
         },
         "Tilesets/Act_01_Feudal.tsx": {
-            "scaleInDock": 1.75
+            "scaleInDock": 3
         },
         "Tilesets/Act_01_Feudal_Dark.tsx": {
             "scaleInDock": 2
         },
         "Tilesets/Act_01_Items.tsx": {
+            "dynamicWrapping": false,
             "scaleInDock": 4
         },
         "Tilesets/Act_02_2D_Mountains.tsx": {
             "scaleInDock": 1
         },
         "Tilesets/Act_02_2D_Village.tsx": {
+            "dynamicWrapping": false,
             "scaleInDock": 1
         },
         "Tilesets/Act_02_Feudal_Castle.tsx": {
             "scaleInDock": 1.5
         },
         "Tilesets/Act_02_Feudal_Japan.tsx": {
-            "scaleInDock": 1
+            "dynamicWrapping": false,
+            "scaleInDock": 4
         },
         "Tilesets/Act_02_Feudal_Japan_Dark.tsx": {
             "scaleInDock": 1
@@ -173,8 +190,9 @@
             "scaleInEditor": 4
         }
     },
+    "frame.defaultDuration": 1000,
     "last.externalTilesetPath": "D:/GameDev/KuroganesEcho/src/KuroganesEcho.Core/Content/Tiled/Tilesets",
-    "last.imagePath": "D:/GameDev/KuroganesEcho/src/KuroganesEcho.Core/Content/Tiled/Tilesets/Env",
+    "last.imagePath": "D:/GameDev/KuroganesEcho/src/KuroganesEcho.Core/Content/Tiled/Tilesets/Feudal",
     "openFiles": [
         "Maps/Act_01_A.tmx",
         "Maps/Act_01_B.tmx",
@@ -184,10 +202,14 @@
         "Maps/Act_02_A.tmx",
         "Maps/Act_03_A.tmx",
         "Maps/Act_03_C.tmx",
-        "Maps/Act_03_B.tmx"
+        "Maps/Act_03_B.tmx",
+        "Tilesets/Act_01.tsx",
+        "Tilesets/Act_03.tsx"
     ],
     "project": "KuroganesEcho.tiled-project",
     "recentFiles": [
+        "Tilesets/Act_03.tsx",
+        "Tilesets/Act_01.tsx",
         "Maps/Act_01_A.tmx",
         "Maps/Act_01_B.tmx",
         "Maps/Act_01_C.tmx",
@@ -195,11 +217,9 @@
         "Maps/Act_02_C.tmx",
         "Maps/Act_02_A.tmx",
         "Maps/Act_03_A.tmx",
-        "Maps/Act_03_B.tmx",
         "Maps/Act_03_C.tmx",
-        "Tilesets/Act_03.tsx",
-        "Tilesets/Act_03_Final.tsx",
-        "Tilesets/Act_03_Environment.tsx"
+        "Maps/Act_03_B.tmx",
+        "Tilesets/Act_03_Final.tsx"
     ],
     "tileset.lastUsedFilter": "Ficheiros de conjunto de tiles Tiled (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",

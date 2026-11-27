@@ -10,6 +10,30 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin MAIN_BG.jpeg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:MAIN_BG.jpeg
+
+#begin GAMEPLAY_BG.jpeg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:GAMEPLAY_BG.jpeg
+
 #begin Fonts/Hud.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
@@ -21,29 +45,43 @@
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ArrayRegular.spritefont
 
 #begin Fonts/ArraySemibold.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ArraySemibold.spritefont
 
 #begin Fonts/ArrayWide.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ArrayWide.spritefont
 
 #begin Fonts/ArraySemiboldWide.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:Fonts/ArraySemiboldWide.spritefont
+
+#begin Fonts/ArrayBold.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/ArrayBold.spritefont
+
+#begin Fonts/ArrayBoldWide.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Fonts/ArrayBoldWide.spritefont
 
 #begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Idle.png
 /importer:TextureImporter
@@ -147,6 +185,12 @@
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Dead.png
 
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Blade.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Blade.png
+
 #begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Idle.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -188,6 +232,36 @@
 /processor:TextureProcessor
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Dead.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Shot.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Shot.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Disguise.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Disguise.png
+
+#begin Tiled/Chars/GeneratedFrames/Kunoichi/Spine.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Kunoichi/Spine.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Kunai.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Monk/Kunai.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dart.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dart.png
 
 #begin Tiled/Enemies/craftpix-net-248468-free-werewolf-sprite-sheets-pixel-art/Black_Werewolf/Idle.png
 /importer:TextureImporter

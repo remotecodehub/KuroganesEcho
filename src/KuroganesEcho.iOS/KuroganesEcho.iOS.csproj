@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net11.0-ios</TargetFramework>
+    <RuntimeIdentifiers>iossimulator-x64;iossimulator-arm64</RuntimeIdentifiers>
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
     <CodesignKey>iPhone Developer</CodesignKey>
   </PropertyGroup>

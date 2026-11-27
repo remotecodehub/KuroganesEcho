@@ -199,13 +199,11 @@ internal sealed class EnemyCharacter
 
     public static bool IsBossType(string enemyType) =>
         enemyType is "Minotaur_1" or "Minotaur_2" or "Minotaur_3" or
-            "Gorgon_1" or "Gorgon_2" or "Gorgon_3" or
             "Fire Wizard" or "Lightning Mage" or "Wanderer Magican";
 
     public static string DefaultBossVariant(string bossType) => bossType switch
     {
         "Minotaur" => "Minotaur_1",
-        "Gorgon" => "Gorgon_1",
         "Wizard" => "Fire Wizard",
         _ => throw new ArgumentOutOfRangeException(nameof(bossType), bossType, "Unknown boss type")
     };

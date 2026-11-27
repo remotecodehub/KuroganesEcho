@@ -24,6 +24,8 @@ font-family: Array-Wide;
 font-family: Array-Regular;
 font-family: Array-Semibold;
 font-family: Array-SemiboldWide;
+font-family: Array-BoldWide;
+font-family: Array-Bold;
 
 ```
 

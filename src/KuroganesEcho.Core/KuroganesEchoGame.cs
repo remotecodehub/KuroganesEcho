@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using KuroganesEcho.Core.Localization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,11 +19,14 @@ public class KuroganesEchoGame : Game
 {
     private const int VirtualWidth = 320;
     private const int VirtualHeight = 180;
+    private const float EnemySpawnActivationDistance = VirtualWidth / 2f + 64f;
     private const float PlayerSpeed = 72f;
     private const float RunSpeed = 132f;
     private const float PlayerScale = 0.5f;
     private const float Gravity = 480f;
     private const float JumpVelocity = -180f;
+    private const float DoubleJumpVelocity = -180f;
+    private const float RunningDoubleJumpVelocity = -304f;
     private const float PlayerHalfWidth = 10f;
     private const int MaximumJumps = 2;
     private const float PlayerHeight = 32f;
@@ -31,6 +35,9 @@ public class KuroganesEchoGame : Game
     private const float StaminaMaximum = 5f;
     private const float StaminaRecoveryPerSecond = 0.85f;
     private const float RunStaminaCost = 1f;
+    private const float LevelBriefingDuration = 5f;
+    private const int StartingLives = 3;
+    private const int MaximumLives = 5;
     private static readonly string[] IntroLineKeys =
     {
         "IntroLine01", "IntroLine02", "IntroLine03", "IntroLine04", "IntroLine05",
@@ -42,16 +49,24 @@ public class KuroganesEchoGame : Game
     private readonly string[] _languageCodes = { "pt-BR", "en-US", "fr-FR" };
     private readonly string[] _menuKeys = { "Play", "Continue", "Options", "Quit" };
     private readonly string[] _difficultyKeys = { "Easy", "Normal", "Hard" };
-    private readonly string[] _controlKeys = { "MoveLeft", "MoveRight", "Attack1", "Attack2", "Jump", "Run" };
-    private readonly Keys[] _keyboardBindings = { Keys.A, Keys.D, Keys.Z, Keys.X, Keys.C, Keys.R };
-    private readonly Buttons[] _gamepadBindings = { Buttons.DPadLeft, Buttons.DPadRight, Buttons.A, Buttons.B, Buttons.X, Buttons.Y };
+    private readonly string[] _controlKeys =
+    {
+        "MoveLeft", "MoveRight", "Attack1", "Attack2", "Jump", "Run",
+        "SpecialPrimary", "SpecialSecondary"
+    };
+    private readonly Keys[] _keyboardBindings = { Keys.A, Keys.D, Keys.Z, Keys.X, Keys.C, Keys.R, Keys.F, Keys.V };
+    private readonly Buttons[] _gamepadBindings =
+    {
+        Buttons.DPadLeft, Buttons.DPadRight, Buttons.A, Buttons.B, Buttons.X, Buttons.Y,
+        Buttons.LeftShoulder, Buttons.RightShoulder
+    };
     private static readonly Buttons[] ConfigurableGamepadButtons =
     {
         Buttons.A, Buttons.B, Buttons.X, Buttons.Y,
         Buttons.LeftShoulder, Buttons.RightShoulder,
         Buttons.LeftStick, Buttons.RightStick,
         Buttons.DPadUp, Buttons.DPadDown, Buttons.DPadLeft, Buttons.DPadRight,
-        Buttons.Start, Buttons.Back
+        Buttons.Back
     };
 
     private SpriteBatch _spriteBatch = null!;
@@ -60,16 +75,23 @@ public class KuroganesEchoGame : Game
     private SpriteFont _fontWide = null!;
     private SpriteFont _fontSemiboldWide = null!;
     private Texture2D _whiteTexture = null!;
+    private Texture2D _mainBackground = null!;
+    private Texture2D _gameplayBackground = null!;
     private PlayerCharacter _player = null!;
     private GameLevel _level = null!;
     private AudioService _audio = null!;
     private readonly List<EnemyInstance> _enemies = new();
+    private readonly List<LevelObjectData> _pendingEnemySpawns = new();
+    private readonly List<PlayerProjectile> _projectiles = new();
     private BossInstance _boss;
     private readonly CombatEffectSystem _effects = new();
     private SaveProgressState _saveProgress = new();
     private BoxingViewportAdapter _viewportAdapter = null!;
     private OrthographicCamera _camera = null!;
     private readonly string[] _characterIds = { "Kunoichi", "Ninja_Monk", "Ninja_Peasant" };
+    private Texture2D _spineTexture = null!;
+    private Texture2D _kunaiTexture = null!;
+    private Texture2D _dartTexture = null!;
 
     private GameScreen _screen = GameScreen.Intro;
     private float _introScroll;
@@ -80,6 +102,12 @@ public class KuroganesEchoGame : Game
     private int _difficultySelection = 1;
     private GameDifficulty _selectedDifficulty = GameDifficulty.Normal;
     private int _controlSelection;
+    private int _pauseSelection;
+    private string _pauseStatusMessage = string.Empty;
+    private int _slotSelection;
+    private string _slotStatusMessage = string.Empty;
+    private GameScreen _slotSelectionReturnScreen = GameScreen.MainMenu;
+    private GameScreen _optionsReturnScreen = GameScreen.MainMenu;
     private BindingDevice _bindingDevice = BindingDevice.Keyboard;
     private bool _waitingForBinding;
     private bool _bindingReady;
@@ -92,19 +120,35 @@ public class KuroganesEchoGame : Game
     private bool _isGrounded;
     private float _runRemaining;
     private float _stamina = StaminaMaximum;
+    private float _power;
+    private bool _secondaryPowerUnlocked;
     private float _playerInvulnerability;
     private float _playerKnockbackVelocity;
     private int _jumpsUsed;
     private int _playerHealth = CombatBalance.PlayerMaxHealth;
     private int _livesRemaining = 3;
+    private int _checkpointId;
+    private Vector2 _checkpointPosition;
     private int _playerFacing = 1;
     private bool _playerAttackHitApplied;
+    private readonly HashSet<string> _collectedCollectibles = new(StringComparer.OrdinalIgnoreCase);
+    private float _levelBriefingRemaining;
+    private float _atmosphereTime;
+    private bool _finalBossDefeated;
+    private bool _finalBossRewardCollected;
     private KeyboardState _previousKeyboard;
     private GamePadState _previousGamePad;
     private bool _gamepadConnected;
     private MouseState _previousMouse;
     private bool _fullScreen;
     private string _currentLevelId = "Act_01_A";
+#if DEBUG
+    private readonly DebugCheatCodeSystem _debugCheatCodes = new();
+    private const float MobileCheatLongPressDuration = 0.85f;
+    private int _mobileCheatLongPressTouchId = -1;
+    private float _mobileCheatLongPressElapsed;
+    private bool _mobileCheatLongPressTriggered;
+#endif
 
     public static bool IsMobile => OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
     public static bool IsDesktop => OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() || OperatingSystem.IsWindows();
@@ -116,8 +160,9 @@ public class KuroganesEchoGame : Game
             PreferredBackBufferWidth = 1280,
             PreferredBackBufferHeight = 720,
             SynchronizeWithVerticalRetrace = true,
-            IsFullScreen = false
+            IsFullScreen = IsDesktop
         };
+        _fullScreen = IsDesktop;
 
         Services.AddService(typeof(GraphicsDeviceManager), _graphics);
         Content.RootDirectory = "Content";
@@ -127,6 +172,7 @@ public class KuroganesEchoGame : Game
     protected override void Initialize()
     {
         _saveProgress = SaveProgressStore.Load();
+        _livesRemaining = Math.Clamp(_saveProgress.LivesRemaining, 1, MaximumLives);
         _currentLevelId = "Act_01_A";
         if (Enum.IsDefined(typeof(GameDifficulty), _saveProgress.Difficulty))
         {
@@ -157,11 +203,16 @@ public class KuroganesEchoGame : Game
         _fontSemibold = Content.Load<SpriteFont>("Fonts/ArraySemibold");
         _fontWide = Content.Load<SpriteFont>("Fonts/ArrayWide");
         _fontSemiboldWide = Content.Load<SpriteFont>("Fonts/ArraySemiboldWide");
+        _mainBackground = Content.Load<Texture2D>("MAIN_BG");
+        _gameplayBackground = Content.Load<Texture2D>("GAMEPLAY_BG");
         _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01A);
         _level.ConfigureDifficulty(_selectedDifficulty);
         _audio = AudioService.Load(Content);
         _audio.PlayIntroMusic();
         _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
+        _spineTexture = Content.Load<Texture2D>("Tiled/Chars/GeneratedFrames/Kunoichi/Spine");
+        _kunaiTexture = Content.Load<Texture2D>("Tiled/Chars/GeneratedFrames/Ninja_Monk/Kunai");
+        _dartTexture = Content.Load<Texture2D>("Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dart");
         LoadEnemies();
 
         _whiteTexture = new Texture2D(GraphicsDevice, 1, 1);
@@ -179,7 +230,41 @@ public class KuroganesEchoGame : Game
         var backPressed = IsNewKeyPress(keyboard, Keys.Escape) || IsNewButtonPress(gamePad, Buttons.Back);
         var touchState = TouchPanel.GetState();
 
-        if (backPressed)
+#if DEBUG
+        var mobileDebugLongPressHandled = UpdateMobileDebugLongPress(gameTime, touchState);
+        if (_screen == GameScreen.Paused)
+        {
+            var debugMenuHandled = _debugCheatCodes.Update(
+                gamePad,
+                _previousGamePad,
+                touchState,
+                IsMobile,
+                ToVirtualPoint,
+                GetDebugCheckpointOptions());
+            ApplyDebugCheatEffects();
+            if (debugMenuHandled || mobileDebugLongPressHandled)
+            {
+                _previousKeyboard = keyboard;
+                _previousGamePad = gamePad;
+                _previousMouse = Mouse.GetState();
+                base.Update(gameTime);
+                return;
+            }
+        }
+        else if (_screen == GameScreen.Act01)
+        {
+            ApplyDebugCheatEffects();
+        }
+#endif
+
+        if (_screen == GameScreen.Act01 &&
+            (IsNewButtonPress(gamePad, Buttons.Start) ||
+             backPressed ||
+             (IsMobile && IsNewTouchPress(touchState, PauseTouchButton()))))
+        {
+            EnterPauseMenu();
+        }
+        else if (backPressed && _screen != GameScreen.Paused)
         {
             if (_screen == GameScreen.MainMenu)
                 Exit();
@@ -189,6 +274,10 @@ public class KuroganesEchoGame : Game
                 _screen = GameScreen.MainMenu;
             else if (_screen == GameScreen.Controls)
                 _screen = GameScreen.Options;
+            else if (_screen == GameScreen.Options)
+                ReturnFromOptions();
+            else if (_screen == GameScreen.SaveSlotSelection)
+                _screen = _slotSelectionReturnScreen;
             else if (_screen is GameScreen.GameOver or GameScreen.Victory)
             {
                 _screen = GameScreen.MainMenu;
@@ -223,6 +312,14 @@ public class KuroganesEchoGame : Game
         else if (_screen == GameScreen.Controls)
         {
             UpdateControls(keyboard, gamePad, touchState);
+        }
+        else if (_screen == GameScreen.Paused)
+        {
+            UpdatePaused(keyboard, gamePad, touchState);
+        }
+        else if (_screen == GameScreen.SaveSlotSelection)
+        {
+            UpdateSaveSlotSelection(keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.GameOver)
         {
@@ -263,8 +360,36 @@ public class KuroganesEchoGame : Game
             DrawDifficultySelection();
         else if (_screen == GameScreen.Controls)
             DrawControls();
+        else if (_screen == GameScreen.Paused)
+        {
+            DrawAct01(gameTime);
+            DrawPauseOverlay();
+        }
+        else if (_screen == GameScreen.SaveSlotSelection)
+        {
+            if (_slotSelectionReturnScreen == GameScreen.Paused)
+            {
+                DrawAct01(gameTime);
+                DrawSaveSlotSelectionOverlay(true);
+            }
+            else
+            {
+                DrawSaveSlotSelectionOverlay(false);
+            }
+        }
         else
             DrawMainMenu();
+
+#if DEBUG
+        if (_screen == GameScreen.Paused)
+        {
+            BeginUi();
+            if (_debugCheatCodes.IsOpen)
+                _debugCheatCodes.Draw(_spriteBatch, _whiteTexture, _font, _fontSemiboldWide);
+            _debugCheatCodes.DrawInputHud(_spriteBatch, _whiteTexture, _font);
+            EndUi();
+        }
+#endif
 
         base.Draw(gameTime);
     }
@@ -294,6 +419,260 @@ public class KuroganesEchoGame : Game
             ActivateMainMenuSelection();
     }
 
+    private void EnterPauseMenu()
+    {
+        _pauseSelection = 0;
+        _pauseStatusMessage = string.Empty;
+        _screen = GameScreen.Paused;
+    }
+
+    private void UpdatePaused(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    {
+#if DEBUG
+        if (UpdateMobileDebugLongPressState(touches))
+            return;
+#endif
+
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
+            _pauseSelection = (_pauseSelection + PauseOptionCount - 1) % PauseOptionCount;
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
+            _pauseSelection = (_pauseSelection + 1) % PauseOptionCount;
+
+        var point = GetPressedPoint(touches);
+        if (point.HasValue)
+        {
+            if (PauseContinueButton().Contains(point.Value))
+            {
+                _pauseSelection = PauseContinueIndex;
+                OpenSaveSlotSelection(GameScreen.Paused);
+                return;
+            }
+
+            for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
+            {
+                if (!PauseSlotButton(slot).Contains(point.Value))
+                    continue;
+
+                _pauseSelection = slot;
+                SaveStateToSlot(slot);
+                return;
+            }
+
+            if (PauseResumeButton().Contains(point.Value))
+            {
+                _screen = GameScreen.Act01;
+                return;
+            }
+
+            if (PauseOptionsButton().Contains(point.Value))
+            {
+                OpenOptions(GameScreen.Paused);
+                return;
+            }
+
+            if (PauseMainMenuButton().Contains(point.Value))
+            {
+                LeaveToMainMenu();
+                return;
+            }
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Escape) ||
+            IsNewButtonPress(gamePad, Buttons.Back) ||
+            IsNewButtonPress(gamePad, Buttons.Start))
+        {
+            _screen = GameScreen.Act01;
+            return;
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Enter) ||
+            IsNewKeyPress(keyboard, Keys.Space) ||
+            IsNewButtonPress(gamePad, Buttons.A))
+            ActivatePauseSelection();
+    }
+
+    private const int PauseResumeIndex = 0;
+    private const int PauseContinueIndex = 1;
+    private const int PauseSaveSlotStartIndex = 2;
+    private const int PauseOptionsIndex = PauseSaveSlotStartIndex + SaveProgressStore.SlotCount;
+    private const int PauseMainMenuIndex = PauseOptionsIndex + 1;
+    private const int PauseOptionCount = PauseMainMenuIndex + 1;
+
+    private void ActivatePauseSelection()
+    {
+        if (_pauseSelection == PauseResumeIndex)
+        {
+            _screen = GameScreen.Act01;
+            return;
+        }
+
+        if (_pauseSelection == PauseContinueIndex)
+        {
+            OpenSaveSlotSelection(GameScreen.Paused);
+            return;
+        }
+
+        if (_pauseSelection >= PauseSaveSlotStartIndex &&
+            _pauseSelection < PauseSaveSlotStartIndex + SaveProgressStore.SlotCount)
+        {
+            SaveStateToSlot(_pauseSelection - PauseSaveSlotStartIndex + 1);
+            return;
+        }
+
+        if (_pauseSelection == PauseOptionsIndex)
+        {
+            OpenOptions(GameScreen.Paused);
+            return;
+        }
+
+        if (_pauseSelection == PauseMainMenuIndex)
+            LeaveToMainMenu();
+    }
+
+    private void SaveStateToSlot(int slot)
+    {
+        SaveCurrentProgress();
+        SaveProgressStore.SaveSlot(slot, CloneSaveState(_saveProgress));
+        _pauseStatusMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            LocalizedText.Get("SaveComplete"),
+            slot);
+        _audio.PlayCue(AudioCue.Collectable, 0.7f);
+    }
+
+    private void OpenSaveSlotSelection(GameScreen returnScreen)
+    {
+        _slotSelectionReturnScreen = returnScreen;
+        _slotSelection = 0;
+        _slotStatusMessage = string.Empty;
+        _screen = GameScreen.SaveSlotSelection;
+    }
+
+    private void UpdateSaveSlotSelection(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    {
+        var optionCount = SaveProgressStore.SlotCount + 1;
+        if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
+            _slotSelection = (_slotSelection + optionCount - 1) % optionCount;
+        if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
+            _slotSelection = (_slotSelection + 1) % optionCount;
+
+        var point = GetPressedPoint(touches);
+        if (point.HasValue)
+        {
+            for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
+            {
+                if (!SaveSlotButton(slot).Contains(point.Value))
+                    continue;
+
+                _slotSelection = slot - 1;
+                LoadStateFromSlot(slot);
+                return;
+            }
+
+            if (SaveSlotBackButton().Contains(point.Value))
+            {
+                ReturnFromSaveSlotSelection();
+                return;
+            }
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Escape) ||
+            IsNewButtonPress(gamePad, Buttons.B))
+        {
+            ReturnFromSaveSlotSelection();
+            return;
+        }
+
+        if (IsNewKeyPress(keyboard, Keys.Enter) ||
+            IsNewKeyPress(keyboard, Keys.Space) ||
+            IsNewButtonPress(gamePad, Buttons.A))
+        {
+            if (_slotSelection < SaveProgressStore.SlotCount)
+                LoadStateFromSlot(_slotSelection + 1);
+            else
+                ReturnFromSaveSlotSelection();
+        }
+    }
+
+    private void ReturnFromSaveSlotSelection()
+    {
+        _screen = _slotSelectionReturnScreen;
+        _slotStatusMessage = string.Empty;
+    }
+
+    private void LoadStateFromSlot(int slot)
+    {
+        if (!SaveProgressStore.HasSlot(slot))
+        {
+            _slotStatusMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                LocalizedText.Get("SlotUnavailable"),
+                slot);
+            return;
+        }
+
+        _saveProgress = SaveProgressStore.LoadSlot(slot);
+        _selectedDifficulty = Enum.IsDefined(typeof(GameDifficulty), _saveProgress.Difficulty)
+            ? _saveProgress.Difficulty
+            : GameDifficulty.Normal;
+        _difficultySelection = (int)_selectedDifficulty;
+
+        var savedCharacterIndex = Array.IndexOf(_characterIds, _saveProgress.CharacterId);
+        if (savedCharacterIndex >= 0)
+            SelectCharacter(savedCharacterIndex);
+
+        var levelId = ResolveSavedLevelId(_saveProgress);
+        LoadLevel(levelId);
+        StartAct01(levelId);
+    }
+
+    private static string ResolveSavedLevelId(SaveProgressState state)
+    {
+        var candidates = new[] { state.CurrentLevelId, state.CheckpointLevelId, state.UnlockedLevelId };
+        foreach (var candidate in candidates)
+        {
+            switch (candidate)
+            {
+                case "Act_02_C":
+                case "Act_02_B":
+                case "Act_02_A":
+                case "Act_01_C":
+                case "Act_01_B":
+                case "Act_01_A":
+                    return candidate;
+            }
+        }
+
+        return "Act_01_A";
+    }
+
+    private static SaveProgressState CloneSaveState(SaveProgressState source) => new()
+    {
+        CurrentLevelId = source.CurrentLevelId,
+        UnlockedLevelId = source.UnlockedLevelId,
+        CharacterId = source.CharacterId,
+        Difficulty = source.Difficulty,
+        LivesRemaining = source.LivesRemaining,
+        SealAshesParts = source.SealAshesParts,
+        CheckpointLevelId = source.CheckpointLevelId,
+        CheckpointId = source.CheckpointId
+    };
+
+    private void OpenOptions(GameScreen returnScreen)
+    {
+        _optionsReturnScreen = returnScreen;
+        _optionsSelection = _languageSelection;
+        _screen = GameScreen.Options;
+    }
+
+    private void ReturnFromOptions() => _screen = _optionsReturnScreen;
+
+    private void LeaveToMainMenu()
+    {
+        _screen = GameScreen.MainMenu;
+        _audio.PlayMenuMusic();
+    }
+
     private void UpdateIntro(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
         _introScroll += (float)gameTime.ElapsedGameTime.TotalSeconds * IntroScrollSpeed;
@@ -320,11 +699,10 @@ public class KuroganesEchoGame : Game
                 _screen = GameScreen.PlayerSelection;
                 break;
             case 1:
-                ContinueSavedProgress();
+                OpenSaveSlotSelection(GameScreen.MainMenu);
                 break;
             case 2:
-                _optionsSelection = _languageSelection;
-                _screen = GameScreen.Options;
+                OpenOptions(GameScreen.MainMenu);
                 break;
             case 3:
                 Exit();
@@ -363,9 +741,9 @@ public class KuroganesEchoGame : Game
                 }
             }
 
-            if (OptionsBackButton().Contains(point.Value))
+            if (IsMobile && OptionsBackButton().Contains(point.Value))
             {
-                _screen = GameScreen.MainMenu;
+                ReturnFromOptions();
                 return;
             }
 
@@ -409,7 +787,7 @@ public class KuroganesEchoGame : Game
         if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
             ActivateOptionsSelection();
         if (IsNewButtonPress(gamePad, Buttons.B))
-            _screen = GameScreen.MainMenu;
+            ReturnFromOptions();
     }
 
     private int ControlsOptionIndex => _languageCodes.Length;
@@ -422,7 +800,7 @@ public class KuroganesEchoGame : Game
 
     private int MuteOptionIndex => SfxVolumeOptionIndex + 1;
 
-    private int BackOptionIndex => MuteOptionIndex + 1;
+    private int BackOptionIndex => MuteOptionIndex + (IsMobile ? 1 : 0);
 
     private int OptionsOptionCount => BackOptionIndex + 1;
 
@@ -482,7 +860,7 @@ public class KuroganesEchoGame : Game
         }
 
         if (_optionsSelection == BackOptionIndex)
-            _screen = GameScreen.MainMenu;
+            ReturnFromOptions();
     }
 
     private void UpdateControls(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
@@ -525,7 +903,7 @@ public class KuroganesEchoGame : Game
                 }
             }
 
-            if (ControlsBackButton().Contains(point.Value))
+            if (IsMobile && ControlsBackButton().Contains(point.Value))
             {
                 _screen = GameScreen.Options;
                 return;
@@ -633,7 +1011,7 @@ public class KuroganesEchoGame : Game
                 return;
             }
 
-            if (SelectionBackButton().Contains(point.Value))
+            if (IsMobile && SelectionBackButton().Contains(point.Value))
             {
                 _screen = GameScreen.MainMenu;
                 return;
@@ -677,7 +1055,7 @@ public class KuroganesEchoGame : Game
                 return;
             }
 
-            if (SelectionBackButton().Contains(point.Value))
+            if (IsMobile && SelectionBackButton().Contains(point.Value))
             {
                 _screen = GameScreen.PlayerSelection;
                 return;
@@ -693,6 +1071,9 @@ public class KuroganesEchoGame : Game
     private void ConfirmDifficulty()
     {
         _selectedDifficulty = (GameDifficulty)_difficultySelection;
+        _livesRemaining = StartingLives;
+        _saveProgress.CheckpointLevelId = "Act_01_A";
+        _saveProgress.CheckpointId = 0;
         _saveProgress.UnlockedLevelId = "Act_01_A";
         LoadLevel("Act_01_A");
         StartAct01("Act_01_A");
@@ -719,7 +1100,15 @@ public class KuroganesEchoGame : Game
         if (savedCharacterIndex >= 0)
             SelectCharacter(savedCharacterIndex);
 
-        var levelId = _saveProgress.UnlockedLevelId is "Act_01_B" ? "Act_01_B" : "Act_01_A";
+        var levelId = _saveProgress.UnlockedLevelId switch
+        {
+            "Act_02_C" => "Act_02_C",
+            "Act_02_B" => "Act_02_B",
+            "Act_02_A" => "Act_02_A",
+            "Act_01_C" => "Act_01_C",
+            "Act_01_B" => "Act_01_B",
+            _ => "Act_01_A"
+        };
         LoadLevel(levelId);
         StartAct01(levelId);
     }
@@ -728,8 +1117,14 @@ public class KuroganesEchoGame : Game
     {
         _screen = GameScreen.Act01;
         _currentLevelId = levelId;
+        _levelBriefingRemaining = LevelBriefingDuration;
+        _atmosphereTime = 0f;
+        _collectedCollectibles.Clear();
+        _finalBossDefeated = false;
+        _finalBossRewardCollected = false;
         _audio.PlayActMusic(_currentLevelId);
-        _playerPosition = _level.PlayerSpawn;
+        InitializeCheckpoint(levelId);
+        _playerPosition = _checkpointPosition;
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
         _verticalVelocity = 0f;
@@ -737,8 +1132,10 @@ public class KuroganesEchoGame : Game
         _jumpsUsed = 0;
         _runRemaining = 0f;
         _stamina = StaminaMaximum;
+        _power = 0f;
+        _secondaryPowerUnlocked = false;
+        _projectiles.Clear();
         _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
-        _livesRemaining = 3;
         _playerInvulnerability = 0f;
         _playerKnockbackVelocity = 0f;
         _playerFacing = 1;
@@ -752,6 +1149,207 @@ public class KuroganesEchoGame : Game
         UpdateCamera();
     }
 
+    private void InitializeCheckpoint(string levelId)
+    {
+        _checkpointId = 0;
+        _checkpointPosition = _level.PlayerSpawn;
+
+        if (!string.Equals(_saveProgress.CheckpointLevelId, levelId, StringComparison.OrdinalIgnoreCase) ||
+            _saveProgress.CheckpointId <= 0)
+            return;
+
+        foreach (var checkpoint in _level.Checkpoints)
+        {
+            if (!TryGetIntProperty(checkpoint, "CheckpointId", out var checkpointId) ||
+                checkpointId != _saveProgress.CheckpointId)
+                continue;
+
+            _checkpointId = checkpointId;
+            _checkpointPosition = ReadRespawnPosition(checkpoint);
+            return;
+        }
+    }
+
+    private void CaptureCheckpoint()
+    {
+        foreach (var checkpoint in _level.Checkpoints)
+        {
+            if (!PlayerHitbox.Intersects(checkpoint.Bounds) ||
+                !TryGetIntProperty(checkpoint, "CheckpointId", out var checkpointId) ||
+                checkpointId <= _checkpointId)
+                continue;
+
+            _checkpointId = checkpointId;
+            _checkpointPosition = ReadRespawnPosition(checkpoint);
+            _saveProgress.CheckpointLevelId = _currentLevelId;
+            _saveProgress.CheckpointId = _checkpointId;
+            SaveCurrentProgress();
+        }
+    }
+
+    private Vector2 ReadRespawnPosition(LevelObjectData checkpoint)
+    {
+        var x = TryGetIntProperty(checkpoint, "RespawnX", out var respawnX)
+            ? respawnX
+            : checkpoint.Bounds.X;
+        var y = TryGetIntProperty(checkpoint, "RespawnY", out var respawnY)
+            ? respawnY
+            : checkpoint.Bounds.Bottom;
+        return new Vector2(x, y);
+    }
+
+    private static bool TryGetIntProperty(LevelObjectData item, string name, out int value)
+    {
+        value = 0;
+        return item.Properties.TryGetValue(name, out var text) &&
+               int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+    }
+
+#if DEBUG
+    private IReadOnlyList<DebugCheatCodeSystem.CheckpointOption> GetDebugCheckpointOptions()
+    {
+        var checkpoints = new List<DebugCheatCodeSystem.CheckpointOption>();
+        foreach (var checkpoint in _level.Checkpoints)
+        {
+            if (!TryGetIntProperty(checkpoint, "CheckpointId", out var checkpointId))
+                continue;
+
+            checkpoints.Add(new DebugCheatCodeSystem.CheckpointOption(
+                checkpointId,
+                string.IsNullOrWhiteSpace(checkpoint.Name) ? $"Checkpoint {checkpointId}" : checkpoint.Name,
+                ReadRespawnPosition(checkpoint)));
+        }
+
+        foreach (var bossSpawn in _level.BossSpawns)
+        {
+            var bossPosition = new Vector2(
+                Math.Max(32f, bossSpawn.Bounds.Center.X - 48f),
+                bossSpawn.Bounds.Bottom);
+            checkpoints.Add(new DebugCheatCodeSystem.CheckpointOption(
+                int.MaxValue,
+                "Final boss / end of level",
+                bossPosition));
+            break;
+        }
+
+        checkpoints.Sort((left, right) => left.Id.CompareTo(right.Id));
+        return checkpoints;
+    }
+
+    private void ApplyDebugCheatEffects()
+    {
+        if (_debugCheatCodes.TryConsumeRestoreResources())
+        {
+            _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
+            _stamina = StaminaMaximum;
+            _power = CombatBalance.PlayerPowerMaximum;
+            _livesRemaining = MaximumLives;
+        }
+
+        if (_debugCheatCodes.TryConsumeCheckpoint(out var checkpoint))
+        {
+            _checkpointId = checkpoint.Id;
+            _checkpointPosition = checkpoint.RespawnPosition;
+            _playerPosition = checkpoint.RespawnPosition;
+            _verticalVelocity = 0f;
+            _playerKnockbackVelocity = 0f;
+            _isGrounded = true;
+            _jumpsUsed = 0;
+            _runRemaining = 0f;
+            _playerInvulnerability = 1f;
+            _projectiles.Clear();
+            _player.Reset();
+            SaveCurrentProgress();
+            UpdateCamera();
+        }
+
+        if (_debugCheatCodes.InfiniteHealth)
+            _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
+        if (_debugCheatCodes.InfiniteStamina)
+            _stamina = StaminaMaximum;
+        if (_debugCheatCodes.InfinitePower)
+            _power = CombatBalance.PlayerPowerMaximum;
+        if (_debugCheatCodes.InfiniteLives)
+            _livesRemaining = MaximumLives;
+    }
+
+    private bool UpdateMobileDebugLongPress(GameTime gameTime, TouchCollection touches)
+    {
+#if DEBUG
+        if (!IsMobile || _screen != GameScreen.Paused)
+        {
+            ResetMobileDebugLongPress();
+            return false;
+        }
+
+        TouchLocation? targetTouch = null;
+        foreach (var touch in touches)
+        {
+            if (touch.State is not (TouchLocationState.Pressed or TouchLocationState.Moved))
+                continue;
+
+            if (PauseResumeButton().Contains(ToVirtualPoint(touch.Position)))
+            {
+                targetTouch = touch;
+                break;
+            }
+        }
+
+        if (!targetTouch.HasValue)
+        {
+            var wasTracking = _mobileCheatLongPressTouchId >= 0;
+            var wasTriggered = _mobileCheatLongPressTriggered;
+            ResetMobileDebugLongPress();
+            return wasTracking && wasTriggered;
+        }
+
+        if (_mobileCheatLongPressTouchId != targetTouch.Value.Id)
+        {
+            _mobileCheatLongPressTouchId = targetTouch.Value.Id;
+            _mobileCheatLongPressElapsed = 0f;
+            _mobileCheatLongPressTriggered = false;
+        }
+
+        _mobileCheatLongPressElapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        if (!_mobileCheatLongPressTriggered &&
+            _mobileCheatLongPressElapsed >= MobileCheatLongPressDuration)
+        {
+            _mobileCheatLongPressTriggered = true;
+            _debugCheatCodes.Open();
+        }
+
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    private bool UpdateMobileDebugLongPressState(TouchCollection touches)
+    {
+#if DEBUG
+        if (!IsMobile || _mobileCheatLongPressTouchId < 0)
+            return false;
+
+        foreach (var touch in touches)
+        {
+            if (touch.Id == _mobileCheatLongPressTouchId &&
+                touch.State is TouchLocationState.Pressed or TouchLocationState.Moved)
+                return true;
+        }
+#endif
+        return false;
+    }
+
+    private void ResetMobileDebugLongPress()
+    {
+#if DEBUG
+        _mobileCheatLongPressTouchId = -1;
+        _mobileCheatLongPressElapsed = 0f;
+        _mobileCheatLongPressTriggered = false;
+#endif
+    }
+#endif
+
     private void LoadLevel(string levelId)
     {
         _currentLevelId = levelId;
@@ -764,18 +1362,27 @@ public class KuroganesEchoGame : Game
     private void LoadEnemies()
     {
         _enemies.Clear();
+        _pendingEnemySpawns.Clear();
         _boss = null;
         foreach (var spawn in _level.EnemySpawns)
         {
             var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
                 ? configuredType
                 : string.Empty;
-            if (!EnemyCharacter.IsSupported(enemyType) || EnemyCharacter.IsBossType(enemyType))
+            if (spawn.Properties.TryGetValue("SpawnOnly", out var spawnOnly) &&
+                bool.TryParse(spawnOnly, out var isSpawnOnly) && isSpawnOnly)
+            {
+                _pendingEnemySpawns.Add(spawn);
                 continue;
+            }
 
-            var enemy = new EnemyInstance(EnemyCharacter.Load(Content, enemyType), spawn);
-            enemy.ConfigureDifficulty(_selectedDifficulty);
-            _enemies.Add(enemy);
+            if (string.Equals(enemyType, "PendingGroup", StringComparison.OrdinalIgnoreCase))
+            {
+                LoadEnemyGroup(spawn);
+                continue;
+            }
+
+            CreateEnemy(spawn, enemyType);
         }
 
         foreach (var spawn in _level.BossSpawns)
@@ -789,10 +1396,79 @@ public class KuroganesEchoGame : Game
         }
     }
 
+    private void ActivatePendingEnemySpawns()
+    {
+        for (var index = _pendingEnemySpawns.Count - 1; index >= 0; index--)
+        {
+            var spawn = _pendingEnemySpawns[index];
+            if (Math.Abs(_playerPosition.X - spawn.Bounds.Center.X) > EnemySpawnActivationDistance)
+                continue;
+
+            _pendingEnemySpawns.RemoveAt(index);
+            var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
+                ? configuredType
+                : string.Empty;
+            if (string.Equals(enemyType, "PendingGroup", StringComparison.OrdinalIgnoreCase))
+                LoadEnemyGroup(spawn);
+            else
+                CreateEnemy(spawn, enemyType);
+        }
+    }
+
+    private void CreateEnemy(LevelObjectData spawn, string enemyType)
+    {
+        if (!EnemyCharacter.IsSupported(enemyType) || EnemyCharacter.IsBossType(enemyType))
+            return;
+
+        var enemy = new EnemyInstance(EnemyCharacter.Load(Content, enemyType), spawn);
+        enemy.ConfigureDifficulty(_selectedDifficulty);
+        _enemies.Add(enemy);
+    }
+
+    private void LoadEnemyGroup(LevelObjectData groupSpawn)
+    {
+        var groupCount = TryGetIntProperty(groupSpawn, "GroupCount", out var configuredCount)
+            ? Math.Clamp(configuredCount, 1, 12)
+            : 1;
+        var groupEnemyType = groupSpawn.Properties.TryGetValue("GroupEnemyType", out var configuredType) &&
+                             EnemyCharacter.IsSupported(configuredType) &&
+                             !EnemyCharacter.IsBossType(configuredType)
+            ? configuredType
+            : "Skeleton_Warrior";
+
+        for (var index = 0; index < groupCount; index++)
+        {
+            var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in groupSpawn.Properties)
+                properties[pair.Key] = pair.Value;
+            properties["EnemyType"] = groupEnemyType;
+            var spawn = new LevelObjectData
+            {
+                Name = $"{groupSpawn.Name}_{index + 1}",
+                Type = "EnemySpawn",
+                Bounds = new Rectangle(groupSpawn.Bounds.X + index * 28, groupSpawn.Bounds.Y, groupSpawn.Bounds.Width, groupSpawn.Bounds.Height),
+                Properties = properties
+            };
+            var enemy = new EnemyInstance(EnemyCharacter.Load(Content, groupEnemyType), spawn);
+            enemy.ConfigureDifficulty(_selectedDifficulty);
+            _enemies.Add(enemy);
+        }
+    }
+
     private void UpdateAct01(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
         var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _atmosphereTime += elapsedSeconds;
         _effects.Update(elapsedSeconds);
+        if (_levelBriefingRemaining > 0f)
+        {
+            _levelBriefingRemaining = Math.Max(0f, _levelBriefingRemaining - elapsedSeconds);
+            if (IsNewKeyPress(keyboard, Keys.Enter) ||
+                IsNewKeyPress(keyboard, Keys.Space) ||
+                IsNewButtonPress(gamePad, Buttons.A) ||
+                GetPressedPoint(touches).HasValue)
+                _levelBriefingRemaining = 0f;
+        }
 
         if (_player.Animation == PlayerAnimationState.Dead)
         {
@@ -805,6 +1481,9 @@ public class KuroganesEchoGame : Game
         _playerInvulnerability = Math.Max(0f, _playerInvulnerability - elapsedSeconds);
         if (_runRemaining <= 0f)
             _stamina = Math.Min(StaminaMaximum, _stamina + StaminaRecoveryPerSecond * elapsedSeconds);
+        _power = Math.Min(
+            CombatBalance.PlayerPowerMaximum,
+            _power + CombatBalance.PlayerPowerRecoveryPerSecond * elapsedSeconds);
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
         if (IsKeyboardMoveDown(keyboard, 0))
@@ -828,6 +1507,10 @@ public class KuroganesEchoGame : Game
                 TryJump();
             else if (IsNewKeyPress(keyboard, _keyboardBindings[5]) || IsNewButtonPress(gamePad, _gamepadBindings[5]))
                 StartAction(PlayerAnimationState.Run);
+            else if (IsNewKeyPress(keyboard, _keyboardBindings[6]) || IsNewButtonPress(gamePad, _gamepadBindings[6]))
+                StartPrimarySpecial();
+            else if (IsNewKeyPress(keyboard, _keyboardBindings[7]) || IsNewButtonPress(gamePad, _gamepadBindings[7]))
+                StartSecondarySpecial();
         }
 
         foreach (var touch in touches)
@@ -858,9 +1541,9 @@ public class KuroganesEchoGame : Game
                 else if (ActionButtonBounds(2).Contains(point))
                     TryJump();
                 else if (ActionButtonBounds(3).Contains(point))
-                    StartAction(PlayerAnimationState.Cast);
+                    StartSecondarySpecial();
                 else if (ActionButtonBounds(4).Contains(point))
-                    StartAction(PlayerAnimationState.Eating);
+                    StartPrimarySpecial();
                 else if (ActionButtonBounds(5).Contains(point))
                     StartAction(PlayerAnimationState.Run);
             }
@@ -910,6 +1593,7 @@ public class KuroganesEchoGame : Game
             _isGrounded = false;
             _playerPosition.Y = Math.Max(32f, _playerPosition.Y);
         }
+        CaptureCheckpoint();
         if (_runRemaining > 0f)
             _runRemaining = Math.Max(0f, _runRemaining - elapsedSeconds);
         _player.Update(elapsedSeconds);
@@ -920,11 +1604,28 @@ public class KuroganesEchoGame : Game
                 _level.GetSurfaceAt(_playerPosition.X, _playerPosition.Y),
                 _player.Animation == PlayerAnimationState.Run);
         }
+        ActivatePendingEnemySpawns();
         foreach (var enemy in _enemies)
             enemy.Update(elapsedSeconds, _playerPosition, _level);
         _boss?.Update(elapsedSeconds, _playerPosition);
+        UpdateProjectiles(elapsedSeconds);
         ResolveCombat();
         ResolvePlayerEnemyCollisions();
+        _enemies.RemoveAll(enemy => !enemy.IsAlive);
+        if (IsBossRewardLevel && _boss is not null && !_boss.IsAlive && !_finalBossDefeated)
+        {
+            _finalBossDefeated = true;
+            foreach (var collectible in _level.Collectibles)
+            {
+                if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
+                    (string.Equals(pickupKind, nameof(CollectibleKind.SealRubyPart), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase)))
+                    _level.RevealCollectibleTile(collectible);
+            }
+            _audio.PlayCue(AudioCue.Collectable, 1f);
+        }
+        CollectLevelItems();
         if (!_player.IsActionActive)
         {
             var locomotion = !_isGrounded
@@ -932,17 +1633,28 @@ public class KuroganesEchoGame : Game
                 : (_moveInput.Length() > 0.05f ? PlayerAnimationState.Walk : PlayerAnimationState.Idle);
             _player.SetLocomotion(locomotion);
         }
-        if (_currentLevelId == "Act_01_A" && PlayerAtLevelExit())
+        if (PlayerAtLevelExit() && !string.IsNullOrWhiteSpace(_level.NextLevelId))
         {
-            LoadLevel("Act_01_B");
-            _saveProgress.UnlockedLevelId = "Act_01_B";
-            StartAct01("Act_01_B");
+            var nextLevelId = _level.NextLevelId;
+            LoadLevel(nextLevelId);
+            _saveProgress.UnlockedLevelId = nextLevelId;
+            StartAct01(nextLevelId);
             return;
         }
-        if (_currentLevelId == "Act_01_B" && _boss is not null && !_boss.IsAlive)
+        if (_currentLevelId == "Act_01_C" && _finalBossDefeated && _finalBossRewardCollected)
         {
-            _saveProgress.CurrentLevelId = "Act_01_B";
-            _saveProgress.UnlockedLevelId = "Act_01_B";
+            LoadLevel("Act_02_A");
+            _saveProgress.UnlockedLevelId = "Act_02_A";
+            StartAct01("Act_02_A");
+            return;
+        }
+        if (_currentLevelId == "Act_02_C" &&
+            _finalBossDefeated &&
+            _finalBossRewardCollected &&
+            _saveProgress.SealAshesParts >= 4)
+        {
+            _saveProgress.CurrentLevelId = "Act_02_C";
+            _saveProgress.UnlockedLevelId = "Act_02_C";
             SaveCurrentProgress();
             _screen = GameScreen.Victory;
             _audio.PlayVictoryMusic();
@@ -962,6 +1674,158 @@ public class KuroganesEchoGame : Game
         return false;
     }
 
+    private void CollectLevelItems()
+    {
+        var maximumHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
+        foreach (var collectible in _level.Collectibles)
+        {
+            if (_collectedCollectibles.Contains(collectible.Name) || !PlayerHitbox.Intersects(collectible.Bounds))
+                continue;
+
+            if (!collectible.Properties.TryGetValue("PickupKind", out var pickupKind) ||
+                !Enum.TryParse<CollectibleKind>(pickupKind, true, out var kind))
+                continue;
+
+            if ((kind is CollectibleKind.SealRubyPart or CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart) && !_finalBossDefeated)
+                continue;
+
+            var collected = kind switch
+            {
+                CollectibleKind.Health => TryCollectHealth(collectible, maximumHealth),
+                CollectibleKind.Stamina => TryCollectStamina(collectible, maximumHealth),
+                CollectibleKind.PowerFruit => TryCollectPowerFruit(collectible),
+                CollectibleKind.ExtraLife => TryCollectExtraLife(),
+                CollectibleKind.SealRubyPart or CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart => TryCollectSealRubyPart(collectible),
+                _ => false
+            };
+            if (!collected)
+                continue;
+
+            _collectedCollectibles.Add(collectible.Name);
+            _level.RemoveCollectibleTile(collectible);
+            if (collectible.Properties.TryGetValue("PickupGroup", out var pickupGroup))
+            {
+                foreach (var groupedCollectible in _level.Collectibles)
+                {
+                    if (!groupedCollectible.Properties.TryGetValue("PickupGroup", out var group) ||
+                        !string.Equals(group, pickupGroup, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    _collectedCollectibles.Add(groupedCollectible.Name);
+                    _level.RemoveCollectibleTile(groupedCollectible);
+                }
+            }
+            _audio.PlayCue(AudioCue.Collectable, 0.9f);
+            _effects.Spawn(new Vector2(collectible.Bounds.Center.X, collectible.Bounds.Top), CombatEffectKind.Magic, Vector2.UnitY, 0.8f);
+            SaveCurrentProgress();
+        }
+
+    }
+
+    private bool TryCollectHealth(LevelObjectData collectible, int maximumHealth)
+    {
+        if (_playerHealth >= maximumHealth)
+            return TryCollectExtraLife();
+
+        var restore = Math.Max(1, maximumHealth / 4);
+        if (collectible.Properties.TryGetValue("RestoreHealth", out var configuredRestore) &&
+            int.TryParse(configuredRestore, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedRestore))
+            restore = Math.Max(1, parsedRestore);
+
+        _playerHealth = Math.Min(maximumHealth, _playerHealth + restore);
+        return true;
+    }
+
+    private bool TryCollectStamina(LevelObjectData collectible, int maximumHealth)
+    {
+        if (_stamina >= StaminaMaximum)
+        {
+            var restoreHealth = Math.Max(1, (int)Math.Ceiling(maximumHealth * 0.125f));
+            _playerHealth = Math.Min(maximumHealth, _playerHealth + restoreHealth);
+            return true;
+        }
+
+        var restore = 1.5f;
+        if (collectible.Properties.TryGetValue("RestoreStamina", out var configuredRestore) &&
+            float.TryParse(configuredRestore, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedRestore))
+            restore = Math.Max(0.1f, parsedRestore);
+
+        _stamina = Math.Min(StaminaMaximum, _stamina + restore);
+        return true;
+    }
+
+    private bool TryCollectExtraLife()
+    {
+        if (_livesRemaining >= MaximumLives)
+            return false;
+
+        _livesRemaining++;
+        return true;
+    }
+
+    private bool TryCollectPowerFruit(LevelObjectData collectible)
+    {
+        if ((IsKunoichi && _power < CombatBalance.SpecialPowerCost) ||
+            (!IsKunoichi && _power >= CombatBalance.PlayerPowerMaximum))
+            return false;
+
+        var restore = CombatBalance.PowerFruitRestore;
+        if (collectible.Properties.TryGetValue("RestorePower", out var configuredRestore) &&
+            float.TryParse(configuredRestore, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedRestore))
+            restore = Math.Max(0.1f, parsedRestore);
+
+        _power = Math.Min(CombatBalance.PlayerPowerMaximum, _power + restore);
+        if (IsKunoichi)
+        {
+            _secondaryPowerUnlocked = true;
+            ConsumeKunoichiFruit();
+            if (CanStartAction())
+                StartAction(PlayerAnimationState.Eating);
+        }
+        return true;
+    }
+
+    private void ConsumeKunoichiFruit()
+    {
+        if (_stamina < StaminaMaximum)
+        {
+            _stamina = Math.Min(
+                StaminaMaximum,
+                _stamina + CombatBalance.KunoichiFruitStaminaRestore);
+            return;
+        }
+
+        var maximumHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
+        if (_playerHealth < maximumHealth)
+        {
+            var restore = Math.Max(
+                1,
+                (int)Math.Ceiling(maximumHealth * CombatBalance.KunoichiFruitHealthRestoreFraction));
+            _playerHealth = Math.Min(maximumHealth, _playerHealth + restore);
+            return;
+        }
+
+        TryCollectExtraLife();
+    }
+
+    private bool TryCollectSealRubyPart(LevelObjectData collectible)
+    {
+        if (_finalBossRewardCollected)
+            return false;
+
+        _finalBossRewardCollected = true;
+        var partIndex = 1;
+        if (collectible.Properties.TryGetValue("SealPartIndex", out var configuredPart) &&
+            int.TryParse(configuredPart, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPart))
+            partIndex = Math.Clamp(parsedPart, 1, 4);
+        _saveProgress.SealAshesParts = Math.Clamp(Math.Max(_saveProgress.SealAshesParts, partIndex), 0, 4);
+        return true;
+    }
+
+    private bool IsBossRewardLevel =>
+        string.Equals(_currentLevelId, "Act_01_C", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(_currentLevelId, "Act_02_C", StringComparison.OrdinalIgnoreCase);
+
     private Rectangle PlayerHitbox => new(
         (int)(_playerPosition.X - PlayerHalfWidth),
         (int)(_playerPosition.Y - PlayerHeight),
@@ -974,15 +1838,151 @@ public class KuroganesEchoGame : Game
         34,
         22);
 
+    private bool IsKunoichi => string.Equals(_player.Id, "Kunoichi", StringComparison.Ordinal);
+    private bool IsMonk => string.Equals(_player.Id, "Ninja_Monk", StringComparison.Ordinal);
+
+    private void StartPrimarySpecial()
+    {
+        if (!CanStartAction())
+            return;
+
+        if (IsKunoichi)
+        {
+            if (_power < CombatBalance.SpecialPowerCost)
+                return;
+
+            StartAction(PlayerAnimationState.Eating);
+            return;
+        }
+
+        if (IsMonk)
+        {
+            if (_power < CombatBalance.SpecialPowerCost)
+                return;
+
+#if DEBUG
+            if (!_debugCheatCodes.InfinitePower)
+                _power -= CombatBalance.SpecialPowerCost;
+#else
+            _power -= CombatBalance.SpecialPowerCost;
+#endif
+            StartAction(PlayerAnimationState.Blade);
+            _playerAttackHitApplied = false;
+        }
+        else
+        {
+            StartAction(PlayerAnimationState.Shot);
+            SpawnSpecialProjectile(PlayerProjectileKind.Dart);
+        }
+    }
+
+    private void StartSecondarySpecial()
+    {
+        if (!CanStartAction())
+            return;
+
+        if (IsKunoichi)
+        {
+            if (!_secondaryPowerUnlocked)
+                return;
+
+            StartAction(PlayerAnimationState.Cast);
+            SpawnSpecialProjectile(PlayerProjectileKind.Spine);
+            return;
+        }
+
+        if (IsMonk || _power < CombatBalance.SpecialPowerCost)
+            return;
+
+#if DEBUG
+        if (!_debugCheatCodes.InfinitePower)
+            _power -= CombatBalance.SpecialPowerCost;
+#else
+        _power -= CombatBalance.SpecialPowerCost;
+#endif
+        StartAction(PlayerAnimationState.Disguise);
+    }
+
+    private bool CanStartAction() => !_player.IsActionActive && _player.Animation != PlayerAnimationState.Dead;
+
+    private void SpawnSpecialProjectile(PlayerProjectileKind kind)
+    {
+        var texture = kind switch
+        {
+            PlayerProjectileKind.Spine => _spineTexture,
+            PlayerProjectileKind.Kunai => _kunaiTexture,
+            _ => _dartTexture
+        };
+        var source = kind == PlayerProjectileKind.Kunai
+            ? new Rectangle(0, 0, Math.Min(16, texture.Width), Math.Min(16, texture.Height))
+            : new Rectangle(0, 0, texture.Width, texture.Height);
+        var position = _playerPosition + new Vector2(_playerFacing * 20f, -20f);
+        _projectiles.Add(new PlayerProjectile(texture, source, position, _playerFacing, kind));
+    }
+
+    private void UpdateProjectiles(float elapsedSeconds)
+    {
+        var worldBounds = new Rectangle(0, 0, (int)_level.WorldBounds.Width, (int)_level.WorldBounds.Height);
+        for (var index = _projectiles.Count - 1; index >= 0; index--)
+        {
+            var projectile = _projectiles[index];
+            projectile.Update(elapsedSeconds, worldBounds);
+            if (projectile.IsExpired)
+            {
+                _projectiles.RemoveAt(index);
+                continue;
+            }
+
+            var hit = false;
+            foreach (var enemy in _enemies)
+            {
+                if (!enemy.IsAlive || !projectile.Hitbox.Intersects(enemy.Hitbox))
+                    continue;
+
+                if (enemy.TakeDamage(CombatBalance.SpecialAttackDamage, projectile.Position.X))
+                {
+                    hit = true;
+                    OnSpecialProjectileHit(projectile, !enemy.IsAlive, enemy.Position - new Vector2(0f, 18f));
+                }
+
+                break;
+            }
+
+            if (!hit && _boss is not null && _boss.IsAlive && projectile.Hitbox.Intersects(_boss.Hitbox))
+            {
+                hit = true;
+                var wasAlive = _boss.IsAlive;
+                _boss.TakeDamage(CombatBalance.SpecialAttackDamage, projectile.Position.Y);
+                OnSpecialProjectileHit(projectile, wasAlive && !_boss.IsAlive, _boss.Position - new Vector2(0f, 26f));
+            }
+
+            if (hit)
+                _projectiles.RemoveAt(index);
+        }
+    }
+
+    private void OnSpecialProjectileHit(PlayerProjectile projectile, bool killed, Vector2 effectPosition)
+    {
+        _audio.PlayCue(AudioCue.SlashImpact, 0.85f);
+        _effects.Spawn(effectPosition, CombatEffectKind.Impact, new Vector2(_playerFacing, -0.2f), 1.05f);
+        if (!killed)
+            return;
+
+        _effects.Spawn(effectPosition, CombatEffectKind.Death, Vector2.UnitY, 1.1f);
+        _audio.PlayCue(AudioCue.Explosion, 0.55f);
+    }
+
     private void ResolveCombat()
     {
         if (!_playerAttackHitApplied && _player.IsActionActive &&
-            _player.Animation is PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2)
+            _player.Animation is PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Blade)
         {
             foreach (var enemy in _enemies)
             {
                 if (!_playerAttackHitApplied && enemy.IsAlive && PlayerAttackHitbox.Intersects(enemy.Hitbox) &&
-                    enemy.TakeDamage(CombatBalance.PlayerAttackDamage, _playerPosition.X))
+                    enemy.TakeDamage(
+                        GetPlayerAttackDamage(enemy.MaxHealth),
+                        _playerPosition.X))
                 {
                     _playerAttackHitApplied = true;
                     _audio.PlayCue(AudioCue.SlashImpact, 0.9f);
@@ -998,7 +1998,9 @@ public class KuroganesEchoGame : Game
             }
 
             if (!_playerAttackHitApplied && _boss is not null && _boss.IsAlive && PlayerAttackHitbox.Intersects(_boss.Hitbox) &&
-                _boss.TakeDamage(CombatBalance.PlayerAttackDamage, PlayerAttackHitbox.Center.Y))
+                _boss.TakeDamage(
+                    GetPlayerAttackDamage(_boss.MaxHealth),
+                    PlayerAttackHitbox.Center.Y))
             {
                 _playerAttackHitApplied = true;
                 _audio.PlayCue(AudioCue.SlashImpact, 1f);
@@ -1034,6 +2036,22 @@ public class KuroganesEchoGame : Game
         }
     }
 
+    private int GetPlayerAttackDamage(int targetMaxHealth)
+    {
+        var damage = _player.Animation == PlayerAnimationState.Blade
+            ? CombatBalance.MonkBladeDamage
+            : CombatBalance.PlayerAttackDamage;
+#if DEBUG
+        if (_debugCheatCodes.OneHitDamage)
+        {
+            // Boss damage is scaled by hit height, so use a value that still
+            // guarantees 100% damage at the minimum 0.75x multiplier.
+            damage = (int)Math.Ceiling(targetMaxHealth / 0.75f);
+        }
+#endif
+        return damage;
+    }
+
     private void ResolvePlayerEnemyCollisions()
     {
         var playerHitbox = PlayerHitbox;
@@ -1063,7 +2081,12 @@ public class KuroganesEchoGame : Game
 
     private bool TakePlayerDamage(int damage, float sourceX)
     {
-        if (_playerInvulnerability > 0f || _playerHealth <= 0)
+#if DEBUG
+        if (_debugCheatCodes.InfiniteHealth)
+            return false;
+#endif
+
+        if (_playerInvulnerability > 0f || _player.Animation == PlayerAnimationState.Disguise || _playerHealth <= 0)
             return false;
 
         _playerHealth = Math.Max(0, _playerHealth - damage);
@@ -1090,7 +2113,7 @@ public class KuroganesEchoGame : Game
 
         _livesRemaining--;
         _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
-        _playerPosition = _level.PlayerSpawn;
+        _playerPosition = _checkpointPosition;
         _verticalVelocity = 0f;
         _playerKnockbackVelocity = 0f;
         _isGrounded = true;
@@ -1102,16 +2125,24 @@ public class KuroganesEchoGame : Game
 
     private void StartAction(PlayerAnimationState action)
     {
+        if (action != PlayerAnimationState.Jump && !CanStartAction())
+            return;
+
         if (action == PlayerAnimationState.Run && _stamina < RunStaminaCost)
             return;
 
         _player.SetAction(action);
-        if (action is PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2)
+        if (action is PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Blade)
             _playerAttackHitApplied = false;
         _runRemaining = action == PlayerAnimationState.Run ? _player.ActionRemaining : 0f;
         if (action == PlayerAnimationState.Run)
         {
+#if DEBUG
+            if (!_debugCheatCodes.InfiniteStamina)
+                _stamina = Math.Max(0f, _stamina - RunStaminaCost);
+#else
             _stamina = Math.Max(0f, _stamina - RunStaminaCost);
+#endif
             _effects.Spawn(_playerPosition - new Vector2(0f, 2f), CombatEffectKind.Dust, new Vector2(-_playerFacing, 0f), 0.75f);
         }
         else if (action == PlayerAnimationState.Attack1)
@@ -1129,6 +2160,19 @@ public class KuroganesEchoGame : Game
             _audio.PlayCue(AudioCue.Magic, 0.75f);
             _effects.Spawn(_playerPosition - new Vector2(-_playerFacing * 10f, 20f), CombatEffectKind.Magic, new Vector2(_playerFacing, 0f), 1.1f);
         }
+        else if (action is PlayerAnimationState.Blade or PlayerAnimationState.Shot)
+        {
+            _audio.PlayCue(AudioCue.Whoosh, 0.75f);
+            _effects.Spawn(_playerPosition - new Vector2(-_playerFacing * 10f, 18f), CombatEffectKind.Slash, new Vector2(_playerFacing, -0.1f), 0.9f);
+        }
+        else if (action == PlayerAnimationState.Eating)
+        {
+            _audio.PlayCue(AudioCue.Collectable, 0.7f);
+        }
+        else if (action == PlayerAnimationState.Disguise)
+        {
+            _effects.Spawn(_playerPosition - new Vector2(0f, 18f), CombatEffectKind.Magic, Vector2.UnitY, 0.9f);
+        }
     }
 
     private void TryJump()
@@ -1136,7 +2180,9 @@ public class KuroganesEchoGame : Game
         if (_jumpsUsed >= MaximumJumps)
             return;
 
-        _verticalVelocity = JumpVelocity;
+        _verticalVelocity = _jumpsUsed == 0
+            ? JumpVelocity
+            : (_runRemaining > 0f ? RunningDoubleJumpVelocity : DoubleJumpVelocity);
         _isGrounded = false;
         _jumpsUsed++;
         StartAction(PlayerAnimationState.Jump);
@@ -1167,6 +2213,8 @@ public class KuroganesEchoGame : Game
         _saveProgress.CharacterId = _characterIds[_characterSelection];
         _saveProgress.Difficulty = _selectedDifficulty;
         _saveProgress.LivesRemaining = _livesRemaining;
+        _saveProgress.CheckpointLevelId = _currentLevelId;
+        _saveProgress.CheckpointId = _checkpointId;
         SaveProgressStore.Save(_saveProgress);
     }
 
@@ -1175,11 +2223,11 @@ public class KuroganesEchoGame : Game
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
 
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawMenuBackground();
         DrawRect(new Rectangle(12, 12, VirtualWidth - 24, VirtualHeight - 24), new Color(25, 35, 45), false, 2);
-        DrawTextCentered(LocalizedText.Get("Title"), new Vector2(VirtualWidth / 2f, 30f), new Color(214, 191, 135), _fontSemiboldWide, 1.25f);
-        DrawTextCentered(LocalizedText.Get("MenuSubtitle"), new Vector2(VirtualWidth / 2f, 50f), new Color(117, 143, 145), 0.55f);
-
+        var title = LocalizedText.Get("Title").ToUpperInvariant();
+        var titleScale = Math.Min(1.25f, (VirtualWidth - 32f) / Math.Max(1f, _fontSemiboldWide.MeasureString(title).X));
+        DrawTextCentered(title, new Vector2(VirtualWidth * 0.5f, 30f), new Color(214, 191, 135), _fontSemiboldWide, titleScale);
         for (var index = 0; index < _menuKeys.Length; index++)
         {
             var selected = index == _menuSelection;
@@ -1189,7 +2237,6 @@ public class KuroganesEchoGame : Game
             DrawTextCentered(LocalizedText.Get(_menuKeys[index]), bounds.Center.ToVector2(), selected ? Color.White : new Color(188, 193, 188), 0.85f);
         }
 
-        DrawTextCentered($"{LocalizedText.Get("Language")}: {_languageCodes[_languageSelection]}", new Vector2(VirtualWidth / 2f, 165f), new Color(130, 145, 149), 0.58f);
         EndUi();
     }
 
@@ -1253,7 +2300,7 @@ public class KuroganesEchoGame : Game
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawMenuBackground();
         DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 27f), new Color(214, 191, 135), _fontSemibold, 1.2f);
         DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 38f), new Color(156, 170, 169), 0.55f);
 
@@ -1291,11 +2338,14 @@ public class KuroganesEchoGame : Game
         DrawAudioOption(MuteButton(), _optionsSelection == MuteOptionIndex,
             $"{LocalizedText.Get("Mute")}: {(_audio.IsMuted ? LocalizedText.Get("On") : LocalizedText.Get("Off"))}");
 
-        var back = OptionsBackButton();
-        var backSelected = _optionsSelection == BackOptionIndex;
-        DrawRect(back, backSelected ? new Color(78, 96, 105) : new Color(42, 53, 63));
-        DrawRect(back, backSelected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
-        DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.62f);
+        if (IsMobile)
+        {
+            var back = OptionsBackButton();
+            var backSelected = _optionsSelection == BackOptionIndex;
+            DrawRect(back, backSelected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+            DrawRect(back, backSelected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+            DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.62f);
+        }
         EndUi();
     }
 
@@ -1306,13 +2356,25 @@ public class KuroganesEchoGame : Game
         DrawTextCentered(label, bounds.Center.ToVector2(), Color.White, 0.52f);
     }
 
+    private void DrawMenuBackground()
+    {
+        _spriteBatch.Draw(_mainBackground, new Rectangle(0, 0, VirtualWidth, VirtualHeight), Color.White);
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(7, 14, 23, 112));
+    }
+
+    private void DrawGameplayBackground()
+    {
+        _spriteBatch.Draw(_gameplayBackground, new Rectangle(0, 0, VirtualWidth, VirtualHeight), Color.White);
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(7, 14, 23, 96));
+    }
+
     private string VolumePercent(float volume) => $"{(int)Math.Round(volume * 100f)}%";
 
     private void DrawControls()
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawMenuBackground();
         DrawTextCentered(LocalizedText.Get("Controls"), new Vector2(VirtualWidth / 2f, 13f), new Color(214, 191, 135), _fontSemiboldWide, 0.95f);
 
         var keyboardButton = ControlsKeyboardButton();
@@ -1339,12 +2401,15 @@ public class KuroganesEchoGame : Game
         var instruction = _waitingForBinding
             ? LocalizedText.Get("PressKey")
             : $"{LocalizedText.Get("Keyboard")}/{LocalizedText.Get("Gamepad")}  ENTER = {LocalizedText.Get("Bind")}";
-        DrawTextCentered(instruction, new Vector2(VirtualWidth / 2f, 145f), new Color(156, 170, 169), 0.45f);
+        DrawTextCentered(instruction, new Vector2(VirtualWidth / 2f, 158f), new Color(156, 170, 169), 0.4f);
 
-        var back = ControlsBackButton();
-        DrawRect(back, new Color(42, 53, 63));
-        DrawRect(back, new Color(77, 91, 99), false, 1);
-        DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.62f);
+        if (IsMobile)
+        {
+            var back = ControlsBackButton();
+            DrawRect(back, new Color(42, 53, 63));
+            DrawRect(back, new Color(77, 91, 99), false, 1);
+            DrawTextCentered(LocalizedText.Get("Back"), back.Center.ToVector2(), Color.White, 0.62f);
+        }
         EndUi();
     }
 
@@ -1352,7 +2417,7 @@ public class KuroganesEchoGame : Game
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawGameplayBackground();
         DrawTextCentered(LocalizedText.Get("SelectPlayer"), new Vector2(VirtualWidth / 2f, 20f), new Color(214, 191, 135), 1f);
         DrawTextCentered("<  >", new Vector2(VirtualWidth / 2f, 38f), new Color(130, 145, 149), 0.72f);
 
@@ -1366,8 +2431,10 @@ public class KuroganesEchoGame : Game
         }
 
         _player.SetLocomotion(PlayerAnimationState.Idle);
-        _player.Draw(_spriteBatch, new Vector2(VirtualWidth / 2f, 115f), 0.42f, SpriteEffects.None);
-        DrawTextCentered(CharacterLabel(_characterSelection), new Vector2(VirtualWidth / 2f, 133f), new Color(214, 191, 135), 0.65f);
+        _player.Draw(_spriteBatch, new Vector2(VirtualWidth / 2f, 112f), 0.38f, SpriteEffects.None);
+        DrawTextCentered(CharacterLabel(_characterSelection), new Vector2(VirtualWidth / 2f, 126f), new Color(214, 191, 135), 0.62f);
+        DrawTextCentered(LocalizedText.Get(CharacterSpecialPrimaryKey()), new Vector2(VirtualWidth / 2f, 137f), new Color(156, 201, 191), 0.43f);
+        DrawTextCentered(LocalizedText.Get(CharacterSpecialSecondaryKey()), new Vector2(VirtualWidth / 2f, 147f), Color.White, 0.4f);
 
         DrawSelectionButtons();
         EndUi();
@@ -1377,7 +2444,7 @@ public class KuroganesEchoGame : Game
     {
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
-        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(20, 29, 39));
+        DrawGameplayBackground();
         DrawTextCentered(LocalizedText.Get("SelectDifficulty"), new Vector2(VirtualWidth / 2f, 24f), new Color(214, 191, 135), 0.95f);
 
         for (var index = 0; index < _difficultyKeys.Length; index++)
@@ -1401,10 +2468,13 @@ public class KuroganesEchoGame : Game
         DrawRect(continueButton, new Color(214, 191, 135), false, 1);
         DrawTextCentered(LocalizedText.Get("Continue"), continueButton.Center.ToVector2(), Color.White, 0.64f);
 
-        var backButton = SelectionBackButton();
-        DrawRect(backButton, new Color(42, 53, 63));
-        DrawRect(backButton, new Color(77, 91, 99), false, 1);
-        DrawTextCentered(LocalizedText.Get("Back"), backButton.Center.ToVector2(), Color.White, 0.64f);
+        if (IsMobile)
+        {
+            var backButton = SelectionBackButton();
+            DrawRect(backButton, new Color(42, 53, 63));
+            DrawRect(backButton, new Color(77, 91, 99), false, 1);
+            DrawTextCentered(LocalizedText.Get("Back"), backButton.Center.ToVector2(), Color.White, 0.64f);
+        }
     }
 
     private void DrawAct01(GameTime gameTime)
@@ -1413,28 +2483,111 @@ public class KuroganesEchoGame : Game
         _level.Draw(gameTime, _spriteBatch, _camera);
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: _camera.GetViewMatrix());
+        DrawSealAshesVisual();
         foreach (var enemy in _enemies)
         {
+            if (!enemy.IsAlive)
+                continue;
+
             enemy.Draw(_spriteBatch);
             DrawWorldHealthBar(enemy.Position, enemy.Health, enemy.MaxHealth);
         }
-        if (_boss is not null)
+        if (_boss is not null && _boss.IsAlive)
         {
             _boss.Draw(_spriteBatch);
             DrawWorldHealthBar(_boss.Position, _boss.Health, _boss.MaxHealth, boss: true);
         }
         DrawPlayer();
+        foreach (var projectile in _projectiles)
+            projectile.Draw(_spriteBatch);
         _effects.Draw(_spriteBatch, _whiteTexture);
         _spriteBatch.End();
 
+        DrawAtmosphere();
         BeginUi();
         DrawPlayerHealthBar();
         if (IsMobile)
         {
             DrawAnalog();
             DrawActionButtons();
+            DrawTouchPauseButton();
         }
         EndUi();
+        if (_levelBriefingRemaining > 0f)
+            DrawLevelBriefingOverlay();
+    }
+
+    private void DrawAtmosphere()
+    {
+        BeginUi();
+        if (_currentLevelId == "Act_02_C")
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 8, 25, 152));
+
+        if (_currentLevelId == "Act_01_A")
+        {
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(64, 110, 150, 18));
+            for (var index = 0; index < 24; index++)
+            {
+                var x = (index * 31 + _atmosphereTime * 18f) % (VirtualWidth + 24f) - 12f;
+                var y = (index * 17 + _atmosphereTime * 54f) % (VirtualHeight + 20f) - 10f;
+                DrawLine(new Vector2(x, y), new Vector2(x - 3f, y + 9f), 1f, new Color(155, 190, 208, 92));
+            }
+        }
+
+        if (_currentLevelId == "Act_02_B")
+        {
+            for (var index = 0; index < 14; index++)
+            {
+                var y = 27f + (index * 19f) % 142f;
+                var x = ((index * 47f + _atmosphereTime * 76f) % 390f) - 35f;
+                DrawLine(new Vector2(x, y), new Vector2(x + 21f, y - 4f), 1f, new Color(225, 206, 171, 92));
+            }
+        }
+
+        if (_currentLevelId == "Act_02_C")
+        {
+            // Purely visual night birds: they never enter the gameplay object list
+            // and therefore cannot hit or damage the player.
+            for (var index = 0; index < 5; index++)
+            {
+                var x = ((index * 77f + _atmosphereTime * (18f + index * 2f)) % 380f) - 30f;
+                var y = 34f + (index * 23f) % 74f + MathF.Sin(_atmosphereTime * 2f + index) * 4f;
+                var wing = 3f + MathF.Sin(_atmosphereTime * 5f + index) * 1.5f;
+                var color = new Color(18, 25, 38, 210);
+                DrawLine(new Vector2(x - 4f, y + wing), new Vector2(x, y), 1f, color);
+                DrawLine(new Vector2(x, y), new Vector2(x + 4f, y + wing), 1f, color);
+            }
+        }
+
+        EndUi();
+    }
+
+    private void DrawSealAshesVisual()
+    {
+        if (!IsBossRewardLevel || !_finalBossDefeated || _finalBossRewardCollected)
+            return;
+
+        foreach (var collectible in _level.Collectibles)
+        {
+            if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
+                (string.Equals(pickupKind, nameof(CollectibleKind.SealRubyPart), StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase)))
+            {
+                DrawSealRubyTile(collectible.Bounds);
+            }
+        }
+    }
+
+    private void DrawSealRubyTile(Rectangle bounds)
+    {
+        var x = bounds.X;
+        var y = bounds.Y;
+        DrawRect(new Rectangle(x, y, bounds.Width, bounds.Height), new Color(42, 7, 22, 235));
+        DrawRect(new Rectangle(x + 2, y + 2, Math.Max(1, bounds.Width - 4), Math.Max(1, bounds.Height - 4)), new Color(145, 12, 36, 245));
+        DrawLine(new Vector2(x + 3, y + bounds.Height - 4), new Vector2(x + bounds.Width / 2f, y + 3), 2f, new Color(255, 86, 97, 245));
+        DrawLine(new Vector2(x + bounds.Width / 2f, y + 3), new Vector2(x + bounds.Width - 3, y + bounds.Height - 4), 2f, new Color(95, 4, 28, 245));
+        DrawRect(new Rectangle(x + 5, y + 4, 3, 3), new Color(255, 218, 190, 235));
     }
 
     private void DrawPlayer()
@@ -1445,11 +2598,135 @@ public class KuroganesEchoGame : Game
 
     private void DrawPlayerHealthBar()
     {
-        DrawText(CharacterLabel(_characterSelection), new Vector2(8f, 5f), Color.White, 0.48f);
+        var characterName = CharacterLabel(_characterSelection);
+        DrawText(characterName, new Vector2(8f, 5f), Color.White, 0.48f);
+        var miniStartX = 8f + _font.MeasureString(characterName).X * 0.48f + 4f;
+        for (var index = 0; index < _livesRemaining; index++)
+        {
+            _player.Draw(
+                _spriteBatch,
+                new Vector2(miniStartX + index * 9f, 15f),
+                0.16f,
+                SpriteEffects.None);
+        }
         DrawHealthBar(new Rectangle(8, 17, 92, 7), _playerHealth, CombatBalance.GetPlayerMaxHealth(_selectedDifficulty));
-        DrawText($"{LocalizedText.Get("Lives")}: {_livesRemaining}", new Vector2(112f, 5f), new Color(214, 191, 135), 0.46f);
         DrawText(LocalizedText.Get("Stamina"), new Vector2(196f, 5f), Color.White, 0.46f);
         DrawHealthBar(new Rectangle(196, 17, 72, 7), (int)Math.Round(_stamina), (int)StaminaMaximum);
+        DrawText(LocalizedText.Get("Power"), new Vector2(110f, 5f), Color.White, 0.46f);
+        DrawHealthBar(new Rectangle(110, 17, 72, 7), (int)Math.Round(_power), CombatBalance.PlayerPowerMaximum);
+    }
+
+    private void DrawLevelBriefingOverlay()
+    {
+        BeginUi();
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 7, 12, 220));
+        DrawRect(new Rectangle(20, 21, VirtualWidth - 40, 138), new Color(25, 35, 45));
+        DrawRect(new Rectangle(20, 21, VirtualWidth - 40, 138), new Color(214, 191, 135), false, 2);
+        var titleLines = SplitTitleIntoTwoLines(LocalizedText.Get(_level.Definition.BriefingTitleKey));
+        DrawTextCentered(titleLines.First, new Vector2(VirtualWidth / 2f, 32f), new Color(214, 191, 135), _fontSemibold, 0.68f);
+        DrawTextCentered(titleLines.Second, new Vector2(VirtualWidth / 2f, 45f), new Color(214, 191, 135), _fontSemibold, 0.68f);
+        DrawTextCentered(LocalizedText.Get("Objective"), new Vector2(VirtualWidth / 2f, 66f), new Color(130, 190, 177), 0.5f);
+        DrawTextCentered(LocalizedText.Get(_level.Definition.BriefingObjectiveKey), new Vector2(VirtualWidth / 2f, 81f), Color.White, 0.54f);
+        DrawTextCentered(LocalizedText.Get("Tutorial"), new Vector2(VirtualWidth / 2f, 104f), new Color(130, 190, 177), 0.5f);
+        DrawWrappedTextCentered(
+            LocalizedText.Get(_level.Definition.BriefingTutorialKey),
+            new Vector2(VirtualWidth / 2f, 119f),
+            264f,
+            Color.White,
+            0.46f,
+            10f);
+        DrawTextCentered(LocalizedText.Get("LevelBriefingPrompt"), new Vector2(VirtualWidth / 2f, 143f), new Color(214, 191, 135), 0.48f);
+        EndUi();
+    }
+
+    private static (string First, string Second) SplitTitleIntoTwoLines(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return (string.Empty, string.Empty);
+
+        var midpoint = title.Length / 2;
+        var split = title.LastIndexOf(' ', midpoint);
+        if (split <= 0)
+            split = title.IndexOf(' ', midpoint);
+        if (split <= 0)
+            return (title, string.Empty);
+
+        return (title[..split], title[(split + 1)..]);
+    }
+
+    private void DrawPauseOverlay()
+    {
+        BeginUi();
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 7, 12, 205));
+        DrawRect(new Rectangle(24, 10, VirtualWidth - 48, VirtualHeight - 20), new Color(20, 29, 39, 245));
+        DrawRect(new Rectangle(24, 10, VirtualWidth - 48, VirtualHeight - 20), new Color(214, 191, 135), false, 2);
+        DrawTextCentered(LocalizedText.Get("Paused"), new Vector2(VirtualWidth / 2f, 21f), new Color(214, 191, 135), _fontSemiboldWide, 0.9f);
+
+        DrawPauseButton(PauseResumeButton(), _pauseSelection == PauseResumeIndex, LocalizedText.Get("Resume"));
+        DrawPauseButton(PauseContinueButton(), _pauseSelection == PauseContinueIndex, LocalizedText.Get("ContinueFromState"));
+        DrawText(LocalizedText.Get("MemoryCard"), new Vector2(42f, 61f), new Color(130, 190, 177), 0.42f);
+        for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
+        {
+            var slotLabel = SaveProgressStore.HasSlot(slot)
+                ? string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotOccupied"), slot)
+                : string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotEmpty"), slot);
+            DrawPauseButton(
+                PauseSlotButton(slot),
+                _pauseSelection == PauseSaveSlotStartIndex + slot - 1,
+                slotLabel);
+        }
+
+        DrawPauseButton(PauseOptionsButton(), _pauseSelection == PauseOptionsIndex, LocalizedText.Get("Options"));
+        DrawPauseButton(PauseMainMenuButton(), _pauseSelection == PauseMainMenuIndex, LocalizedText.Get("MainMenu"));
+        if (!string.IsNullOrWhiteSpace(_pauseStatusMessage))
+            DrawTextCentered(_pauseStatusMessage, new Vector2(VirtualWidth / 2f, 168f), new Color(156, 201, 191), 0.42f);
+        else
+            DrawTextCentered(LocalizedText.Get("PausePrompt"), new Vector2(VirtualWidth / 2f, 168f), Color.White, 0.42f);
+        EndUi();
+    }
+
+    private void DrawSaveSlotSelectionOverlay(bool paused)
+    {
+        if (!paused)
+            GraphicsDevice.Clear(new Color(12, 16, 24));
+
+        BeginUi();
+        if (paused)
+        {
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 7, 12, 205));
+            DrawRect(new Rectangle(24, 10, VirtualWidth - 48, VirtualHeight - 20), new Color(20, 29, 39, 245));
+            DrawRect(new Rectangle(24, 10, VirtualWidth - 48, VirtualHeight - 20), new Color(214, 191, 135), false, 2);
+        }
+        else
+        {
+            DrawMenuBackground();
+            DrawRect(new Rectangle(12, 12, VirtualWidth - 24, VirtualHeight - 24), new Color(25, 35, 45), false, 2);
+        }
+
+        DrawTextCentered(LocalizedText.Get("ContinueFromState"), new Vector2(VirtualWidth / 2f, 25f), new Color(214, 191, 135), _fontSemiboldWide, 0.72f);
+        DrawTextCentered(LocalizedText.Get("SelectSaveSlot"), new Vector2(VirtualWidth / 2f, 39f), new Color(156, 201, 191), 0.42f);
+
+        for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
+        {
+            var slotLabel = SaveProgressStore.HasSlot(slot)
+                ? string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotOccupied"), slot)
+                : string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotEmpty"), slot);
+            DrawPauseButton(SaveSlotButton(slot), _slotSelection == slot - 1, slotLabel);
+        }
+
+        DrawPauseButton(SaveSlotBackButton(), _slotSelection == SaveProgressStore.SlotCount, LocalizedText.Get("Back"));
+        if (!string.IsNullOrWhiteSpace(_slotStatusMessage))
+            DrawTextCentered(_slotStatusMessage, new Vector2(VirtualWidth / 2f, 161f), new Color(236, 188, 120), 0.42f);
+        else
+            DrawTextCentered(LocalizedText.Get("PausePrompt"), new Vector2(VirtualWidth / 2f, 161f), Color.White, 0.38f);
+        EndUi();
+    }
+
+    private void DrawPauseButton(Rectangle bounds, bool selected, string label)
+    {
+        DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+        DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+        DrawTextCentered(label, bounds.Center.ToVector2(), Color.White, 0.48f);
     }
 
     private void DrawWorldHealthBar(Vector2 feetPosition, int health, int maximumHealth, bool boss = false)
@@ -1498,9 +2775,21 @@ public class KuroganesEchoGame : Game
         }
     }
 
+    private void DrawTouchPauseButton()
+    {
+        var bounds = PauseTouchButton();
+        DrawRect(bounds, new Color(42, 53, 63, 230));
+        DrawRect(bounds, new Color(214, 191, 135), false, 1);
+        DrawTextCentered("II", bounds.Center.ToVector2(), Color.White, 0.52f);
+    }
+
     private void BeginUi()
     {
-        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, transformMatrix: _viewportAdapter.GetScaleMatrix());
+        // UI fonts are rendered at the virtual resolution and then scaled to the
+        // window. Linear sampling prevents a horizontal atlas seam from cutting
+        // through the Array glyphs while preserving the pixel-art sampler for
+        // the world and character sprites.
+        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, transformMatrix: _viewportAdapter.GetScaleMatrix());
     }
 
     private void EndUi() => _spriteBatch.End();
@@ -1526,6 +2815,47 @@ public class KuroganesEchoGame : Game
     {
         var size = font.MeasureString(text);
         _spriteBatch.DrawString(font, text, center, color, 0f, size / 2f, scale, SpriteEffects.None, 0f);
+    }
+
+    private void DrawWrappedTextCentered(string text, Vector2 center, float maxWidth, Color color, float scale, float lineHeight)
+    {
+        var lines = WrapText(text, _font, maxWidth, scale);
+        if (lines.Count == 0)
+            return;
+
+        var blockHeight = lines.Count * lineHeight;
+        for (var index = 0; index < lines.Count; index++)
+        {
+            var lineCenter = new Vector2(center.X, center.Y - blockHeight / 2f + lineHeight * (index + 0.5f));
+            DrawTextCentered(lines[index], lineCenter, color, scale);
+        }
+    }
+
+    private static List<string> WrapText(string text, SpriteFont font, float maxWidth, float scale)
+    {
+        var lines = new List<string>();
+        if (string.IsNullOrWhiteSpace(text))
+            return lines;
+
+        var current = string.Empty;
+        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var candidate = string.IsNullOrEmpty(current) ? word : $"{current} {word}";
+            if (!string.IsNullOrEmpty(current) && font.MeasureString(candidate).X * scale > maxWidth)
+            {
+                lines.Add(current);
+                current = word;
+            }
+            else
+            {
+                current = candidate;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(current))
+            lines.Add(current);
+
+        return lines;
     }
 
     private void DrawRect(Rectangle bounds, Color color, bool filled = true, int thickness = 1)
@@ -1576,15 +2906,31 @@ public class KuroganesEchoGame : Game
 
     private Rectangle MenuButton(int index) => new(80, 52 + index * 25, 160, 21);
 
+    private Rectangle PauseTouchButton() => new(278, 4, 34, 16);
+
+    private Rectangle PauseResumeButton() => new(64, 28, 192, 14);
+
+    private Rectangle PauseContinueButton() => new(64, 44, 192, 14);
+
+    private Rectangle PauseSlotButton(int slot) => new(42, 66 + (slot - 1) * 14, 236, 13);
+
+    private Rectangle PauseOptionsButton() => new(64, 113, 192, 14);
+
+    private Rectangle PauseMainMenuButton() => new(64, 130, 192, 14);
+
+    private Rectangle SaveSlotButton(int slot) => new(42, 55 + (slot - 1) * 22, 236, 18);
+
+    private Rectangle SaveSlotBackButton() => new(112, 125, 96, 18);
+
     private Rectangle LanguageButton(int index) => new(66, 43 + index * 16, 188, 14);
 
     private Rectangle CharacterSelectionButton(int index) => new(8 + index * 104, 49, 96, 22);
 
     private Rectangle DifficultyButton(int index) => new(72, 50 + index * 24, 176, 20);
 
-    private Rectangle SelectionContinueButton() => new(112, 148, 96, 18);
+    private Rectangle SelectionContinueButton() => new(112, 160, 96, 18);
 
-    private Rectangle SelectionBackButton() => new(8, 148, 72, 18);
+    private Rectangle SelectionBackButton() => new(8, 160, 72, 18);
 
     private Rectangle OptionsBackButton() => new(112, 164, 96, 12);
 
@@ -1602,9 +2948,9 @@ public class KuroganesEchoGame : Game
 
     private Rectangle ControlsGamepadButton() => new(164, 27, 148, 14);
 
-    private Rectangle ControlRow(int index) => new(16, 42 + index * 16, 288, 15);
+    private Rectangle ControlRow(int index) => new(16, 42 + index * 14, 288, 13);
 
-    private Rectangle ControlsBackButton() => new(112, 160, 96, 16);
+    private Rectangle ControlsBackButton() => new(112, 166, 96, 11);
 
     private bool IsKeyboardMoveDown(KeyboardState keyboard, int index)
     {
@@ -1614,13 +2960,32 @@ public class KuroganesEchoGame : Game
 
     private string GetKeyboardBindingLabel(int index) => _keyboardBindings[index].ToString();
 
-    private string GetGamepadBindingLabel(int index) => _gamepadBindings[index].ToString();
+    private string GetGamepadBindingLabel(int index) => _gamepadBindings[index] switch
+    {
+        Buttons.LeftShoulder => "L Shoulder",
+        Buttons.RightShoulder => "R Shoulder",
+        _ => _gamepadBindings[index].ToString()
+    };
 
     private string CharacterLabel(int index) => _characterIds[index] switch
     {
         "Kunoichi" => LocalizedText.Get("Kunoichi"),
         "Ninja_Monk" => LocalizedText.Get("Monk"),
         _ => LocalizedText.Get("Peasant")
+    };
+
+    private string CharacterSpecialPrimaryKey() => _characterIds[_characterSelection] switch
+    {
+        "Kunoichi" => "KunoichiSpecialPrimary",
+        "Ninja_Monk" => "MonkSpecialPrimary",
+        _ => "PeasantSpecialPrimary"
+    };
+
+    private string CharacterSpecialSecondaryKey() => _characterIds[_characterSelection] switch
+    {
+        "Kunoichi" => "KunoichiSpecialSecondary",
+        "Ninja_Monk" => "MonkSpecialSecondary",
+        _ => "PeasantSpecialSecondary"
     };
 
     private const float AnalogRadius = 24f;
@@ -1650,6 +3015,17 @@ public class KuroganesEchoGame : Game
             return ToVirtualPoint(mouse.Position.ToVector2());
 
         return null;
+    }
+
+    private bool IsNewTouchPress(TouchCollection touches, Rectangle bounds)
+    {
+        foreach (var touch in touches)
+        {
+            if (touch.State == TouchLocationState.Pressed && bounds.Contains(ToVirtualPoint(touch.Position)))
+                return true;
+        }
+
+        return false;
     }
 
     private Point ToVirtualPoint(Vector2 screenPosition)
@@ -1702,6 +3078,8 @@ public class KuroganesEchoGame : Game
         DifficultySelection,
         Controls,
         Act01,
+        Paused,
+        SaveSlotSelection,
         GameOver,
         Victory
     }

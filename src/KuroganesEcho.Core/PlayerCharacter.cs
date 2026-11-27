@@ -15,6 +15,9 @@ internal enum PlayerAnimationState
     Cast,
     Walk,
     Eating,
+    Blade,
+    Shot,
+    Disguise,
     Jump,
     Dead
 }
@@ -52,7 +55,9 @@ internal sealed class PlayerCharacter
         var player = new PlayerCharacter(characterId);
         var root = $"Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/{characterId}";
         var isKunoichi = string.Equals(characterId, "Kunoichi", StringComparison.Ordinal);
-        var hasCast = isKunoichi || string.Equals(characterId, "Ninja_Monk", StringComparison.Ordinal);
+        var isMonk = string.Equals(characterId, "Ninja_Monk", StringComparison.Ordinal);
+        var isPeasant = string.Equals(characterId, "Ninja_Peasant", StringComparison.Ordinal);
+        var hasCast = isKunoichi || isMonk;
 
         player.Add(content, PlayerAnimationState.Idle, $"{root}/Idle", FrameCount(characterId, PlayerAnimationState.Idle));
         player.Add(content, PlayerAnimationState.Run, $"{root}/Run", FrameCount(characterId, PlayerAnimationState.Run));
@@ -72,13 +77,33 @@ internal sealed class PlayerCharacter
         else
             player.UseFallback(PlayerAnimationState.Eating, PlayerAnimationState.Idle);
 
+        if (isMonk)
+            player.Add(content, PlayerAnimationState.Blade, $"{root}/Blade", FrameCount(characterId, PlayerAnimationState.Blade));
+        else
+            player.UseFallback(PlayerAnimationState.Blade, PlayerAnimationState.Attack2);
+
+        if (isPeasant)
+        {
+            player.Add(content, PlayerAnimationState.Shot, $"{root}/Shot", FrameCount(characterId, PlayerAnimationState.Shot));
+            player.Add(content, PlayerAnimationState.Disguise, $"{root}/Disguise", FrameCount(characterId, PlayerAnimationState.Disguise));
+        }
+        else
+        {
+            player.UseFallback(PlayerAnimationState.Shot, PlayerAnimationState.Attack2);
+            player.UseFallback(PlayerAnimationState.Disguise, PlayerAnimationState.Idle);
+        }
+
         return player;
     }
 
     public void SetAction(PlayerAnimationState animation)
     {
         Animation = animation;
-        ActionRemaining = animation == PlayerAnimationState.Jump ? 0.9f : 0.65f;
+        ActionRemaining = animation switch
+        {
+            PlayerAnimationState.Jump or PlayerAnimationState.Eating or PlayerAnimationState.Disguise => 0.9f,
+            _ => 0.65f
+        };
         _animationClock = 0f;
         _lastStepFrame = -1;
     }
@@ -193,6 +218,8 @@ internal sealed class PlayerCharacter
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 8,
             PlayerAnimationState.Cast => 6,
+            PlayerAnimationState.Blade => 1,
+            PlayerAnimationState.Shot or PlayerAnimationState.Disguise => 1,
             PlayerAnimationState.Jump => 10,
             PlayerAnimationState.Dead => 5,
             _ => 1
@@ -204,6 +231,7 @@ internal sealed class PlayerCharacter
             // animation read as a clipped attack instead of a full run cycle.
             PlayerAnimationState.Run => 8,
             PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Cast => 5,
+            PlayerAnimationState.Blade => 6,
             PlayerAnimationState.Jump => 9,
             PlayerAnimationState.Dead => 5,
             _ => 1
@@ -215,6 +243,8 @@ internal sealed class PlayerCharacter
             PlayerAnimationState.Walk => 8,
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 4,
+            PlayerAnimationState.Shot => 6,
+            PlayerAnimationState.Disguise => 9,
             PlayerAnimationState.Jump => 8,
             PlayerAnimationState.Dead => 4,
             _ => 1

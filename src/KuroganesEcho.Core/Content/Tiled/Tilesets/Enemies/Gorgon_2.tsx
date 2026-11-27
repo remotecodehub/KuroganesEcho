@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.0" name="Gorgon_2" tilewidth="128" tileheight="128" tilecount="76" columns="0" objectalignment="bottom">
+<tileset version="1.10" tiledversion="1.11.0" name="Gorgon_2" tilewidth="128" tileheight="128" tilecount="71" columns="0" objectalignment="bottom">
   <grid orientation="orthogonal" width="128" height="128"/>
     <tile id="0">
       <properties>
@@ -200,7 +200,7 @@
     <tile id="39">
       <properties>
         <property name="Character" value="Gorgon_2"/>
-        <property name="State" value="Idle_2"/>
+        <property name="State" value="Idle"/>
         <property name="RenderScale" type="float" value="0.75"/>
         <property name="Loop" type="bool" value="true"/>
       </properties>
@@ -210,58 +210,30 @@
         <frame tileid="41" duration="120"/>
         <frame tileid="42" duration="120"/>
         <frame tileid="43" duration="120"/>
-      </animation>
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_2_00.png"/>
-    </tile>
-    <tile id="40">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_2_01.png"/>
-    </tile>
-    <tile id="41">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_2_02.png"/>
-    </tile>
-    <tile id="42">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_2_03.png"/>
-    </tile>
-    <tile id="43">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_2_04.png"/>
-    </tile>
-    <tile id="44">
-      <properties>
-        <property name="Character" value="Gorgon_2"/>
-        <property name="State" value="Idle"/>
-        <property name="RenderScale" type="float" value="0.75"/>
-        <property name="Loop" type="bool" value="true"/>
-      </properties>
-      <animation>
         <frame tileid="44" duration="120"/>
         <frame tileid="45" duration="120"/>
-        <frame tileid="46" duration="120"/>
-        <frame tileid="47" duration="120"/>
-        <frame tileid="48" duration="120"/>
-        <frame tileid="49" duration="120"/>
-        <frame tileid="50" duration="120"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_00.png"/>
     </tile>
-    <tile id="45">
+    <tile id="40">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_01.png"/>
     </tile>
-    <tile id="46">
+    <tile id="41">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_02.png"/>
     </tile>
-    <tile id="47">
+    <tile id="42">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_03.png"/>
     </tile>
-    <tile id="48">
+    <tile id="43">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_04.png"/>
     </tile>
-    <tile id="49">
+    <tile id="44">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_05.png"/>
     </tile>
-    <tile id="50">
+    <tile id="45">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Idle_06.png"/>
     </tile>
-    <tile id="51">
+    <tile id="46">
       <properties>
         <property name="Character" value="Gorgon_2"/>
         <property name="State" value="Run"/>
@@ -269,38 +241,66 @@
         <property name="Loop" type="bool" value="true"/>
       </properties>
       <animation>
+        <frame tileid="46" duration="80"/>
+        <frame tileid="47" duration="80"/>
+        <frame tileid="48" duration="80"/>
+        <frame tileid="49" duration="80"/>
+        <frame tileid="50" duration="80"/>
         <frame tileid="51" duration="80"/>
         <frame tileid="52" duration="80"/>
-        <frame tileid="53" duration="80"/>
-        <frame tileid="54" duration="80"/>
-        <frame tileid="55" duration="80"/>
-        <frame tileid="56" duration="80"/>
-        <frame tileid="57" duration="80"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Run_00.png"/>
     </tile>
-    <tile id="52">
+    <tile id="47">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Run_01.png"/>
     </tile>
-    <tile id="53">
+    <tile id="48">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Run_02.png"/>
     </tile>
-    <tile id="54">
+    <tile id="49">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Run_03.png"/>
     </tile>
-    <tile id="55">
+    <tile id="50">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Run_04.png"/>
     </tile>
-    <tile id="56">
+    <tile id="51">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Run_05.png"/>
     </tile>
-    <tile id="57">
+    <tile id="52">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Run_06.png"/>
+    </tile>
+    <tile id="53">
+      <properties>
+        <property name="Character" value="Gorgon_2"/>
+        <property name="State" value="Special"/>
+        <property name="RenderScale" type="float" value="0.75"/>
+        <property name="Loop" type="bool" value="true"/>
+      </properties>
+      <animation>
+        <frame tileid="53" duration="100"/>
+        <frame tileid="54" duration="100"/>
+        <frame tileid="55" duration="100"/>
+        <frame tileid="56" duration="100"/>
+        <frame tileid="57" duration="100"/>
+      </animation>
+      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_00.png"/>
+    </tile>
+    <tile id="54">
+      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_01.png"/>
+    </tile>
+    <tile id="55">
+      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_02.png"/>
+    </tile>
+    <tile id="56">
+      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_03.png"/>
+    </tile>
+    <tile id="57">
+      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_04.png"/>
     </tile>
     <tile id="58">
       <properties>
         <property name="Character" value="Gorgon_2"/>
-        <property name="State" value="Special"/>
+        <property name="State" value="Walk"/>
         <property name="RenderScale" type="float" value="0.75"/>
         <property name="Loop" type="bool" value="true"/>
       </properties>
@@ -310,29 +310,6 @@
         <frame tileid="60" duration="100"/>
         <frame tileid="61" duration="100"/>
         <frame tileid="62" duration="100"/>
-      </animation>
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_00.png"/>
-    </tile>
-    <tile id="59">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_01.png"/>
-    </tile>
-    <tile id="60">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_02.png"/>
-    </tile>
-    <tile id="61">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_03.png"/>
-    </tile>
-    <tile id="62">
-      <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Special_04.png"/>
-    </tile>
-    <tile id="63">
-      <properties>
-        <property name="Character" value="Gorgon_2"/>
-        <property name="State" value="Walk"/>
-        <property name="RenderScale" type="float" value="0.75"/>
-        <property name="Loop" type="bool" value="true"/>
-      </properties>
-      <animation>
         <frame tileid="63" duration="100"/>
         <frame tileid="64" duration="100"/>
         <frame tileid="65" duration="100"/>
@@ -341,48 +318,43 @@
         <frame tileid="68" duration="100"/>
         <frame tileid="69" duration="100"/>
         <frame tileid="70" duration="100"/>
-        <frame tileid="71" duration="100"/>
-        <frame tileid="72" duration="100"/>
-        <frame tileid="73" duration="100"/>
-        <frame tileid="74" duration="100"/>
-        <frame tileid="75" duration="100"/>
       </animation>
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_00.png"/>
     </tile>
-    <tile id="64">
+    <tile id="59">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_01.png"/>
     </tile>
-    <tile id="65">
+    <tile id="60">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_02.png"/>
     </tile>
-    <tile id="66">
+    <tile id="61">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_03.png"/>
     </tile>
-    <tile id="67">
+    <tile id="62">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_04.png"/>
     </tile>
-    <tile id="68">
+    <tile id="63">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_05.png"/>
     </tile>
-    <tile id="69">
+    <tile id="64">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_06.png"/>
     </tile>
-    <tile id="70">
+    <tile id="65">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_07.png"/>
     </tile>
-    <tile id="71">
+    <tile id="66">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_08.png"/>
     </tile>
-    <tile id="72">
+    <tile id="67">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_09.png"/>
     </tile>
-    <tile id="73">
+    <tile id="68">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_10.png"/>
     </tile>
-    <tile id="74">
+    <tile id="69">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_11.png"/>
     </tile>
-    <tile id="75">
+    <tile id="70">
       <image width="128" height="128" source="../../Enemies/GeneratedFrames/Gorgon_2/Walk_12.png"/>
     </tile>
 </tileset>

@@ -40,7 +40,7 @@
 		<integer>5</integer>
 	</array>
 	<key>CFBundleIdentifier</key>
-	<string>com.companyname.KuroganesEcho</string>
+	<string>com.remotecodehub.kuroganesecho</string>
 	<key>CFBundleDisplayName</key>
 	<string>KuroganesEcho</string>
 	<key>XSAppIconAssets</key>

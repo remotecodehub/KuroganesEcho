@@ -4,6 +4,8 @@
 
 `Maps/Act_01_A.tmx` e `Maps/Act_01_B.tmx` são mapas ortogonais de 320×24 blocos, com tiles de mapa de 16×16 px e viewport lógica de 320×180 px.
 
+Os mapas `Act_02_A.tmx`, `Act_02_B.tmx` e `Act_02_C.tmx` usam o mesmo contrato de 320×24 blocos, mas agora compartilham os tilesets `Act_02_Feudal_Japan.tsx` (dia), `Act_02_Feudal_Japan_Dark.tsx` (noite) e `Act_02_Feudal_Castle.tsx`. A composição visual foi orientada pela referência de paisagem do Japão feudal: céu marfim, montanhas em camadas, arrozais/terraços, telhados de vila, torii, caminhos de santuário e castelo de encosta. Os GIDs e as camadas de colisão/gameplay dos ACTs 02 permanecem estáveis para não alterar o fluxo de jogo.
+
 Os mapas contêm:
 
 - camadas visuais `Background`, `VillageBackdrop`, `Terrain` e `Act01Props`;
@@ -33,6 +35,8 @@ Os frames recortados ficam em `Chars/GeneratedFrames/`. O script `.codex/generat
 
 Os spritesheets em `Enemies/` possuem tilesets animados correspondentes em `Tilesets/Enemies/`.
 O script `.codex/generate_tiled_enemy_assets.ps1` recorta os frames e recria esses `.tsx`.
+
+Para o Act 02, os tilesets de animação ativos são `Red_Werewolf`, `Gorgon_2`, `Kitsune` e `Skeleton_Archer`. A geração usa uma lista explícita de estados para evitar incluir variações auxiliares: `Dead` e `Hurt` são não-looping; `Attack_3` da Kitsune contém o lançamento visual do fogo; `Shot_1` e `Shot_2` do Skeleton_Archer contêm a sequência visual do disparo.
 
 `Black_Werewolf` e `Skeleton_Warrior` continuam sendo os inimigos regulares de Act_01_A e Act_01_B.
 `Minotaur`, `Gorgon` e `Wizard` são representados por `BossInstance`, com variantes selecionáveis

@@ -21,6 +21,18 @@ internal enum GameDifficulty
     Hard
 }
 
+internal enum CollectibleKind
+{
+    Health,
+    Stamina,
+    PowerFruit,
+    ExtraLife,
+    SealRubyPart,
+    // Compatibility with maps created before the ruby reward contract.
+    IronTalismanThird,
+    SealAshesPart
+}
+
 internal sealed class LevelDefinition
 {
     public required string Id { get; init; }
@@ -29,6 +41,9 @@ internal sealed class LevelDefinition
     public string GameplayObjectLayerName { get; init; } = "Gameplay";
     public Vector2 PlayerSpawn { get; init; }
     public string NextLevelId { get; init; }
+    public required string BriefingTitleKey { get; init; }
+    public required string BriefingObjectiveKey { get; init; }
+    public required string BriefingTutorialKey { get; init; }
 
     public static LevelDefinition Act01A => new()
     {
@@ -37,7 +52,10 @@ internal sealed class LevelDefinition
         CollisionObjectLayerName = "Collision",
         GameplayObjectLayerName = "Gameplay",
         PlayerSpawn = new Vector2(64f, 352f),
-        NextLevelId = "Act_01_B"
+        NextLevelId = "Act_01_B",
+        BriefingTitleKey = "Act01ATitle",
+        BriefingObjectiveKey = "Act01AObjective",
+        BriefingTutorialKey = "Act01ATutorial"
     };
 
     public static LevelDefinition Act01B => new()
@@ -47,11 +65,70 @@ internal sealed class LevelDefinition
         CollisionObjectLayerName = "Collision",
         GameplayObjectLayerName = "Gameplay",
         PlayerSpawn = new Vector2(64f, 352f),
-        NextLevelId = null
+        NextLevelId = "Act_01_C",
+        BriefingTitleKey = "Act01BTitle",
+        BriefingObjectiveKey = "Act01BObjective",
+        BriefingTutorialKey = "Act01BTutorial"
+    };
+
+    public static LevelDefinition Act01C => new()
+    {
+        Id = "Act_01_C",
+        MapAssetPath = "Content/Tiled/Maps/Act_01_C.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = null,
+        BriefingTitleKey = "Act01CTitle",
+        BriefingObjectiveKey = "Act01CObjective",
+        BriefingTutorialKey = "Act01CTutorial"
+    };
+
+    public static LevelDefinition Act02A => new()
+    {
+        Id = "Act_02_A",
+        MapAssetPath = "Content/Tiled/Maps/Act_02_A.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = "Act_02_B",
+        BriefingTitleKey = "Act02ATitle",
+        BriefingObjectiveKey = "Act02AObjective",
+        BriefingTutorialKey = "Act02ATutorial"
+    };
+
+    public static LevelDefinition Act02B => new()
+    {
+        Id = "Act_02_B",
+        MapAssetPath = "Content/Tiled/Maps/Act_02_B.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = "Act_02_C",
+        BriefingTitleKey = "Act02BTitle",
+        BriefingObjectiveKey = "Act02BObjective",
+        BriefingTutorialKey = "Act02BTutorial"
+    };
+
+    public static LevelDefinition Act02C => new()
+    {
+        Id = "Act_02_C",
+        MapAssetPath = "Content/Tiled/Maps/Act_02_C.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(64f, 352f),
+        NextLevelId = null,
+        BriefingTitleKey = "Act02CTitle",
+        BriefingObjectiveKey = "Act02CObjective",
+        BriefingTutorialKey = "Act02CTutorial"
     };
 
     public static LevelDefinition ForId(string id) => id switch
     {
+        "Act_02_C" => Act02C,
+        "Act_02_B" => Act02B,
+        "Act_02_A" => Act02A,
+        "Act_01_C" => Act01C,
         "Act_01_B" => Act01B,
         _ => Act01A
     };
@@ -68,6 +145,7 @@ internal sealed class LevelObjectData
 internal sealed class GameLevel
 {
     private const float PlayerCollisionHalfWidth = 10f;
+    private const uint DefaultCollectibleTileFirstGid = 73;
     private readonly List<Rectangle> _collisionPlatforms = new();
     private readonly List<FootstepSurface> _collisionSurfaces = new();
     private readonly List<LevelObjectData> _gameplayObjects = new();
@@ -77,16 +155,37 @@ internal sealed class GameLevel
         Definition = definition;
         Tilemap = tilemap;
         Renderer = renderer;
+        _playerSpawn = definition.PlayerSpawn;
     }
+
+    private Vector2 _playerSpawn;
 
     public LevelDefinition Definition { get; }
     public Tilemap Tilemap { get; }
     public TilemapSpriteBatchRenderer Renderer { get; }
     public RectangleF WorldBounds => Tilemap.WorldBounds;
-    public Vector2 PlayerSpawn => Definition.PlayerSpawn;
+    public Vector2 PlayerSpawn => _playerSpawn;
+    public string NextLevelId
+    {
+        get
+        {
+            foreach (var exit in LevelExits)
+            {
+                if (exit.Properties.TryGetValue("NextLevelId", out var nextLevelId) &&
+                    !string.IsNullOrWhiteSpace(nextLevelId))
+                    return nextLevelId;
+            }
+
+            return Definition.NextLevelId;
+        }
+    }
+    public IReadOnlyDictionary<string, string> MapProperties { get; private set; } =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     public GameDifficulty Difficulty { get; private set; } = GameDifficulty.Normal;
     public IReadOnlyList<Rectangle> CollisionPlatforms => _collisionPlatforms;
     public IReadOnlyList<LevelObjectData> GameplayObjects => _gameplayObjects;
+    public IEnumerable<LevelObjectData> Collectibles => _gameplayObjects.Where(item => item.Type == "Collectible");
+    public IEnumerable<LevelObjectData> Checkpoints => _gameplayObjects.Where(item => item.Type == "Checkpoint");
     public IEnumerable<LevelObjectData> EnemySpawns => _gameplayObjects.Where(item => item.Type == "EnemySpawn");
     public IEnumerable<LevelObjectData> BossSpawns => _gameplayObjects.Where(item => item.Type == "BossSpawn");
     public IEnumerable<LevelObjectData> LevelExits => _gameplayObjects.Where(item => item.Type == "LevelExit");
@@ -168,6 +267,8 @@ internal sealed class GameLevel
         if (root is null)
             return;
 
+        MapProperties = ReadProperties(root);
+
         var collisionLayer = root.Elements("objectgroup")
             .FirstOrDefault(layer => string.Equals(
                 (string)layer.Attribute("name"),
@@ -195,15 +296,260 @@ internal sealed class GameLevel
         {
             foreach (var objectElement in gameplayLayer.Elements("object"))
             {
-                _gameplayObjects.Add(new LevelObjectData
+                var gameplayObject = new LevelObjectData
                 {
                     Name = (string)objectElement.Attribute("name") ?? string.Empty,
                     Type = (string)objectElement.Attribute("type") ?? string.Empty,
                     Bounds = ReadBounds(objectElement),
                     Properties = ReadProperties(objectElement)
-                });
+                };
+                _gameplayObjects.Add(gameplayObject);
+
+                if (string.Equals(gameplayObject.Name, "PlayerSpawn", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(gameplayObject.Type, "PlayerSpawn", StringComparison.OrdinalIgnoreCase))
+                    _playerSpawn = new Vector2(gameplayObject.Bounds.X, gameplayObject.Bounds.Bottom);
             }
         }
+
+        LoadTileCollectibles(root);
+    }
+
+    public void RemoveCollectibleTile(LevelObjectData collectible)
+    {
+        if (!Tilemap.Layers.TryGetValue("Collectibles", out var layer) || layer is not TilemapTileLayer tileLayer)
+            return;
+
+        var tileX = collectible.Bounds.X / Math.Max(1, tileLayer.TileWidth);
+        var tileY = collectible.Bounds.Y / Math.Max(1, tileLayer.TileHeight);
+        tileLayer.SetTile(tileX, tileY, null);
+    }
+
+    public void RevealCollectibleTile(LevelObjectData collectible)
+    {
+        if (!Tilemap.Layers.TryGetValue("Collectibles", out var layer) || layer is not TilemapTileLayer tileLayer)
+            return;
+        if (!collectible.Properties.TryGetValue("TileGid", out var gidText) || !uint.TryParse(gidText, out var gid))
+            return;
+
+        var tileX = collectible.Bounds.X / Math.Max(1, tileLayer.TileWidth);
+        var tileY = collectible.Bounds.Y / Math.Max(1, tileLayer.TileHeight);
+        tileLayer.SetTile(tileX, tileY, new TilemapTile((int)gid, TilemapTileFlipFlags.None));
+    }
+
+    private void LoadTileCollectibles(XElement root)
+    {
+        var layer = root.Elements("layer")
+            .FirstOrDefault(item => string.Equals(
+                (string)item.Attribute("name"),
+                "Collectibles",
+                StringComparison.OrdinalIgnoreCase));
+        if (layer is null)
+            return;
+
+        var width = (int?)layer.Attribute("width") ?? 0;
+        var height = (int?)layer.Attribute("height") ?? 0;
+        var data = layer.Element("data");
+        if (width <= 0 || height <= 0 || data is null)
+            return;
+
+        var tileLayer = Tilemap.Layers.TryGetValue("Collectibles", out var loadedLayer) && loadedLayer is TilemapTileLayer loadedTileLayer
+            ? loadedTileLayer
+            : null;
+        var tileWidth = tileLayer?.TileWidth ?? (int?)root.Attribute("tilewidth") ?? 16;
+        var tileHeight = tileLayer?.TileHeight ?? (int?)root.Attribute("tileheight") ?? 16;
+        var collectibleTileset = root.Elements("tileset")
+            .FirstOrDefault(item => ((string)item.Attribute("source"))?.EndsWith(
+                "Act_01_Items.tsx",
+                StringComparison.OrdinalIgnoreCase) == true);
+        var collectibleFirstGid = uint.TryParse(
+            (string)collectibleTileset?.Attribute("firstgid"),
+            NumberStyles.Integer,
+            CultureInfo.InvariantCulture,
+            out var configuredFirstGid)
+            ? configuredFirstGid
+            : DefaultCollectibleTileFirstGid;
+        var extraLifeTile = ReadTileCoordinate(root, "ExtraLifeTile");
+        var powerFruitTile = ReadTileCoordinate(root, "PowerFruitTile");
+        var powerFruitTiles = ReadTileCoordinates(root, "PowerFruitTiles");
+        if (powerFruitTile.HasValue)
+            powerFruitTiles.Add(powerFruitTile.Value);
+        var sealRubyPartTiles = ReadTileCoordinates(root, "SealRubyPartTiles");
+        if (sealRubyPartTiles.Count == 0)
+            sealRubyPartTiles = ReadTileCoordinates(root, "SealAshesPartTiles");
+
+        // Act 01 C existed before the ruby metadata was introduced. Accept its
+        // old single-tile coordinate so the reward cannot disappear on upgrade.
+        var legacyIronTalismanTile = ReadTileCoordinate(root, "IronTalismanTile");
+        if (sealRubyPartTiles.Count == 0 && legacyIronTalismanTile.HasValue)
+            sealRubyPartTiles.Add(legacyIronTalismanTile.Value);
+        var sealPartIndex = ReadIntProperty(root, "SealPartIndex") ?? 1;
+
+        var tileValues = ReadTileValues(data, width * height);
+        for (var index = 0; index < tileValues.Count; index++)
+        {
+            var gid = tileValues[index];
+            var tileCoordinate = new Point(index % width, index / width);
+            var staleSealTile = sealRubyPartTiles.Count == 1 &&
+                                gid == collectibleFirstGid + 2 &&
+                                !sealRubyPartTiles.Contains(tileCoordinate);
+            var kind = staleSealTile
+                ? (CollectibleKind?)null
+                : sealRubyPartTiles.Contains(tileCoordinate)
+                ? CollectibleKind.SealRubyPart
+                : powerFruitTiles.Contains(tileCoordinate)
+                    ? CollectibleKind.PowerFruit
+                    : gid switch
+            {
+                _ when gid == collectibleFirstGid => CollectibleKind.Health,
+                _ when gid == collectibleFirstGid + 1 => CollectibleKind.Stamina,
+                _ when gid == collectibleFirstGid + 2 => CollectibleKind.PowerFruit,
+                _ => (CollectibleKind?)null
+            };
+            if (!kind.HasValue)
+                continue;
+
+            var tileX = index % width;
+            var tileY = index / width;
+            if (kind.Value == CollectibleKind.Health &&
+                extraLifeTile.HasValue &&
+                extraLifeTile.Value.X == tileX &&
+                extraLifeTile.Value.Y == tileY)
+                kind = CollectibleKind.ExtraLife;
+            var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["PickupKind"] = kind.Value.ToString(),
+                ["TileGid"] = gid.ToString(CultureInfo.InvariantCulture)
+            };
+            if (kind.Value == CollectibleKind.Health)
+                properties["RestoreHealth"] = "25";
+            else if (kind.Value == CollectibleKind.Stamina)
+                properties["RestoreStamina"] = "2.5";
+            else if (kind.Value == CollectibleKind.PowerFruit)
+                properties["RestorePower"] = CombatBalance.PowerFruitRestore.ToString(CultureInfo.InvariantCulture);
+            else if (kind.Value == CollectibleKind.ExtraLife)
+                properties["ExtraLife"] = "1";
+            else if (kind.Value == CollectibleKind.SealRubyPart)
+            {
+                properties["UnlockAfterBoss"] = "true";
+                properties["SealPartIndex"] = sealPartIndex.ToString(CultureInfo.InvariantCulture);
+                if (sealRubyPartTiles.Count > 1)
+                    properties["PickupGroup"] = "SealRubyPart";
+            }
+
+            _gameplayObjects.Add(new LevelObjectData
+            {
+                Name = $"{kind.Value}Tile_{tileX}_{tileY}",
+                Type = "Collectible",
+                Bounds = new Rectangle(tileX * tileWidth, tileY * tileHeight, tileWidth, tileHeight),
+                Properties = properties
+            });
+
+            if (kind.Value == CollectibleKind.SealRubyPart)
+                tileLayer?.SetTile(tileX, tileY, null);
+        }
+
+        // Refactored Act 02 C maps may still contain the four old talisman gids
+        // in the layer while only one coordinate is the part released by this
+        // boss. Hide those stale visual tiles instead of exposing a full reward.
+        if (sealRubyPartTiles.Count == 1 && tileLayer is not null)
+        {
+            for (var index = 0; index < tileValues.Count; index++)
+            {
+                if (tileValues[index] != collectibleFirstGid + 2)
+                    continue;
+
+                var tileCoordinate = new Point(index % width, index / width);
+                if (!sealRubyPartTiles.Contains(tileCoordinate))
+                    tileLayer.SetTile(tileCoordinate.X, tileCoordinate.Y, null);
+            }
+        }
+    }
+
+    private static int? ReadIntProperty(XElement root, string propertyName)
+    {
+        var value = root.Element("properties")?.Elements("property")
+            .FirstOrDefault(property => string.Equals(
+                (string)property.Attribute("name"),
+                propertyName,
+                StringComparison.OrdinalIgnoreCase))?
+            .Attribute("value")?.Value;
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : null;
+    }
+
+    private static Point? ReadTileCoordinate(XElement root, string propertyName)
+    {
+        var value = root.Element("properties")?.Elements("property")
+            .FirstOrDefault(property => string.Equals(
+                (string)property.Attribute("name"),
+                propertyName,
+                StringComparison.OrdinalIgnoreCase))?
+            .Attribute("value")?.Value;
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var parts = value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 2 &&
+               int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var x) &&
+               int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var y)
+            ? new Point(x, y)
+            : null;
+    }
+
+    private static List<Point> ReadTileCoordinates(XElement root, string propertyName)
+    {
+        var value = root.Element("properties")?.Elements("property")
+            .FirstOrDefault(property => string.Equals(
+                (string)property.Attribute("name"),
+                propertyName,
+                StringComparison.OrdinalIgnoreCase))?
+            .Attribute("value")?.Value;
+        var result = new List<Point>();
+        if (string.IsNullOrWhiteSpace(value))
+            return result;
+
+        foreach (var coordinate in value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = coordinate.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var x) &&
+                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var y))
+                result.Add(new Point(x, y));
+        }
+
+        return result;
+    }
+
+    private static List<uint> ReadTileValues(XElement data, int expectedCount)
+    {
+        var encoding = (string)data.Attribute("encoding");
+        if (string.Equals(encoding, "csv", StringComparison.OrdinalIgnoreCase))
+        {
+            return data.Value
+                .Split(new[] { ',', '\r', '\n', '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(value => uint.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed : 0u)
+                .Take(expectedCount)
+                .ToList();
+        }
+
+        var encoded = new string(data.Value.Where(character => !char.IsWhiteSpace(character)).ToArray());
+        if (encoded.Length == 0)
+            return new List<uint>();
+
+        var bytes = Convert.FromBase64String(encoded);
+        var count = Math.Min(expectedCount, bytes.Length / 4);
+        var values = new List<uint>(count);
+        for (var index = 0; index < count; index++)
+        {
+            var offset = index * 4;
+            values.Add((uint)(bytes[offset] |
+                              (bytes[offset + 1] << 8) |
+                              (bytes[offset + 2] << 16) |
+                              (bytes[offset + 3] << 24)));
+        }
+
+        return values;
     }
 
     private static Rectangle ReadBounds(XElement element)

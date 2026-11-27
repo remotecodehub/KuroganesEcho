@@ -40,6 +40,16 @@ function Get-FrameDuration([string] $state) {
     }
 }
 
+# Act 02 uses a deliberately explicit animation contract. Keeping it here makes
+# regeneration deterministic and prevents auxiliary idle/effect sheets from
+# leaking into the four gameplay tilesets.
+$act02AnimationStates = @{
+    'Red_Werewolf' = @('Attack_1', 'Attack_2', 'Attack_3', 'Dead', 'Hurt', 'Jump', 'Run', 'Run_Attack', 'Walk')
+    'Gorgon_2' = @('Attack_1', 'Attack_2', 'Attack_3', 'Dead', 'Hurt', 'Idle', 'Run', 'Special', 'Walk')
+    'Kitsune' = @('Attack_1', 'Attack_2', 'Attack_3', 'Dead', 'Hurt', 'Idle', 'Jump', 'Run', 'Walk')
+    'Skeleton_Archer' = @('Attack_1', 'Attack_2', 'Attack_3', 'Dead', 'Evasion', 'Hurt', 'Idle', 'Shot_1', 'Shot_2', 'Walk')
+}
+
 New-Item -ItemType Directory -Force -Path $frameRoot, $tilesetRoot | Out-Null
 
 $variantDirectories = Get-ChildItem -LiteralPath $sourceRoot -Directory |
@@ -67,6 +77,9 @@ foreach ($variantDirectory in $variantDirectories) {
 
         $dimensions = Get-PngDimensions $source.FullName
         $state = Get-StateName $source.BaseName
+        if ($act02AnimationStates.ContainsKey($variant) -and $state -notin $act02AnimationStates[$variant]) {
+            continue
+        }
         $isSheet = $dimensions.Height -eq $tileHeight -and $dimensions.Width -ge $tileWidth -and (($dimensions.Width % $tileWidth) -eq 0)
 
         if ($isSheet) {

@@ -1,9 +1,103 @@
 {
-    "activeFile": "",
+    "activeFile": "Maps/Act_03_C.tmx",
     "expandedProjectPaths": [
     ],
     "file.lastUsedOpenFilter": "Todos os Ficheiros (*)",
     "fileStates": {
+        "Maps/Act_01_A.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2594,
+                "y": 401
+            }
+        },
+        "Maps/Act_01_B.tmx": {
+            "expandedObjectLayers": [
+                5,
+                6
+            ],
+            "scale": 1,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 2518,
+                "y": 191
+            }
+        },
+        "Maps/Act_01_C.tmx": {
+            "expandedObjectLayers": [
+                5,
+                6
+            ],
+            "scale": 2,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 2560,
+                "y": 192.5
+            }
+        },
+        "Maps/Act_02_A.tmx": {
+            "expandedObjectLayers": [
+                21
+            ],
+            "scale": 3,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1200,
+                "y": 68.33333333333333
+            }
+        },
+        "Maps/Act_02_B.tmx": {
+            "scale": 2,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 2521,
+                "y": 208.5
+            }
+        },
+        "Maps/Act_02_C.tmx": {
+            "expandedObjectLayers": [
+                20
+            ],
+            "scale": 3,
+            "selectedLayer": 12,
+            "viewCenter": {
+                "x": 2560,
+                "y": 208.33333333333331
+            }
+        },
+        "Maps/Act_03_A.tmx": {
+            "expandedObjectLayers": [
+                9,
+                8
+            ],
+            "scale": 1.5,
+            "selectedLayer": 6,
+            "viewCenter": {
+                "x": 2546.6666666666665,
+                "y": 277.3333333333333
+            }
+        },
+        "Maps/Act_03_B.tmx": {
+            "expandedObjectLayers": [
+                9,
+                8
+            ],
+            "scale": 2,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2103.5,
+                "y": 148
+            }
+        },
+        "Maps/Act_03_C.tmx": {
+            "scale": 2,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 87.5,
+                "y": 167.5
+            }
+        },
         "Maps/KuroganesEcho_320x24.tmx": {
             "scale": 4,
             "selectedLayer": 0,
@@ -12,23 +106,106 @@
                 "y": 301.5
             }
         },
+        "Tilesets/Act03_Environment.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 2
+        },
         "Tilesets/Act_01_Environment.tsx": {
             "scaleInDock": 2
         },
-        "Tilesets/Kunoichi.tsx": {
+        "Tilesets/Act_01_Feudal.tsx": {
+            "scaleInDock": 1.75
+        },
+        "Tilesets/Act_01_Feudal_Dark.tsx": {
+            "scaleInDock": 2
+        },
+        "Tilesets/Act_01_Items.tsx": {
+            "scaleInDock": 4
+        },
+        "Tilesets/Act_02_2D_Mountains.tsx": {
             "scaleInDock": 1
+        },
+        "Tilesets/Act_02_2D_Village.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/Act_02_Feudal_Castle.tsx": {
+            "scaleInDock": 1.5
+        },
+        "Tilesets/Act_02_Feudal_Japan.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/Act_02_Feudal_Japan_Dark.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/Act_02_Feudal_Sun.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1.75
+        },
+        "Tilesets/Act_02_Ruins.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/Act_03.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1.5,
+            "scaleInEditor": 3
+        },
+        "Tilesets/Act_03_Environment.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1.75,
+            "scaleInEditor": 5.5
+        },
+        "Tilesets/Act_03_Final.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1.75,
+            "scaleInEditor": 2
+        },
+        "Tilesets/Kunoichi.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "Tilesets/Ninja_Monk.tsx": {
-            "scaleInDock": 1
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "Tilesets/Ninja_Peasant.tsx": {
-            "scaleInDock": 1
+            "scaleInDock": 1,
+            "scaleInEditor": 4
         }
     },
+    "last.externalTilesetPath": "D:/GameDev/KuroganesEcho/src/KuroganesEcho.Core/Content/Tiled/Tilesets",
+    "last.imagePath": "D:/GameDev/KuroganesEcho/src/KuroganesEcho.Core/Content/Tiled/Tilesets/Env",
     "openFiles": [
+        "Maps/Act_01_A.tmx",
+        "Maps/Act_01_B.tmx",
+        "Maps/Act_01_C.tmx",
+        "Maps/Act_02_B.tmx",
+        "Maps/Act_02_C.tmx",
+        "Maps/Act_02_A.tmx",
+        "Maps/Act_03_A.tmx",
+        "Maps/Act_03_C.tmx",
+        "Maps/Act_03_B.tmx"
     ],
     "project": "KuroganesEcho.tiled-project",
     "recentFiles": [
-        "Maps/KuroganesEcho_320x24.tmx"
-    ]
+        "Maps/Act_01_A.tmx",
+        "Maps/Act_01_B.tmx",
+        "Maps/Act_01_C.tmx",
+        "Maps/Act_02_B.tmx",
+        "Maps/Act_02_C.tmx",
+        "Maps/Act_02_A.tmx",
+        "Maps/Act_03_A.tmx",
+        "Maps/Act_03_B.tmx",
+        "Maps/Act_03_C.tmx",
+        "Tilesets/Act_03.tsx",
+        "Tilesets/Act_03_Final.tsx",
+        "Tilesets/Act_03_Environment.tsx"
+    ],
+    "tileset.lastUsedFilter": "Ficheiros de conjunto de tiles Tiled (*.tsx *.xml)",
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    },
+    "tileset.type": 1
 }

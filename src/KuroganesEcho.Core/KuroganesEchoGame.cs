@@ -83,6 +83,7 @@ public class KuroganesEchoGame : Game
     private readonly List<EnemyInstance> _enemies = new();
     private readonly List<LevelObjectData> _pendingEnemySpawns = new();
     private readonly List<PlayerProjectile> _projectiles = new();
+    private readonly List<EnemyProjectile> _enemyProjectiles = new();
     private BossInstance _boss;
     private readonly CombatEffectSystem _effects = new();
     private SaveProgressState _saveProgress = new();
@@ -1135,6 +1136,7 @@ public class KuroganesEchoGame : Game
         _power = 0f;
         _powerRecoveryElapsed = 0f;
         _projectiles.Clear();
+        _enemyProjectiles.Clear();
         _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
         _playerInvulnerability = 0f;
         _playerKnockbackVelocity = 0f;
@@ -1258,6 +1260,7 @@ public class KuroganesEchoGame : Game
             _runRemaining = 0f;
             _playerInvulnerability = 1f;
             _projectiles.Clear();
+            _enemyProjectiles.Clear();
             _player.Reset();
             SaveCurrentProgress();
             UpdateCamera();
@@ -1603,14 +1606,23 @@ public class KuroganesEchoGame : Game
                 _player.Animation == PlayerAnimationState.Run);
         }
         ActivatePendingEnemySpawns();
+        var visibleBounds = CameraWorldBounds;
         foreach (var enemy in _enemies)
-            enemy.Update(elapsedSeconds, _playerPosition, _level);
+        {
+            enemy.Update(elapsedSeconds, _playerPosition, _level, visibleBounds);
+            if (enemy.TryLaunchRangedAttack(
+                    _playerPosition - new Vector2(0f, PlayerHeight / 2f),
+                    out var origin,
+                    out var direction))
+                _enemyProjectiles.Add(new EnemyProjectile(enemy.Character, origin, direction));
+        }
         _boss?.Update(elapsedSeconds, _playerPosition);
         UpdateProjectiles(elapsedSeconds);
+        UpdateEnemyProjectiles(elapsedSeconds);
         ResolveCombat();
         ResolvePlayerEnemyCollisions();
-        _enemies.RemoveAll(enemy => !enemy.IsAlive);
-        if (IsBossRewardLevel && _boss is not null && !_boss.IsAlive && !_finalBossDefeated)
+        _enemies.RemoveAll(enemy => enemy.IsDeathAnimationComplete);
+        if (IsBossRewardLevel && _boss is not null && _boss.IsDeathAnimationComplete && !_finalBossDefeated)
         {
             _finalBossDefeated = true;
             foreach (var collectible in _level.Collectibles)
@@ -1998,6 +2010,36 @@ public class KuroganesEchoGame : Game
         _audio.PlayCue(AudioCue.Explosion, 0.55f);
     }
 
+    private void UpdateEnemyProjectiles(float elapsedSeconds)
+    {
+        var worldBounds = new Rectangle(0, 0, (int)_level.WorldBounds.Width, (int)_level.WorldBounds.Height);
+        var playerHitbox = PlayerHitbox;
+        for (var index = _enemyProjectiles.Count - 1; index >= 0; index--)
+        {
+            var projectile = _enemyProjectiles[index];
+            projectile.Update(elapsedSeconds, worldBounds);
+            if (projectile.IsExpired)
+            {
+                _enemyProjectiles.RemoveAt(index);
+                continue;
+            }
+
+            if (!projectile.Hitbox.Intersects(playerHitbox))
+                continue;
+
+            if (TakePlayerDamage(CombatBalance.EnemyAttackDamage, projectile.SourceX))
+            {
+                _audio.PlayCue(AudioCue.Magic, 0.75f);
+                _effects.Spawn(
+                    _playerPosition - new Vector2(0f, 18f),
+                    CombatEffectKind.Magic,
+                    projectile.Direction);
+            }
+
+            _enemyProjectiles.RemoveAt(index);
+        }
+    }
+
     private void ResolveCombat()
     {
         if (!_playerAttackHitApplied && _player.IsActionActive &&
@@ -2047,7 +2089,10 @@ public class KuroganesEchoGame : Game
                 if (TakePlayerDamage(CombatBalance.EnemyAttackDamage, enemy.Position.X))
                 {
                     _audio.PlayCue(AudioCue.SlashImpact, 0.75f);
-                    _effects.Spawn(_playerPosition - new Vector2(0f, 18f), CombatEffectKind.Impact, new Vector2(enemy.Position.X - _playerPosition.X, -0.1f));
+                    _effects.Spawn(
+                        _playerPosition - new Vector2(0f, 18f),
+                        CombatEffectKind.Impact,
+                        new Vector2(enemy.Position.X - _playerPosition.X, -0.1f));
                 }
             }
         }
@@ -2123,6 +2168,8 @@ public class KuroganesEchoGame : Game
 
         if (_playerHealth == 0)
             _player.SetDead();
+        else
+            _player.SetHurt();
 
         return true;
     }
@@ -2216,12 +2263,26 @@ public class KuroganesEchoGame : Game
 
     private void UpdateCamera()
     {
-        var halfWidth = VirtualWidth / 2f;
-        var cameraX = Math.Clamp(_playerPosition.X, halfWidth, _level.WorldBounds.Width - halfWidth);
-        var halfHeight = VirtualHeight / 2f;
-        var cameraY = Math.Clamp(_playerPosition.Y, halfHeight, _level.WorldBounds.Height - halfHeight);
-        _camera.LookAt(new Vector2(cameraX, cameraY));
+        _camera.LookAt(CameraCenter);
     }
+
+    private Vector2 CameraCenter
+    {
+        get
+        {
+            var halfWidth = VirtualWidth / 2f;
+            var halfHeight = VirtualHeight / 2f;
+            return new Vector2(
+                Math.Clamp(_playerPosition.X, halfWidth, _level.WorldBounds.Width - halfWidth),
+                Math.Clamp(_playerPosition.Y, halfHeight, _level.WorldBounds.Height - halfHeight));
+        }
+    }
+
+    private Rectangle CameraWorldBounds => new(
+        (int)(CameraCenter.X - VirtualWidth / 2f),
+        (int)(CameraCenter.Y - VirtualHeight / 2f),
+        VirtualWidth,
+        VirtualHeight);
 
     private void ToggleFullscreen()
     {
@@ -2512,19 +2573,23 @@ public class KuroganesEchoGame : Game
         DrawSealAshesVisual();
         foreach (var enemy in _enemies)
         {
-            if (!enemy.IsAlive)
+            if (enemy.IsDeathAnimationComplete)
                 continue;
 
             enemy.Draw(_spriteBatch);
-            DrawWorldHealthBar(enemy.Position, enemy.Health, enemy.MaxHealth);
+            if (enemy.IsAlive)
+                DrawWorldHealthBar(enemy.Position, enemy.Health, enemy.MaxHealth);
         }
-        if (_boss is not null && _boss.IsAlive)
+        if (_boss is not null && (_boss.IsAlive || !_boss.IsDeathAnimationComplete))
         {
             _boss.Draw(_spriteBatch);
-            DrawWorldHealthBar(_boss.Position, _boss.Health, _boss.MaxHealth, boss: true);
+            if (_boss.IsAlive)
+                DrawWorldHealthBar(_boss.Position, _boss.Health, _boss.MaxHealth, boss: true);
         }
         DrawPlayer();
         foreach (var projectile in _projectiles)
+            projectile.Draw(_spriteBatch);
+        foreach (var projectile in _enemyProjectiles)
             projectile.Draw(_spriteBatch);
         _effects.Draw(_spriteBatch, _whiteTexture);
         _spriteBatch.End();

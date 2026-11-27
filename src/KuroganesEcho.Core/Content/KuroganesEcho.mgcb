@@ -137,6 +137,12 @@
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Dead.png
 
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Kunoichi/Hurt.png
+
 #begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Idle.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -185,6 +191,12 @@
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Dead.png
 
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Hurt.png
+
 #begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Monk/Blade.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -232,6 +244,12 @@
 /processor:TextureProcessor
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Dead.png
+
+#begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Hurt.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Hurt.png
 
 #begin Tiled/Chars/craftpix-net-407836-free-ninja-sprite-sheets-pixel-art/Ninja_Peasant/Shot.png
 /importer:TextureImporter

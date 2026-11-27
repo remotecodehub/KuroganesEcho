@@ -56,6 +56,7 @@ internal sealed class BossInstance
     public int MaxHealth => CombatBalance.GetBossMaxHealth(_difficulty);
     public int Health { get; private set; }
     public bool IsAlive => Health > 0;
+    public bool IsDeathAnimationComplete => !IsAlive && Character.IsDeadAnimationComplete;
     public bool IsEnraged => IsAlive && Health <= MaxHealth / 2;
     public bool IsAttacking => IsAlive && _attackRemaining > 0f;
 

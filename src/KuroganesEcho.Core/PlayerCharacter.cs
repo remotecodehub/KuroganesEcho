@@ -19,6 +19,7 @@ internal enum PlayerAnimationState
     Shot,
     Disguise,
     Jump,
+    Hurt,
     Dead
 }
 
@@ -65,6 +66,7 @@ internal sealed class PlayerCharacter
         player.Add(content, PlayerAnimationState.Attack1, $"{root}/Attack_1", FrameCount(characterId, PlayerAnimationState.Attack1));
         player.Add(content, PlayerAnimationState.Attack2, $"{root}/Attack_2", FrameCount(characterId, PlayerAnimationState.Attack2));
         player.Add(content, PlayerAnimationState.Jump, $"{root}/Jump", FrameCount(characterId, PlayerAnimationState.Jump));
+        player.Add(content, PlayerAnimationState.Hurt, $"{root}/Hurt", FrameCount(characterId, PlayerAnimationState.Hurt));
         player.Add(content, PlayerAnimationState.Dead, $"{root}/Dead", FrameCount(characterId, PlayerAnimationState.Dead));
 
         if (hasCast)
@@ -115,6 +117,15 @@ internal sealed class PlayerCharacter
 
         Animation = PlayerAnimationState.Dead;
         ActionRemaining = FrameCountForAnimation(PlayerAnimationState.Dead) / DeadFrameRate;
+        _animationClock = 0f;
+        _lastStepFrame = -1;
+        _footstepPending = false;
+    }
+
+    public void SetHurt()
+    {
+        Animation = PlayerAnimationState.Hurt;
+        ActionRemaining = _frameCounts[PlayerAnimationState.Hurt] / 10f;
         _animationClock = 0f;
         _lastStepFrame = -1;
         _footstepPending = false;
@@ -218,6 +229,7 @@ internal sealed class PlayerCharacter
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 8,
             PlayerAnimationState.Cast => 6,
+            PlayerAnimationState.Hurt => 2,
             PlayerAnimationState.Blade => 1,
             PlayerAnimationState.Shot or PlayerAnimationState.Disguise => 1,
             PlayerAnimationState.Jump => 10,
@@ -231,6 +243,7 @@ internal sealed class PlayerCharacter
             // animation read as a clipped attack instead of a full run cycle.
             PlayerAnimationState.Run => 8,
             PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Cast => 5,
+            PlayerAnimationState.Hurt => 4,
             PlayerAnimationState.Blade => 6,
             PlayerAnimationState.Jump => 9,
             PlayerAnimationState.Dead => 5,
@@ -243,6 +256,7 @@ internal sealed class PlayerCharacter
             PlayerAnimationState.Walk => 8,
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 4,
+            PlayerAnimationState.Hurt => 2,
             PlayerAnimationState.Shot => 6,
             PlayerAnimationState.Disguise => 9,
             PlayerAnimationState.Jump => 8,

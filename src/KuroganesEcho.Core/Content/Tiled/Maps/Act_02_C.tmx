@@ -120,7 +120,7 @@
   </object>
   <object id="120" name="EnemySpawn_01" type="EnemySpawn" x="192" y="320" width="16" height="32">
    <properties>
-    <property name="EnemyType" value="Black_Werewolf"/>
+    <property name="EnemyType" value="Red_Werewolf"/>
     <property name="SpawnMode" value="Single"/>
     <property name="SpawnOnly" type="bool" value="true"/>
     <property name="SpawnOrigin" value="HouseDoor"/>
@@ -129,7 +129,7 @@
   </object>
   <object id="121" name="EnemySpawn_02" type="EnemySpawn" x="784" y="320" width="16" height="32">
    <properties>
-    <property name="EnemyType" value="Karasu_tengu"/>
+    <property name="EnemyType" value="Kitsune"/>
     <property name="SpawnMode" value="Single"/>
     <property name="SpawnOnly" type="bool" value="true"/>
     <property name="SpawnOrigin" value="HouseDoor"/>
@@ -138,7 +138,7 @@
   </object>
   <object id="122" name="EnemySpawn_03" type="EnemySpawn" x="1312" y="320" width="16" height="32">
    <properties>
-    <property name="EnemyType" value="Yamabushi_tengu"/>
+    <property name="EnemyType" value="Gorgon_2"/>
     <property name="SpawnMode" value="Single"/>
     <property name="SpawnOnly" type="bool" value="true"/>
     <property name="SpawnOrigin" value="HouseDoor"/>
@@ -147,7 +147,7 @@
   </object>
   <object id="123" name="EnemySpawn_04" type="EnemySpawn" x="2336" y="320" width="16" height="32">
    <properties>
-    <property name="EnemyType" value="Skeleton_Warrior"/>
+    <property name="EnemyType" value="Red_Werewolf"/>
     <property name="SpawnMode" value="Single"/>
     <property name="SpawnOnly" type="bool" value="true"/>
     <property name="SpawnOrigin" value="HouseDoor"/>
@@ -165,11 +165,119 @@
   </object>
   <object id="125" name="EnemySpawn_06" type="EnemySpawn" x="4192" y="320" width="16" height="32">
    <properties>
-    <property name="EnemyType" value="Gorgon_1"/>
+    <property name="EnemyType" value="Gorgon_2"/>
     <property name="SpawnMode" value="Single"/>
     <property name="SpawnOnly" type="bool" value="true"/>
     <property name="SpawnOrigin" value="HouseDoor"/>
     <property name="StructureId" value="House_05"/>
+   </properties>
+  </object>
+  <object id="126" name="EnemySpawn_126" type="EnemySpawn" x="1504" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Red_Werewolf"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="127" name="EnemySpawn_127" type="EnemySpawn" x="1840" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Kitsune"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="128" name="EnemySpawn_128" type="EnemySpawn" x="2720" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Gorgon_2"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="129" name="EnemySpawn_129" type="EnemySpawn" x="3200" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Red_Werewolf"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="130" name="EnemySpawn_130" type="EnemySpawn" x="3520" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Kitsune"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="131" name="EnemySpawn_131" type="EnemySpawn" x="3840" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Gorgon_2"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="132" name="EnemySpawn_132" type="EnemySpawn" x="4000" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Red_Werewolf"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="133" name="EnemySpawn_133" type="EnemySpawn" x="4080" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Kitsune"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="134" name="EnemySpawn_134" type="EnemySpawn" x="4160" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Gorgon_2"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="135" name="EnemySpawn_135" type="EnemySpawn" x="4240" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Red_Werewolf"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="136" name="EnemySpawn_136" type="EnemySpawn" x="4320" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Kitsune"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="137" name="EnemySpawn_137" type="EnemySpawn" x="4400" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Gorgon_2"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="138" name="EnemySpawn_138" type="EnemySpawn" x="4480" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Archer"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="139" name="EnemySpawn_139" type="EnemySpawn" x="4560" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Archer"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="140" name="EnemySpawn_140" type="EnemySpawn" x="4640" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Archer"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="141" name="EnemySpawn_141" type="EnemySpawn" x="4720" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Archer"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="142" name="EnemySpawn_142" type="EnemySpawn" x="4800" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Archer"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="143" name="EnemySpawn_143" type="EnemySpawn" x="4880" y="320" width="16" height="32">
+   <properties>
+    <property name="EnemyType" value="Skeleton_Archer"/>
+    <property name="SpawnOnly" type="bool" value="true"/>
    </properties>
   </object>
   <object id="150" name="FinalBoss_Minotaur_2" type="BossSpawn" x="4992" y="320" width="16" height="32">
@@ -181,7 +289,7 @@
     <property name="Trigger" value="OnEnter"/>
    </properties>
   </object>
-  <object id="190" name="RuinCastleEnemyGroup" type="EnemySpawn" x="4800" y="320" width="16" height="32">
+  <object id="190" name="RuinCastleEnemyGroup" type="SpawnMarker" x="4800" y="320" width="16" height="32">
    <properties>
     <property name="EnemyType" value="PendingGroup"/>
     <property name="GroupCount" type="int" value="6"/>

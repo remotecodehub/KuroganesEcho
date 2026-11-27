@@ -19,6 +19,7 @@ public class KuroganesEchoGame : Game
 {
     private const int VirtualWidth = 320;
     private const int VirtualHeight = 180;
+    private const float EnemySpawnActivationDistance = VirtualWidth / 2f + 64f;
     private const float PlayerSpeed = 72f;
     private const float RunSpeed = 132f;
     private const float PlayerScale = 0.5f;
@@ -1400,7 +1401,7 @@ public class KuroganesEchoGame : Game
         for (var index = _pendingEnemySpawns.Count - 1; index >= 0; index--)
         {
             var spawn = _pendingEnemySpawns[index];
-            if (Math.Abs(_playerPosition.X - spawn.Bounds.Center.X) > 128f)
+            if (Math.Abs(_playerPosition.X - spawn.Bounds.Center.X) > EnemySpawnActivationDistance)
                 continue;
 
             _pendingEnemySpawns.RemoveAt(index);

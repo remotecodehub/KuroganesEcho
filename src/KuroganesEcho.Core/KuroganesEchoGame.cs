@@ -121,7 +121,7 @@ public class KuroganesEchoGame : Game
     private float _runRemaining;
     private float _stamina = StaminaMaximum;
     private float _power;
-    private bool _secondaryPowerUnlocked;
+    private float _powerRecoveryElapsed;
     private float _playerInvulnerability;
     private float _playerKnockbackVelocity;
     private int _jumpsUsed;
@@ -1133,7 +1133,7 @@ public class KuroganesEchoGame : Game
         _runRemaining = 0f;
         _stamina = StaminaMaximum;
         _power = 0f;
-        _secondaryPowerUnlocked = false;
+        _powerRecoveryElapsed = 0f;
         _projectiles.Clear();
         _playerHealth = CombatBalance.GetPlayerMaxHealth(_selectedDifficulty);
         _playerInvulnerability = 0f;
@@ -1481,9 +1481,7 @@ public class KuroganesEchoGame : Game
         _playerInvulnerability = Math.Max(0f, _playerInvulnerability - elapsedSeconds);
         if (_runRemaining <= 0f)
             _stamina = Math.Min(StaminaMaximum, _stamina + StaminaRecoveryPerSecond * elapsedSeconds);
-        _power = Math.Min(
-            CombatBalance.PlayerPowerMaximum,
-            _power + CombatBalance.PlayerPowerRecoveryPerSecond * elapsedSeconds);
+        UpdatePlayerPowerRecovery(elapsedSeconds);
         _moveInput = Vector2.Zero;
         _analogVisualInput = Vector2.Zero;
         if (IsKeyboardMoveDown(keyboard, 0))
@@ -1777,7 +1775,6 @@ public class KuroganesEchoGame : Game
         _power = Math.Min(CombatBalance.PlayerPowerMaximum, _power + restore);
         if (IsKunoichi)
         {
-            _secondaryPowerUnlocked = true;
             ConsumeKunoichiFruit();
             if (CanStartAction())
                 StartAction(PlayerAnimationState.Eating);
@@ -1883,7 +1880,7 @@ public class KuroganesEchoGame : Game
 
         if (IsKunoichi)
         {
-            if (!_secondaryPowerUnlocked)
+            if (!TrySpendAvailablePower())
                 return;
 
             StartAction(PlayerAnimationState.Cast);
@@ -1891,16 +1888,45 @@ public class KuroganesEchoGame : Game
             return;
         }
 
-        if (IsMonk || _power < CombatBalance.SpecialPowerCost)
+        if (IsMonk || !TrySpendAvailablePower())
             return;
 
-#if DEBUG
-        if (!_debugCheatCodes.InfinitePower)
-            _power -= CombatBalance.SpecialPowerCost;
-#else
-        _power -= CombatBalance.SpecialPowerCost;
-#endif
         StartAction(PlayerAnimationState.Disguise);
+    }
+
+    private bool TrySpendAvailablePower()
+    {
+        if (_power <= 0f)
+            return false;
+
+#if DEBUG
+        if (_debugCheatCodes.InfinitePower)
+            return true;
+#endif
+        _power = Math.Max(0f, _power - CombatBalance.GetSecondarySpecialPowerCost(_selectedDifficulty));
+        return true;
+    }
+
+    private void UpdatePlayerPowerRecovery(float elapsedSeconds)
+    {
+        if (_power >= CombatBalance.PlayerPowerMaximum)
+        {
+            _powerRecoveryElapsed = 0f;
+            return;
+        }
+
+        _powerRecoveryElapsed += elapsedSeconds;
+        while (_powerRecoveryElapsed >= CombatBalance.PlayerPowerRecoveryIntervalSeconds &&
+               _power < CombatBalance.PlayerPowerMaximum)
+        {
+            _powerRecoveryElapsed -= CombatBalance.PlayerPowerRecoveryIntervalSeconds;
+            _power = Math.Min(
+                CombatBalance.PlayerPowerMaximum,
+                _power + CombatBalance.GetPlayerPowerRecoveryAmount(_selectedDifficulty));
+        }
+
+        if (_power >= CombatBalance.PlayerPowerMaximum)
+            _powerRecoveryElapsed = 0f;
     }
 
     private bool CanStartAction() => !_player.IsActionActive && _player.Animation != PlayerAnimationState.Dead;

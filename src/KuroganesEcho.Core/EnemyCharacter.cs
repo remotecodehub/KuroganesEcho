@@ -50,7 +50,10 @@ internal sealed class EnemyCharacter
         string Special2 = null,
         EnemyRangedAttackKind RangedAttackKind = EnemyRangedAttackKind.None,
         EnemyAnimationState RangedAttackAnimation = EnemyAnimationState.Attack1,
-        string ProjectileAsset = null);
+        string ProjectileAsset = null,
+        int? ProjectileFrameCount = null,
+        string SecondaryProjectileAsset = null,
+        int? SecondaryProjectileFrameCount = null);
 
     private static readonly IReadOnlyDictionary<string, EnemyDefinition> Definitions =
         new Dictionary<string, EnemyDefinition>(StringComparer.OrdinalIgnoreCase)
@@ -108,13 +111,27 @@ internal sealed class EnemyCharacter
                 "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", null, "Special"),
             ["Fire Wizard"] = new(
                 "Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Fire Wizard",
-                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Fireball", "Flame_jet"),
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Fireball", "Flame_jet",
+                RangedAttackKind: EnemyRangedAttackKind.Cast,
+                RangedAttackAnimation: EnemyAnimationState.Special1,
+                ProjectileAsset: "Charge",
+                ProjectileFrameCount: 12),
             ["Lightning Mage"] = new(
                 "Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Lightning Mage",
-                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Light_ball", "Light_charge"),
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Light_ball", "Light_charge",
+                RangedAttackKind: EnemyRangedAttackKind.Cast,
+                RangedAttackAnimation: EnemyAnimationState.Special1,
+                ProjectileAsset: "Charge",
+                ProjectileFrameCount: 10),
             ["Wanderer Magican"] = new(
                 "Tiled/Enemies/craftpix-net-529677-free-wizard-sprite-sheets-pixel-art/Wanderer Magican",
-                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Charge_1", "Charge_2")
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, "Jump", "Magic_arrow", "Magic_sphere",
+                RangedAttackKind: EnemyRangedAttackKind.Cast,
+                RangedAttackAnimation: EnemyAnimationState.Special1,
+                ProjectileAsset: "Charge_1",
+                ProjectileFrameCount: 9,
+                SecondaryProjectileAsset: "Charge_2",
+                SecondaryProjectileFrameCount: 6)
         };
 
     private readonly Dictionary<EnemyAnimationState, AnimationClip> _clips = new();
@@ -123,6 +140,8 @@ internal sealed class EnemyCharacter
     private const float DeadFrameRate = 3f;
     private Texture2D _rangedProjectileTexture;
     private int _rangedProjectileFrameCount;
+    private Texture2D _secondaryProjectileTexture;
+    private int _secondaryProjectileFrameCount;
 
     private EnemyCharacter(string id)
     {
@@ -144,6 +163,10 @@ internal sealed class EnemyCharacter
     public EnemyAnimationState RangedAttackAnimation { get; private set; }
     public Texture2D RangedProjectileTexture => _rangedProjectileTexture;
     public int RangedProjectileFrameCount => _rangedProjectileFrameCount;
+    public Texture2D SecondaryProjectileTexture => _secondaryProjectileTexture ?? _rangedProjectileTexture;
+    public int SecondaryProjectileFrameCount =>
+        _secondaryProjectileTexture is not null ? _secondaryProjectileFrameCount : _rangedProjectileFrameCount;
+    public bool HasAnimation(EnemyAnimationState state) => _clips.ContainsKey(state);
 
     public static EnemyCharacter Load(ContentManager content, string enemyType)
     {
@@ -213,7 +236,12 @@ internal sealed class EnemyCharacter
         if (definition.ProjectileAsset is not null)
         {
             _rangedProjectileTexture = content.Load<Texture2D>($"{definition.Root}/{definition.ProjectileAsset}");
-            _rangedProjectileFrameCount = GetFrameCount(_rangedProjectileTexture);
+            _rangedProjectileFrameCount = definition.ProjectileFrameCount ?? GetFrameCount(_rangedProjectileTexture);
+        }
+        if (definition.SecondaryProjectileAsset is not null)
+        {
+            _secondaryProjectileTexture = content.Load<Texture2D>($"{definition.Root}/{definition.SecondaryProjectileAsset}");
+            _secondaryProjectileFrameCount = definition.SecondaryProjectileFrameCount ?? GetFrameCount(_secondaryProjectileTexture);
         }
     }
 

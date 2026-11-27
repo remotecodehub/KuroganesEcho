@@ -107,4 +107,37 @@
   <data name="Act02CTitle" xml:space="preserve"><value>A Fortaleza sob Asas Negras</value></data>
   <data name="Act02CObjective" xml:space="preserve"><value>Derrote o boss noturno e recupere a segunda parte do Selo de Cinzas.</value></data>
   <data name="Act02CTutorial" xml:space="preserve"><value>Os pássaros noturnos cruzam o mapa para atrapalhar sua visão, mas não causam dano.</value></data>
+  <data name="Act03ATitle" xml:space="preserve"><value>A Muralha Quebrada</value></data>
+  <data name="Act03AObjective" xml:space="preserve"><value>Atravesse as ruínas externas e alcance o portão interno do castelo.</value></data>
+  <data name="Act03ATutorial" xml:space="preserve"><value>Novos inimigos patrulham a muralha; use telhados, plataformas e especiais.</value></data>
+  <data name="Act03BTitle" xml:space="preserve"><value>O Pátio das Cinzas</value></data>
+  <data name="Act03BObjective" xml:space="preserve"><value>Avance pelo pátio devastado até a entrada do salão do trono morto.</value></data>
+  <data name="Act03BTutorial" xml:space="preserve"><value>Cuidado com ataques à distância e feras ágeis entre as muralhas quebradas.</value></data>
+  <data name="Act03CTitle" xml:space="preserve"><value>O Salão do Trono Morto</value></data>
+  <data name="Act03CObjective" xml:space="preserve"><value>Derrote o Minotauro III e os três guardiões arcanos para restaurar o Selo de Cinzas.</value></data>
+  <data name="Act03CTutorial" xml:space="preserve"><value>Colete o Selo 3/4 para despertar a sequência final e vença os três magos pelo 4/4.</value></data>
+  <data name="BossMinotaur1" xml:space="preserve"><value>MINOTAURO I</value></data>
+  <data name="BossMinotaur2" xml:space="preserve"><value>MINOTAURO II</value></data>
+  <data name="BossMinotaur3" xml:space="preserve"><value>MINOTAURO III</value></data>
+  <data name="BossFireWizard" xml:space="preserve"><value>MAGO DO FOGO</value></data>
+  <data name="BossLightningMage" xml:space="preserve"><value>MAGO DO RELÂMPAGO</value></data>
+  <data name="BossWandererMagican" xml:space="preserve"><value>MAGO ERRANTE</value></data>
+  <data name="AshSealHud" xml:space="preserve"><value>SELO {0}/4</value></data>
+  <data name="AshSeal3Revealed" xml:space="preserve"><value>SELO DE CINZAS 3/4 REVELADO</value></data>
+  <data name="AshSeal4Revealed" xml:space="preserve"><value>SELO DE CINZAS 4/4 REVELADO</value></data>
+  <data name="CreditsHeadingComplete" xml:space="preserve"><value>SELO DE CINZAS RESTAURADO (4/4)</value></data>
+  <data name="CreditsLineSealRestored" xml:space="preserve"><value>A Chama Silenciosa volta a arder.</value></data>
+  <data name="CreditsLineFlameLives" xml:space="preserve"><value>A paz retorna ao clã Kurogane.</value></data>
+  <data name="CreditsSectionDirection" xml:space="preserve"><value>DIREÇÃO E DESIGN</value></data>
+  <data name="CreditsDirectionName" xml:space="preserve"><value>Equipe Kurogane's Echo</value></data>
+  <data name="CreditsSectionEngineering" xml:space="preserve"><value>PROGRAMAÇÃO E SISTEMAS</value></data>
+  <data name="CreditsEngineeringName" xml:space="preserve"><value>MonoGame e MonoGame.Extended</value></data>
+  <data name="CreditsSectionArt" xml:space="preserve"><value>PIXEL ART 16-BIT E LEVEL DESIGN</value></data>
+  <data name="CreditsArtName" xml:space="preserve"><value>Mapas Tiled e Pacotes de Sprites</value></data>
+  <data name="CreditsSectionAudio" xml:space="preserve"><value>MÚSICA E EFEITOS SONOROS</value></data>
+  <data name="CreditsAudioName" xml:space="preserve"><value>Trilha Feudal 16-Bit</value></data>
+  <data name="CreditsSectionTech" xml:space="preserve"><value>TECNOLOGIA</value></data>
+  <data name="CreditsTechName" xml:space="preserve"><value>.NET e MonoGame Framework</value></data>
+  <data name="CreditsThankYou" xml:space="preserve"><value>OBRIGADO POR JOGAR</value></data>
+  <data name="CreditsSkipHint" xml:space="preserve"><value>ENTER / ESPAÇO / A / TOQUE PARA PULAR</value></data>
 </root>

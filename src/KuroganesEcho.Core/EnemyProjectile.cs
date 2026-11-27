@@ -26,6 +26,40 @@ internal sealed class EnemyProjectile
             EnemyRangedAttackKind.Shot => (260f, 8f, 3f, 0.55f),
             _ => throw new ArgumentOutOfRangeException(nameof(character), "Enemy has no ranged attack")
         };
+        Damage = CombatBalance.EnemyAttackDamage;
+        ImpactCue = AudioCue.Magic;
+        ImpactEffect = CombatEffectKind.Magic;
+        Position = position;
+        Direction = direction.LengthSquared() > 0.001f
+            ? Vector2.Normalize(direction)
+            : Vector2.UnitX;
+        SourceX = position.X;
+    }
+
+    public EnemyProjectile(
+        Texture2D texture,
+        int frameCount,
+        Vector2 position,
+        Vector2 direction,
+        float speed,
+        float halfWidth,
+        float halfHeight,
+        float scale,
+        int damage,
+        AudioCue impactCue = AudioCue.Magic,
+        CombatEffectKind impactEffect = CombatEffectKind.Magic,
+        float lifetimeSeconds = LifetimeSeconds)
+    {
+        _texture = texture;
+        _frameCount = Math.Max(1, frameCount);
+        _speed = speed;
+        _halfWidth = halfWidth;
+        _halfHeight = halfHeight;
+        _scale = scale;
+        _remaining = lifetimeSeconds;
+        Damage = damage;
+        ImpactCue = impactCue;
+        ImpactEffect = impactEffect;
         Position = position;
         Direction = direction.LengthSquared() > 0.001f
             ? Vector2.Normalize(direction)
@@ -36,6 +70,9 @@ internal sealed class EnemyProjectile
     public Vector2 Position { get; private set; }
     public Vector2 Direction { get; }
     public float SourceX { get; }
+    public int Damage { get; }
+    public AudioCue ImpactCue { get; }
+    public CombatEffectKind ImpactEffect { get; }
     public bool IsExpired => _remaining <= 0f;
     public Rectangle Hitbox => new(
         (int)(Position.X - _halfWidth),

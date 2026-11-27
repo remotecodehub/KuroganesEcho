@@ -123,8 +123,50 @@ internal sealed class LevelDefinition
         BriefingTutorialKey = "Act02CTutorial"
     };
 
+    public static LevelDefinition Act03A => new()
+    {
+        Id = "Act_03_A",
+        MapAssetPath = "Content/Tiled/Maps/Act_03_A.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(32f, 320f),
+        NextLevelId = "Act_03_B",
+        BriefingTitleKey = "Act03ATitle",
+        BriefingObjectiveKey = "Act03AObjective",
+        BriefingTutorialKey = "Act03ATutorial"
+    };
+
+    public static LevelDefinition Act03B => new()
+    {
+        Id = "Act_03_B",
+        MapAssetPath = "Content/Tiled/Maps/Act_03_B.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(32f, 320f),
+        NextLevelId = "Act_03_C",
+        BriefingTitleKey = "Act03BTitle",
+        BriefingObjectiveKey = "Act03BObjective",
+        BriefingTutorialKey = "Act03BTutorial"
+    };
+
+    public static LevelDefinition Act03C => new()
+    {
+        Id = "Act_03_C",
+        MapAssetPath = "Content/Tiled/Maps/Act_03_C.tmx",
+        CollisionObjectLayerName = "Collision",
+        GameplayObjectLayerName = "Gameplay",
+        PlayerSpawn = new Vector2(32f, 320f),
+        NextLevelId = null,
+        BriefingTitleKey = "Act03CTitle",
+        BriefingObjectiveKey = "Act03CObjective",
+        BriefingTutorialKey = "Act03CTutorial"
+    };
+
     public static LevelDefinition ForId(string id) => id switch
     {
+        "Act_03_C" => Act03C,
+        "Act_03_B" => Act03B,
+        "Act_03_A" => Act03A,
         "Act_02_C" => Act02C,
         "Act_02_B" => Act02B,
         "Act_02_A" => Act02A,
@@ -253,7 +295,9 @@ internal sealed class GameLevel
     {
         if (name is null)
             return FootstepSurface.Snow;
-        if (name.StartsWith("HouseRoof", StringComparison.OrdinalIgnoreCase))
+        if (name.StartsWith("HouseRoof", StringComparison.OrdinalIgnoreCase) ||
+            name.StartsWith("ConstructionRoof", StringComparison.OrdinalIgnoreCase) ||
+            name.StartsWith("CastleRoof", StringComparison.OrdinalIgnoreCase))
             return FootstepSurface.Roof;
         if (name.StartsWith("Platform", StringComparison.OrdinalIgnoreCase))
             return FootstepSurface.Wood;
@@ -377,6 +421,8 @@ internal sealed class GameLevel
         var sealRubyPartTiles = ReadTileCoordinates(root, "SealRubyPartTiles");
         if (sealRubyPartTiles.Count == 0)
             sealRubyPartTiles = ReadTileCoordinates(root, "SealAshesPartTiles");
+        var finalSealRubyPartTiles = ReadTileCoordinates(root, "FinalSealRubyPartTiles");
+        var finalSealPartIndex = ReadIntProperty(root, "FinalSealPartIndex") ?? 4;
 
         // Act 01 C existed before the ruby metadata was introduced. Accept its
         // old single-tile coordinate so the reward cannot disappear on upgrade.
@@ -390,12 +436,15 @@ internal sealed class GameLevel
         {
             var gid = tileValues[index];
             var tileCoordinate = new Point(index % width, index / width);
+            var isPrimarySealTile = sealRubyPartTiles.Contains(tileCoordinate);
+            var isFinalSealTile = finalSealRubyPartTiles.Contains(tileCoordinate);
             var staleSealTile = sealRubyPartTiles.Count == 1 &&
+                                finalSealRubyPartTiles.Count == 0 &&
                                 gid == collectibleFirstGid + 2 &&
-                                !sealRubyPartTiles.Contains(tileCoordinate);
+                                !isPrimarySealTile;
             var kind = staleSealTile
                 ? (CollectibleKind?)null
-                : sealRubyPartTiles.Contains(tileCoordinate)
+                : (isPrimarySealTile || isFinalSealTile)
                 ? CollectibleKind.SealRubyPart
                 : powerFruitTiles.Contains(tileCoordinate)
                     ? CollectibleKind.PowerFruit
@@ -431,9 +480,10 @@ internal sealed class GameLevel
                 properties["ExtraLife"] = "1";
             else if (kind.Value == CollectibleKind.SealRubyPart)
             {
+                var partNumber = isFinalSealTile ? finalSealPartIndex : sealPartIndex;
                 properties["UnlockAfterBoss"] = "true";
-                properties["SealPartIndex"] = sealPartIndex.ToString(CultureInfo.InvariantCulture);
-                if (sealRubyPartTiles.Count > 1)
+                properties["SealPartIndex"] = partNumber.ToString(CultureInfo.InvariantCulture);
+                if (!isFinalSealTile && sealRubyPartTiles.Count > 1)
                     properties["PickupGroup"] = "SealRubyPart";
             }
 
@@ -452,7 +502,7 @@ internal sealed class GameLevel
         // Refactored Act 02 C maps may still contain the four old talisman gids
         // in the layer while only one coordinate is the part released by this
         // boss. Hide those stale visual tiles instead of exposing a full reward.
-        if (sealRubyPartTiles.Count == 1 && tileLayer is not null)
+        if (sealRubyPartTiles.Count == 1 && finalSealRubyPartTiles.Count == 0 && tileLayer is not null)
         {
             for (var index = 0; index < tileValues.Count; index++)
             {

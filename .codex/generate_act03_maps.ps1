@@ -412,8 +412,8 @@ function Write-Map([int] $mapIndex, [string] $act, [string] $title, [string] $bi
 
 Write-ResizedEnvironmentImage
 Write-EnvironmentTileset
-Write-Map 0 'Act_03_A' 'A Muralha Quebrada' 'outer ruined castle wall and burned village approach' 'Act_03_B' @('Skeleton_Warrior','Skeleton_Archer','Red_Werewolf') @(640, 1040, 1536, 1856, 2240, 2784, 3328, 3872, 4416) @(1280, 2560, 3840) @(192, 1184, 2704) 
-Write-Map 1 'Act_03_B' 'Pátio das Cinzas' 'ash-covered castle courtyard with broken towers and chapel ruins' 'Act_03_C' @('Skeleton_Spearman','Gorgon_2','Fire Wizard','Skeleton_Archer') @(576, 1120, 1632, 2080, 2592, 3136, 3680, 4224, 4768) @(1120, 2400, 3840) @(160, 1440, 3008)
-Write-Map 2 'Act_03_C' 'Salão do Trono Morto' 'inner keep, ruined throne hall and final ash-filled battlements' '' @('Skeleton_Warrior','Skeleton_Archer','Gorgon_3') @(512, 960, 1440, 1920, 2464, 3008, 3552, 4096, 4576) @(1024, 2304, 3712) @(176, 1328, 2816)
+Write-Map 0 'Act_03_A' 'A Muralha Quebrada' 'outer ruined castle wall and burned village approach' 'Act_03_B' @('Skeleton_Warrior','Skeleton_Archer','White_Werewolf','Skeleton_Spearman','Karasu_tengu','Black_Werewolf','Gorgon_1') @(640, 1040, 1536, 1856, 2240, 2784, 3328, 3872, 4416) @(1280, 2560, 3840) @(192, 1184, 2704) 
+Write-Map 1 'Act_03_B' 'Pátio das Cinzas' 'ash-covered castle courtyard with broken towers and chapel ruins' 'Act_03_C' @('Yamabushi_tengu','Gorgon_3','Red_Werewolf','Kitsune','Gorgon_2','White_Werewolf','Skeleton_Spearman') @(576, 1120, 1632, 2080, 2592, 3136, 3680, 4224, 4768) @(1120, 2400, 3840) @(160, 1440, 3008)
+Write-Map 2 'Act_03_C' 'Salão do Trono Morto' 'inner keep, ruined throne hall and final ash-filled battlements' '' @('Gorgon_3','Yamabushi_tengu','White_Werewolf','Kitsune','Skeleton_Spearman','Skeleton_Archer','Gorgon_3') @(512, 960, 1440, 1920, 2464, 3008, 3552, 4096, 4576) @(1024, 2304, 3712) @(176, 1328, 2816)
 
 Write-Host 'Act 03 tileset and maps generated.'

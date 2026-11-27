@@ -107,4 +107,37 @@
   <data name="Act02CTitle" xml:space="preserve"><value>The Fortress beneath Black Wings</value></data>
   <data name="Act02CObjective" xml:space="preserve"><value>Defeat the night boss and recover the second part of the Ash Seal.</value></data>
   <data name="Act02CTutorial" xml:space="preserve"><value>Nocturnal birds cross the map to distract you, but they cannot deal damage.</value></data>
+  <data name="Act03ATitle" xml:space="preserve"><value>The Broken Castle Wall</value></data>
+  <data name="Act03AObjective" xml:space="preserve"><value>Cross the scorched outer ruins and breach the inner castle gate.</value></data>
+  <data name="Act03ATutorial" xml:space="preserve"><value>New enemies patrol the ramparts; use roofs, platforms and specials to survive.</value></data>
+  <data name="Act03BTitle" xml:space="preserve"><value>The Courtyard of Embers</value></data>
+  <data name="Act03BObjective" xml:space="preserve"><value>Fight through the ruined courtyard and reach the dead throne keep.</value></data>
+  <data name="Act03BTutorial" xml:space="preserve"><value>Watch for ranged casters and agile beasts lurking along the broken walls.</value></data>
+  <data name="Act03CTitle" xml:space="preserve"><value>The Hall of the Dead Throne</value></data>
+  <data name="Act03CObjective" xml:space="preserve"><value>Defeat Minotaur III and the three arcane guardians to restore the Ash Seal.</value></data>
+  <data name="Act03CTutorial" xml:space="preserve"><value>Collect Ash Seal 3/4 to awaken the final gauntlet; defeat all three mages for 4/4.</value></data>
+  <data name="BossMinotaur1" xml:space="preserve"><value>MINOTAUR I</value></data>
+  <data name="BossMinotaur2" xml:space="preserve"><value>MINOTAUR II</value></data>
+  <data name="BossMinotaur3" xml:space="preserve"><value>MINOTAUR III</value></data>
+  <data name="BossFireWizard" xml:space="preserve"><value>FIRE WIZARD</value></data>
+  <data name="BossLightningMage" xml:space="preserve"><value>LIGHTNING MAGE</value></data>
+  <data name="BossWandererMagican" xml:space="preserve"><value>WANDERER MAGICIAN</value></data>
+  <data name="AshSealHud" xml:space="preserve"><value>SEAL {0}/4</value></data>
+  <data name="AshSeal3Revealed" xml:space="preserve"><value>ASH SEAL 3/4 REVEALED</value></data>
+  <data name="AshSeal4Revealed" xml:space="preserve"><value>ASH SEAL 4/4 REVEALED</value></data>
+  <data name="CreditsHeadingComplete" xml:space="preserve"><value>ASH SEAL RESTORED (4/4)</value></data>
+  <data name="CreditsLineSealRestored" xml:space="preserve"><value>The Silent Flame burns once more.</value></data>
+  <data name="CreditsLineFlameLives" xml:space="preserve"><value>Peace returns to the Kurogane clan.</value></data>
+  <data name="CreditsSectionDirection" xml:space="preserve"><value>GAME DIRECTION &amp; DESIGN</value></data>
+  <data name="CreditsDirectionName" xml:space="preserve"><value>Kurogane's Echo Team</value></data>
+  <data name="CreditsSectionEngineering" xml:space="preserve"><value>PROGRAMMING &amp; SYSTEMS</value></data>
+  <data name="CreditsEngineeringName" xml:space="preserve"><value>MonoGame &amp; MonoGame.Extended</value></data>
+  <data name="CreditsSectionArt" xml:space="preserve"><value>16-BIT PIXEL ART &amp; LEVEL DESIGN</value></data>
+  <data name="CreditsArtName" xml:space="preserve"><value>Tiled World &amp; Sprite Packs</value></data>
+  <data name="CreditsSectionAudio" xml:space="preserve"><value>MUSIC &amp; SOUND DESIGN</value></data>
+  <data name="CreditsAudioName" xml:space="preserve"><value>16-Bit Feudal Soundtrack</value></data>
+  <data name="CreditsSectionTech" xml:space="preserve"><value>POWERED BY</value></data>
+  <data name="CreditsTechName" xml:space="preserve"><value>.NET &amp; MonoGame Framework</value></data>
+  <data name="CreditsThankYou" xml:space="preserve"><value>THANK YOU FOR PLAYING</value></data>
+  <data name="CreditsSkipHint" xml:space="preserve"><value>ENTER / SPACE / A / TAP TO SKIP</value></data>
 </root>

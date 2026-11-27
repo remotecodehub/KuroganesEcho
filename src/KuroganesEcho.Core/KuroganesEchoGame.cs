@@ -32,6 +32,9 @@ public class KuroganesEchoGame : Game
     private const float PlayerHeight = 32f;
     private const float IntroScrollSpeed = 8f;
     private const float IntroLineHeight = 13f;
+    private const float CreditsScrollSpeed = 14f;
+    private const float CreditsLineHeight = 12f;
+    private const float BossBannerDuration = 2.6f;
     private const float StaminaMaximum = 5f;
     private const float StaminaRecoveryPerSecond = 0.85f;
     private const float RunStaminaCost = 1f;
@@ -43,6 +46,30 @@ public class KuroganesEchoGame : Game
         "IntroLine01", "IntroLine02", "IntroLine03", "IntroLine04", "IntroLine05",
         "IntroLine06", "IntroLine07", "IntroLine08", "IntroLine09", "IntroLine10",
         "IntroLine11", "IntroLine12", "IntroLine13"
+    };
+    private static readonly string[] CreditsLineKeys =
+    {
+        "CreditsHeadingComplete",
+        "CreditsSpacer",
+        "CreditsLineSealRestored",
+        "CreditsLineFlameLives",
+        "CreditsSpacer",
+        "CreditsSectionDirection",
+        "CreditsDirectionName",
+        "CreditsSpacer",
+        "CreditsSectionEngineering",
+        "CreditsEngineeringName",
+        "CreditsSpacer",
+        "CreditsSectionArt",
+        "CreditsArtName",
+        "CreditsSpacer",
+        "CreditsSectionAudio",
+        "CreditsAudioName",
+        "CreditsSpacer",
+        "CreditsSectionTech",
+        "CreditsTechName",
+        "CreditsSpacer",
+        "CreditsThankYou"
     };
 
     private readonly GraphicsDeviceManager _graphics;
@@ -85,6 +112,10 @@ public class KuroganesEchoGame : Game
     private readonly List<PlayerProjectile> _projectiles = new();
     private readonly List<EnemyProjectile> _enemyProjectiles = new();
     private BossInstance _boss;
+    private LevelObjectData _act03BossSpawn;
+    private Act03BossStage _act03BossStage = Act03BossStage.None;
+    private string _bossBannerText = string.Empty;
+    private float _bossBannerRemaining;
     private readonly CombatEffectSystem _effects = new();
     private SaveProgressState _saveProgress = new();
     private BoxingViewportAdapter _viewportAdapter = null!;
@@ -96,6 +127,7 @@ public class KuroganesEchoGame : Game
 
     private GameScreen _screen = GameScreen.Intro;
     private float _introScroll;
+    private float _creditsScroll;
     private int _menuSelection;
     private int _languageSelection;
     private int _optionsSelection;
@@ -149,6 +181,10 @@ public class KuroganesEchoGame : Game
     private int _mobileCheatLongPressTouchId = -1;
     private float _mobileCheatLongPressElapsed;
     private bool _mobileCheatLongPressTriggered;
+    private string _visualValidationDir;
+    private int _visualValidationStep;
+    private int _visualValidationFrameWait;
+    private bool _visualValidationCapturedStep;
 #endif
 
     public static bool IsMobile => OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
@@ -156,14 +192,20 @@ public class KuroganesEchoGame : Game
 
     public KuroganesEchoGame()
     {
+        var startFullScreen = IsDesktop;
+#if DEBUG
+        _visualValidationDir = Environment.GetEnvironmentVariable("KUROGANE_CAPTURE_DIR");
+        if (!string.IsNullOrWhiteSpace(_visualValidationDir))
+            startFullScreen = false;
+#endif
         _graphics = new GraphicsDeviceManager(this)
         {
             PreferredBackBufferWidth = 1280,
             PreferredBackBufferHeight = 720,
             SynchronizeWithVerticalRetrace = true,
-            IsFullScreen = IsDesktop
+            IsFullScreen = startFullScreen
         };
-        _fullScreen = IsDesktop;
+        _fullScreen = startFullScreen;
 
         Services.AddService(typeof(GraphicsDeviceManager), _graphics);
         Content.RootDirectory = "Content";
@@ -258,6 +300,15 @@ public class KuroganesEchoGame : Game
         }
 #endif
 
+#if DEBUG
+        if (!string.IsNullOrWhiteSpace(_visualValidationDir))
+        {
+            UpdateVisualValidation(gameTime);
+            base.Update(gameTime);
+            return;
+        }
+#endif
+
         if (_screen == GameScreen.Act01 &&
             (IsNewButtonPress(gamePad, Buttons.Start) ||
              backPressed ||
@@ -279,8 +330,9 @@ public class KuroganesEchoGame : Game
                 ReturnFromOptions();
             else if (_screen == GameScreen.SaveSlotSelection)
                 _screen = _slotSelectionReturnScreen;
-            else if (_screen is GameScreen.GameOver or GameScreen.Victory)
+            else if (_screen is GameScreen.GameOver or GameScreen.Victory or GameScreen.Credits)
             {
+                _creditsScroll = 0f;
                 _screen = GameScreen.MainMenu;
                 _audio.PlayMenuMusic();
             }
@@ -330,7 +382,14 @@ public class KuroganesEchoGame : Game
         else if (_screen == GameScreen.Victory)
         {
             if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A) || GetPressedPoint(touchState).HasValue)
+            {
                 _screen = GameScreen.MainMenu;
+                _audio.PlayMenuMusic();
+            }
+        }
+        else if (_screen == GameScreen.Credits)
+        {
+            UpdateCredits(gameTime, keyboard, gamePad, touchState);
         }
         else
         {
@@ -351,6 +410,8 @@ public class KuroganesEchoGame : Game
             DrawGameOver();
         else if (_screen == GameScreen.Victory)
             DrawVictory();
+        else if (_screen == GameScreen.Credits)
+            DrawCredits();
         else if (_screen == GameScreen.Intro)
             DrawIntro();
         else if (_screen == GameScreen.Options)
@@ -390,10 +451,189 @@ public class KuroganesEchoGame : Game
             _debugCheatCodes.DrawInputHud(_spriteBatch, _whiteTexture, _font);
             EndUi();
         }
+        if (!string.IsNullOrWhiteSpace(_visualValidationDir) && _visualValidationFrameWait == 1 && !_visualValidationCapturedStep)
+        {
+            _visualValidationCapturedStep = true;
+            CaptureVisualValidationFrame();
+        }
 #endif
 
         base.Draw(gameTime);
     }
+
+#if DEBUG
+    private void UpdateVisualValidation(GameTime gameTime)
+    {
+        if (_visualValidationFrameWait > 0)
+        {
+            _visualValidationFrameWait--;
+            if (_screen == GameScreen.Act01)
+            {
+                var dt = 0.016f;
+                _atmosphereTime += dt;
+                _effects.Update(dt);
+                foreach (var enemy in _enemies)
+                    enemy.Update(dt, _playerPosition, _level, CameraWorldBounds);
+                if (_boss is not null)
+                {
+                    _boss.Update(dt, _playerPosition);
+                    _boss.TryLaunchProjectiles(_playerPosition - new Vector2(0f, PlayerHeight / 2f), _enemyProjectiles, out _);
+                }
+                UpdateEnemyProjectiles(dt);
+                UpdateCamera();
+            }
+            else if (_screen == GameScreen.Credits)
+            {
+                _creditsScroll += 0.016f * CreditsScrollSpeed;
+            }
+            return;
+        }
+
+        _visualValidationCapturedStep = false;
+        switch (_visualValidationStep)
+        {
+            case 0:
+                // Verify Act 01 & Act 02 regression load cleanly
+                foreach (var regressionId in new[] { "Act_01_A", "Act_01_B", "Act_01_C", "Act_02_A", "Act_02_B", "Act_02_C" })
+                {
+                    LoadLevel(regressionId);
+                    StartAct01(regressionId);
+                }
+                // Verify Act 02 C -> Act 03 A transition requires Minotaur_2 + Ash Seal 2/4
+                _saveProgress.SealAshesParts = 2;
+                _saveProgress.Act03FinalBossesCompleted = false;
+                LoadLevel("Act_03_A");
+                StartAct01("Act_03_A");
+                _levelBriefingRemaining = 0f;
+                _playerPosition = new Vector2(540f, 320f);
+                ActivatePendingEnemySpawns();
+                UpdateCamera();
+                _visualValidationFrameWait = 6;
+                break;
+
+            case 1:
+                LoadLevel("Act_03_B");
+                StartAct01("Act_03_B");
+                _levelBriefingRemaining = 0f;
+                _playerPosition = new Vector2(540f, 320f);
+                ActivatePendingEnemySpawns();
+                UpdateCamera();
+                _visualValidationFrameWait = 6;
+                break;
+
+            case 2:
+                LoadLevel("Act_03_C");
+                StartAct01("Act_03_C");
+                _levelBriefingRemaining = 0f;
+                _playerPosition = new Vector2(540f, 320f);
+                ActivatePendingEnemySpawns();
+                UpdateCamera();
+                _visualValidationFrameWait = 6;
+                break;
+
+            case 3:
+                // Minotaur_3 encounter at boss spawn
+                _playerPosition = new Vector2(3680f, 320f);
+                _enemies.Clear();
+                UpdateCamera();
+                _visualValidationFrameWait = 8;
+                break;
+
+            case 4:
+                // Defeat Minotaur_3, reveal & collect Ash Seal 3/4 -> spawns Fire Wizard
+                _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
+                for (var i = 0; i < 120; i++)
+                {
+                    _boss?.Update(0.05f, _playerPosition);
+                    UpdateBossProgression();
+                }
+                // Move player onto Ash Seal 3/4 tile (230,19) -> x=3680, y=320
+                _playerPosition = new Vector2(3688f, 320f);
+                CollectLevelItems();
+                _playerPosition = new Vector2(3660f, 320f);
+                UpdateCamera();
+                _visualValidationFrameWait = 12;
+                break;
+
+            case 5:
+                // Defeat Fire Wizard -> spawns Lightning Mage
+                _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
+                for (var i = 0; i < 120; i++)
+                {
+                    _boss?.Update(0.05f, _playerPosition);
+                    UpdateBossProgression();
+                }
+                _playerPosition = new Vector2(3660f, 320f);
+                UpdateCamera();
+                _visualValidationFrameWait = 12;
+                break;
+
+            case 6:
+                // Defeat Lightning Mage -> spawns Wanderer Magican
+                _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
+                for (var i = 0; i < 120; i++)
+                {
+                    _boss?.Update(0.05f, _playerPosition);
+                    UpdateBossProgression();
+                }
+                _playerPosition = new Vector2(3660f, 320f);
+                UpdateCamera();
+                _visualValidationFrameWait = 12;
+                break;
+
+            case 7:
+                // Defeat Wanderer Magican -> reveal & collect Ash Seal 4/4 -> opens Credits
+                _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
+                for (var i = 0; i < 120; i++)
+                {
+                    _boss?.Update(0.05f, _playerPosition);
+                    UpdateBossProgression();
+                }
+                _playerPosition = new Vector2(3720f, 320f);
+                CollectLevelItems();
+                if (_act03BossStage == Act03BossStage.Completed && _saveProgress.SealAshesParts >= 4)
+                    EnterCreditsScreen();
+                _creditsScroll = 95f;
+                _visualValidationFrameWait = 6;
+                break;
+
+            default:
+                Exit();
+                break;
+        }
+    }
+
+    private void CaptureVisualValidationFrame()
+    {
+        var names = new[]
+        {
+            "01_Act_03_A.png",
+            "02_Act_03_B.png",
+            "03_Act_03_C.png",
+            "04_Minotaur_3.png",
+            "05_Fire_Wizard.png",
+            "06_Lightning_Mage.png",
+            "07_Wanderer_Magican.png",
+            "08_Credits.png"
+        };
+        if (_visualValidationStep >= 0 && _visualValidationStep < names.Length)
+        {
+            System.IO.Directory.CreateDirectory(_visualValidationDir);
+            var w = GraphicsDevice.PresentationParameters.BackBufferWidth;
+            var h = GraphicsDevice.PresentationParameters.BackBufferHeight;
+            var data = new Color[w * h];
+            GraphicsDevice.GetBackBufferData(data);
+            using var tex = new Texture2D(GraphicsDevice, w, h);
+            tex.SetData(data);
+            var outPath = System.IO.Path.Combine(_visualValidationDir, names[_visualValidationStep]);
+            using var stream = System.IO.File.Create(outPath);
+            tex.SaveAsPng(stream, w, h);
+            var logLine = $"Captured {names[_visualValidationStep]} | Screen={_screen} Level={_currentLevelId} Stage={_act03BossStage} Boss={_boss?.VariantId ?? "None"} Scale={_boss?.VisualScale ?? 0f:F2} Seal={_saveProgress.SealAshesParts}/4 Enemies={_enemies.Count}";
+            System.IO.File.AppendAllText(System.IO.Path.Combine(_visualValidationDir, "validation.log"), logLine + Environment.NewLine);
+        }
+        _visualValidationStep++;
+    }
+#endif
 
     private void UpdateMainMenu(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
@@ -634,6 +874,9 @@ public class KuroganesEchoGame : Game
         {
             switch (candidate)
             {
+                case "Act_03_C":
+                case "Act_03_B":
+                case "Act_03_A":
                 case "Act_02_C":
                 case "Act_02_B":
                 case "Act_02_A":
@@ -655,6 +898,7 @@ public class KuroganesEchoGame : Game
         Difficulty = source.Difficulty,
         LivesRemaining = source.LivesRemaining,
         SealAshesParts = source.SealAshesParts,
+        Act03FinalBossesCompleted = source.Act03FinalBossesCompleted,
         CheckpointLevelId = source.CheckpointLevelId,
         CheckpointId = source.CheckpointId
     };
@@ -1076,6 +1320,8 @@ public class KuroganesEchoGame : Game
         _saveProgress.CheckpointLevelId = "Act_01_A";
         _saveProgress.CheckpointId = 0;
         _saveProgress.UnlockedLevelId = "Act_01_A";
+        _saveProgress.SealAshesParts = 0;
+        _saveProgress.Act03FinalBossesCompleted = false;
         LoadLevel("Act_01_A");
         StartAct01("Act_01_A");
     }
@@ -1103,6 +1349,9 @@ public class KuroganesEchoGame : Game
 
         var levelId = _saveProgress.UnlockedLevelId switch
         {
+            "Act_03_C" => "Act_03_C",
+            "Act_03_B" => "Act_03_B",
+            "Act_03_A" => "Act_03_A",
             "Act_02_C" => "Act_02_C",
             "Act_02_B" => "Act_02_B",
             "Act_02_A" => "Act_02_A",
@@ -1123,7 +1372,10 @@ public class KuroganesEchoGame : Game
         _collectedCollectibles.Clear();
         _finalBossDefeated = false;
         _finalBossRewardCollected = false;
+        _bossBannerText = string.Empty;
+        _bossBannerRemaining = 0f;
         _audio.PlayActMusic(_currentLevelId);
+        InitializeAct03BossState();
         InitializeCheckpoint(levelId);
         _playerPosition = _checkpointPosition;
         _moveInput = Vector2.Zero;
@@ -1367,6 +1619,7 @@ public class KuroganesEchoGame : Game
         _enemies.Clear();
         _pendingEnemySpawns.Clear();
         _boss = null;
+        _act03BossSpawn = null;
         foreach (var spawn in _level.EnemySpawns)
         {
             var enemyType = spawn.Properties.TryGetValue("EnemyType", out var configuredType)
@@ -1394,9 +1647,50 @@ public class KuroganesEchoGame : Game
             {
                 boss.ConfigureDifficulty(_selectedDifficulty);
                 _boss = boss;
+                if (string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+                    _act03BossSpawn = spawn;
                 break;
             }
         }
+    }
+
+    private void InitializeAct03BossState()
+    {
+        if (!string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+        {
+            _act03BossStage = Act03BossStage.None;
+            return;
+        }
+
+        if (_saveProgress.SealAshesParts >= 3 && !_saveProgress.Act03FinalBossesCompleted && _act03BossSpawn is not null)
+        {
+            // Player already defeated Minotaur_3 and collected Ash Seal 3/4 in this save;
+            // resume at Fire Wizard without re-awarding Ash Seal 3/4.
+            SpawnFinalSequenceBoss(Act03BossStage.FireWizard, "Fire Wizard");
+            return;
+        }
+
+        _act03BossStage = Act03BossStage.Minotaur3;
+    }
+
+    private void SpawnFinalSequenceBoss(Act03BossStage stage, string variantId)
+    {
+        if (_act03BossSpawn is null)
+            return;
+
+        _act03BossStage = stage;
+        _enemyProjectiles.Clear();
+        _boss = new BossInstance(Content, BossKind.Wizard, _act03BossSpawn, variantId);
+        _boss.ConfigureDifficulty(_selectedDifficulty);
+        _audio.PlayFinalBossMusic(variantId);
+        _effects.Spawn(_boss.Position - new Vector2(0f, 30f), CombatEffectKind.Magic, Vector2.UnitY, 1.5f);
+        ShowBossBanner(LocalizedText.Get(_boss.LocalizationNameKey));
+    }
+
+    private void ShowBossBanner(string message)
+    {
+        _bossBannerText = message;
+        _bossBannerRemaining = BossBannerDuration;
     }
 
     private void ActivatePendingEnemySpawns()
@@ -1462,6 +1756,8 @@ public class KuroganesEchoGame : Game
     {
         var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
         _atmosphereTime += elapsedSeconds;
+        if (_bossBannerRemaining > 0f)
+            _bossBannerRemaining = Math.Max(0f, _bossBannerRemaining - elapsedSeconds);
         _effects.Update(elapsedSeconds);
         if (_levelBriefingRemaining > 0f)
         {
@@ -1616,25 +1912,24 @@ public class KuroganesEchoGame : Game
                     out var direction))
                 _enemyProjectiles.Add(new EnemyProjectile(enemy.Character, origin, direction));
         }
-        _boss?.Update(elapsedSeconds, _playerPosition);
+        if (_boss is not null)
+        {
+            _boss.Update(elapsedSeconds, _playerPosition);
+            if (_boss.TryLaunchProjectiles(
+                    _playerPosition - new Vector2(0f, PlayerHeight / 2f),
+                    _enemyProjectiles,
+                    out var castCue))
+            {
+                _audio.PlayCue(castCue, 0.75f);
+                _effects.Spawn(_boss.Position - new Vector2(0f, 30f), CombatEffectKind.Magic, Vector2.UnitY, 0.9f);
+            }
+        }
         UpdateProjectiles(elapsedSeconds);
         UpdateEnemyProjectiles(elapsedSeconds);
         ResolveCombat();
         ResolvePlayerEnemyCollisions();
         _enemies.RemoveAll(enemy => enemy.IsDeathAnimationComplete);
-        if (IsBossRewardLevel && _boss is not null && _boss.IsDeathAnimationComplete && !_finalBossDefeated)
-        {
-            _finalBossDefeated = true;
-            foreach (var collectible in _level.Collectibles)
-            {
-                if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
-                    (string.Equals(pickupKind, nameof(CollectibleKind.SealRubyPart), StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase)))
-                    _level.RevealCollectibleTile(collectible);
-            }
-            _audio.PlayCue(AudioCue.Collectable, 1f);
-        }
+        UpdateBossProgression();
         CollectLevelItems();
         if (!_player.IsActionActive)
         {
@@ -1661,16 +1956,114 @@ public class KuroganesEchoGame : Game
         if (_currentLevelId == "Act_02_C" &&
             _finalBossDefeated &&
             _finalBossRewardCollected &&
+            _saveProgress.SealAshesParts >= 2)
+        {
+            LoadLevel("Act_03_A");
+            _saveProgress.UnlockedLevelId = "Act_03_A";
+            StartAct01("Act_03_A");
+            return;
+        }
+        if (_currentLevelId == "Act_03_C" &&
+            _act03BossStage == Act03BossStage.Completed &&
             _saveProgress.SealAshesParts >= 4)
         {
-            _saveProgress.CurrentLevelId = "Act_02_C";
-            _saveProgress.UnlockedLevelId = "Act_02_C";
+            _saveProgress.CurrentLevelId = "Act_03_C";
+            _saveProgress.UnlockedLevelId = "Act_03_C";
+            _saveProgress.Act03FinalBossesCompleted = true;
             SaveCurrentProgress();
-            _screen = GameScreen.Victory;
-            _audio.PlayVictoryMusic();
+            EnterCreditsScreen();
             return;
         }
         UpdateCamera();
+    }
+
+    private void UpdateBossProgression()
+    {
+        if (!IsBossRewardLevel || _boss is null || !_boss.IsDeathAnimationComplete)
+            return;
+
+        if (!string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+        {
+            if (_finalBossDefeated)
+                return;
+
+            _finalBossDefeated = true;
+            RevealSealCollectibles(partIndex: null);
+            _audio.PlayCue(AudioCue.Collectable, 1f);
+            return;
+        }
+
+        switch (_act03BossStage)
+        {
+            case Act03BossStage.Minotaur3:
+                _act03BossStage = Act03BossStage.AwaitingSeal3;
+                _finalBossDefeated = true;
+                _boss = null;
+                _enemyProjectiles.Clear();
+                RevealSealCollectibles(partIndex: 3);
+                _audio.PlayCue(AudioCue.Collectable, 1f);
+                ShowBossBanner(LocalizedText.Get("AshSeal3Revealed"));
+                break;
+
+            case Act03BossStage.FireWizard:
+                _boss = null;
+                _enemyProjectiles.Clear();
+                SpawnFinalSequenceBoss(Act03BossStage.LightningMage, "Lightning Mage");
+                break;
+
+            case Act03BossStage.LightningMage:
+                _boss = null;
+                _enemyProjectiles.Clear();
+                SpawnFinalSequenceBoss(Act03BossStage.WandererMagican, "Wanderer Magican");
+                break;
+
+            case Act03BossStage.WandererMagican:
+                _act03BossStage = Act03BossStage.AwaitingSeal4;
+                _boss = null;
+                _enemyProjectiles.Clear();
+                RevealSealCollectibles(partIndex: 4);
+                _audio.PlayCue(AudioCue.Collectable, 1f);
+                ShowBossBanner(LocalizedText.Get("AshSeal4Revealed"));
+                break;
+        }
+    }
+
+    private void RevealSealCollectibles(int? partIndex)
+    {
+        foreach (var collectible in _level.Collectibles)
+        {
+            if (!IsSealCollectible(collectible))
+                continue;
+
+            if (partIndex.HasValue && GetSealPartIndex(collectible) != partIndex.Value)
+                continue;
+
+            _level.RevealCollectibleTile(collectible);
+        }
+    }
+
+    private static bool IsSealCollectible(LevelObjectData collectible) =>
+        collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
+        (string.Equals(pickupKind, nameof(CollectibleKind.SealRubyPart), StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase));
+
+    private static int GetSealPartIndex(LevelObjectData collectible)
+    {
+        if (collectible.Properties.TryGetValue("SealPartIndex", out var configuredPart) &&
+            int.TryParse(configuredPart, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPart))
+            return Math.Clamp(parsedPart, 1, 4);
+        return 1;
+    }
+
+    private bool IsSealCollectibleAvailable(LevelObjectData collectible)
+    {
+        if (!string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+            return _finalBossDefeated && !_finalBossRewardCollected;
+
+        var partIndex = GetSealPartIndex(collectible);
+        return (partIndex == 3 && _act03BossStage == Act03BossStage.AwaitingSeal3) ||
+               (partIndex == 4 && _act03BossStage == Act03BossStage.AwaitingSeal4);
     }
 
     private bool PlayerAtLevelExit()
@@ -1696,7 +2089,8 @@ public class KuroganesEchoGame : Game
                 !Enum.TryParse<CollectibleKind>(pickupKind, true, out var kind))
                 continue;
 
-            if ((kind is CollectibleKind.SealRubyPart or CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart) && !_finalBossDefeated)
+            if ((kind is CollectibleKind.SealRubyPart or CollectibleKind.IronTalismanThird or CollectibleKind.SealAshesPart) &&
+                !IsSealCollectibleAvailable(collectible))
                 continue;
 
             var collected = kind switch
@@ -1819,21 +2213,40 @@ public class KuroganesEchoGame : Game
 
     private bool TryCollectSealRubyPart(LevelObjectData collectible)
     {
+        var partIndex = GetSealPartIndex(collectible);
+        if (string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+        {
+            if (partIndex == 3 && _act03BossStage == Act03BossStage.AwaitingSeal3)
+            {
+                _saveProgress.SealAshesParts = Math.Clamp(Math.Max(_saveProgress.SealAshesParts, 3), 0, 4);
+                SpawnFinalSequenceBoss(Act03BossStage.FireWizard, "Fire Wizard");
+                return true;
+            }
+
+            if (partIndex == 4 && _act03BossStage == Act03BossStage.AwaitingSeal4)
+            {
+                _act03BossStage = Act03BossStage.Completed;
+                _finalBossRewardCollected = true;
+                _saveProgress.SealAshesParts = 4;
+                _saveProgress.Act03FinalBossesCompleted = true;
+                return true;
+            }
+
+            return false;
+        }
+
         if (_finalBossRewardCollected)
             return false;
 
         _finalBossRewardCollected = true;
-        var partIndex = 1;
-        if (collectible.Properties.TryGetValue("SealPartIndex", out var configuredPart) &&
-            int.TryParse(configuredPart, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPart))
-            partIndex = Math.Clamp(parsedPart, 1, 4);
         _saveProgress.SealAshesParts = Math.Clamp(Math.Max(_saveProgress.SealAshesParts, partIndex), 0, 4);
         return true;
     }
 
     private bool IsBossRewardLevel =>
         string.Equals(_currentLevelId, "Act_01_C", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(_currentLevelId, "Act_02_C", StringComparison.OrdinalIgnoreCase);
+        string.Equals(_currentLevelId, "Act_02_C", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase);
 
     private Rectangle PlayerHitbox => new(
         (int)(_playerPosition.X - PlayerHalfWidth),
@@ -2027,12 +2440,12 @@ public class KuroganesEchoGame : Game
             if (!projectile.Hitbox.Intersects(playerHitbox))
                 continue;
 
-            if (TakePlayerDamage(CombatBalance.EnemyAttackDamage, projectile.SourceX))
+            if (TakePlayerDamage(projectile.Damage, projectile.SourceX))
             {
-                _audio.PlayCue(AudioCue.Magic, 0.75f);
+                _audio.PlayCue(projectile.ImpactCue, 0.75f);
                 _effects.Spawn(
                     _playerPosition - new Vector2(0f, 18f),
-                    CombatEffectKind.Magic,
+                    projectile.ImpactEffect,
                     projectile.Direction);
             }
 
@@ -2193,6 +2606,8 @@ public class KuroganesEchoGame : Game
         _jumpsUsed = 0;
         _playerInvulnerability = 1f;
         _player.Reset();
+        _enemyProjectiles.Clear();
+        _boss?.Reset();
         SaveCurrentProgress();
     }
 
@@ -2380,6 +2795,75 @@ public class KuroganesEchoGame : Game
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(12, 31, 34));
         DrawTextCentered(LocalizedText.Get("Victory"), new Vector2(VirtualWidth / 2f, 70f), new Color(214, 191, 135), _fontSemiboldWide, 1.25f);
         DrawTextCentered(LocalizedText.Get("PressToContinue"), new Vector2(VirtualWidth / 2f, 112f), new Color(156, 201, 191), 0.58f);
+        EndUi();
+    }
+
+    private void EnterCreditsScreen()
+    {
+        _creditsScroll = 0f;
+        _bossBannerRemaining = 0f;
+        _screen = GameScreen.Credits;
+        _audio.PlayCreditsMusic();
+    }
+
+    private void UpdateCredits(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    {
+        _creditsScroll += (float)gameTime.ElapsedGameTime.TotalSeconds * CreditsScrollSpeed;
+        var totalHeight = VirtualHeight + (CreditsLineKeys.Length + 4) * CreditsLineHeight + 36f;
+        var creditsFinished = _creditsScroll >= totalHeight;
+        var skipRequested = IsNewKeyPress(keyboard, Keys.Enter) ||
+                            IsNewKeyPress(keyboard, Keys.Space) ||
+                            IsNewButtonPress(gamePad, Buttons.A) ||
+                            IsNewButtonPress(gamePad, Buttons.B) ||
+                            IsNewButtonPress(gamePad, Buttons.Start) ||
+                            GetPressedPoint(touches).HasValue;
+
+        if (creditsFinished || skipRequested)
+        {
+            _creditsScroll = 0f;
+            _screen = GameScreen.MainMenu;
+            _audio.PlayMenuMusic();
+        }
+    }
+
+    private void DrawCredits()
+    {
+        GraphicsDevice.Clear(new Color(5, 7, 13));
+        BeginUi();
+
+        DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(5, 7, 13));
+        DrawRect(new Rectangle(10, 10, VirtualWidth - 20, VirtualHeight - 20), new Color(46, 58, 72), false, 1);
+
+        var startY = VirtualHeight - 16f - _creditsScroll;
+        var title = LocalizedText.Get("Title").ToUpperInvariant();
+        if (startY >= -24f && startY <= VirtualHeight + 24f)
+        {
+            var titleScale = Math.Min(1.05f, (VirtualWidth - 40f) / Math.Max(1f, _fontSemiboldWide.MeasureString(title).X));
+            DrawTextCentered(title, new Vector2(VirtualWidth / 2f, startY), new Color(214, 191, 135), _fontSemiboldWide, new Vector2(titleScale, titleScale));
+        }
+
+        for (var index = 0; index < CreditsLineKeys.Length; index++)
+        {
+            var key = CreditsLineKeys[index];
+            var line = key == "CreditsSpacer" ? string.Empty : LocalizedText.Get(key);
+            if (line.Length == 0)
+                continue;
+
+            var y = startY + 24f + index * CreditsLineHeight;
+            if (y < -14f || y > VirtualHeight + 14f)
+                continue;
+
+            var isHeading = key.StartsWith("CreditsHeading", StringComparison.Ordinal) ||
+                            key.StartsWith("CreditsSection", StringComparison.Ordinal) ||
+                            key == "CreditsThankYou";
+            var color = isHeading ? new Color(214, 191, 135) : new Color(204, 214, 216);
+            var scale = key == "CreditsHeadingComplete" ? 0.68f : (isHeading ? 0.54f : 0.48f);
+            DrawTextCentered(line, new Vector2(VirtualWidth / 2f, y), color, isHeading ? _fontSemibold : _font, new Vector2(scale, scale));
+        }
+
+        DrawRect(new Rectangle(0, 0, VirtualWidth, 18), new Color(5, 7, 13, 235));
+        DrawRect(new Rectangle(0, VirtualHeight - 20, VirtualWidth, 20), new Color(5, 7, 13, 235));
+        DrawTextCentered(LocalizedText.Get("CreditsSkipHint"), new Vector2(VirtualWidth / 2f, VirtualHeight - 10f), new Color(156, 170, 169), 0.42f);
         EndUi();
     }
 
@@ -2584,7 +3068,14 @@ public class KuroganesEchoGame : Game
         {
             _boss.Draw(_spriteBatch);
             if (_boss.IsAlive)
+            {
                 DrawWorldHealthBar(_boss.Position, _boss.Health, _boss.MaxHealth, boss: true);
+                DrawTextCentered(
+                    LocalizedText.Get(_boss.LocalizationNameKey),
+                    new Vector2(_boss.Position.X, _boss.Position.Y - 91f),
+                    new Color(246, 214, 148),
+                    0.38f);
+            }
         }
         DrawPlayer();
         foreach (var projectile in _projectiles)
@@ -2597,6 +3088,8 @@ public class KuroganesEchoGame : Game
         DrawAtmosphere();
         BeginUi();
         DrawPlayerHealthBar();
+        if (_bossBannerRemaining > 0f && !string.IsNullOrWhiteSpace(_bossBannerText))
+            DrawBossBanner();
         if (IsMobile)
         {
             DrawAnalog();
@@ -2650,20 +3143,36 @@ public class KuroganesEchoGame : Game
             }
         }
 
+        if (_currentLevelId is "Act_03_A" or "Act_03_B" or "Act_03_C")
+        {
+            var tint = _currentLevelId == "Act_03_C"
+                ? new Color(18, 9, 14, 72)
+                : new Color(24, 14, 12, 34);
+            DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), tint);
+            for (var index = 0; index < 18; index++)
+            {
+                var x = ((index * 37f + _atmosphereTime * (12f + (index % 3) * 5f)) % (VirtualWidth + 20f)) - 10f;
+                var y = ((index * 23f + _atmosphereTime * (18f + (index % 4) * 4f)) % (VirtualHeight + 16f)) - 8f;
+                var emberColor = index % 4 == 0
+                    ? new Color(246, 132, 62, 145)
+                    : new Color(188, 178, 170, 110);
+                DrawRect(new Rectangle((int)x, (int)y, 2, 1), emberColor);
+            }
+        }
+
         EndUi();
     }
 
     private void DrawSealAshesVisual()
     {
-        if (!IsBossRewardLevel || !_finalBossDefeated || _finalBossRewardCollected)
+        if (!IsBossRewardLevel)
             return;
 
         foreach (var collectible in _level.Collectibles)
         {
-            if (collectible.Properties.TryGetValue("PickupKind", out var pickupKind) &&
-                (string.Equals(pickupKind, nameof(CollectibleKind.SealRubyPart), StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(pickupKind, nameof(CollectibleKind.IronTalismanThird), StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(pickupKind, nameof(CollectibleKind.SealAshesPart), StringComparison.OrdinalIgnoreCase)))
+            if (!_collectedCollectibles.Contains(collectible.Name) &&
+                IsSealCollectible(collectible) &&
+                IsSealCollectibleAvailable(collectible))
             {
                 DrawSealRubyTile(collectible.Bounds);
             }
@@ -2705,6 +3214,19 @@ public class KuroganesEchoGame : Game
         DrawHealthBar(new Rectangle(196, 17, 72, 7), (int)Math.Round(_stamina), (int)StaminaMaximum);
         DrawText(LocalizedText.Get("Power"), new Vector2(110f, 5f), Color.White, 0.46f);
         DrawHealthBar(new Rectangle(110, 17, 72, 7), (int)Math.Round(_power), CombatBalance.PlayerPowerMaximum);
+        var sealText = string.Format(
+            CultureInfo.CurrentCulture,
+            LocalizedText.Get("AshSealHud"),
+            Math.Clamp(_saveProgress.SealAshesParts, 0, 4));
+        DrawText(sealText, new Vector2(272f, 5f), new Color(235, 198, 128), 0.36f);
+    }
+
+    private void DrawBossBanner()
+    {
+        var banner = new Rectangle(52, 30, VirtualWidth - 104, 18);
+        DrawRect(banner, new Color(18, 12, 22, 225));
+        DrawRect(banner, new Color(214, 191, 135), false, 1);
+        DrawTextCentered(_bossBannerText, banner.Center.ToVector2(), new Color(255, 226, 154), _fontSemibold, new Vector2(0.56f, 0.56f));
     }
 
     private void DrawLevelBriefingOverlay()
@@ -2822,7 +3344,7 @@ public class KuroganesEchoGame : Game
 
     private void DrawWorldHealthBar(Vector2 feetPosition, int health, int maximumHealth, bool boss = false)
     {
-        var bounds = new Rectangle((int)feetPosition.X - (boss ? 28 : 16), (int)feetPosition.Y - (boss ? 58 : 40), boss ? 56 : 32, boss ? 5 : 4);
+        var bounds = new Rectangle((int)feetPosition.X - (boss ? 28 : 16), (int)feetPosition.Y - (boss ? 84 : 40), boss ? 56 : 32, boss ? 5 : 4);
         DrawHealthBar(bounds, health, maximumHealth);
     }
 
@@ -3172,7 +3694,20 @@ public class KuroganesEchoGame : Game
         Paused,
         SaveSlotSelection,
         GameOver,
-        Victory
+        Victory,
+        Credits
+    }
+
+    private enum Act03BossStage
+    {
+        None,
+        Minotaur3,
+        AwaitingSeal3,
+        FireWizard,
+        LightningMage,
+        WandererMagican,
+        AwaitingSeal4,
+        Completed
     }
 
     private enum BindingDevice

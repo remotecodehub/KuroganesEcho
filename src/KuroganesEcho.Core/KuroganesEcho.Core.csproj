@@ -12,4 +12,10 @@
     </PackageReference>
     <PackageReference Include="MonoGame.Extended" Version="6.1.1" />
   </ItemGroup>
+  <Target Name="AddSupportedCultureMetadata" BeforeTargets="GetAssemblyAttributes">
+    <ItemGroup>
+      <_LocalizedResxFiles Include="Localization\Resources.*.resx" />
+      <AssemblyMetadata Include="SupportedCulture" Value="$([System.String]::Copy('%(_LocalizedResxFiles.Filename)').Substring(10))" Condition="'%(_LocalizedResxFiles.Filename)' != ''" />
+    </ItemGroup>
+  </Target>
 </Project>

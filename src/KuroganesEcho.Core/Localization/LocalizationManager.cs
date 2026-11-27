@@ -1,61 +1,218 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Resources;
 using System.Threading;
 
 namespace KuroganesEcho.Core.Localization;
 
 /// <summary>
-/// Manages localization settings for the game, including retrieving supported cultures and setting the current culture for localization.
+/// Manages localization settings for the game, discovering supported cultures directly
+/// from the compiled localization resources and applying validated cultures safely.
 /// </summary>
 internal class LocalizationManager
 {
     /// <summary>
-    /// the culture code we default to
+    /// The culture code we default to when no valid user preference exists.
     /// </summary>
     public const string DEFAULT_CULTURE_CODE = "pt-BR";
 
-    /// <summary>
-    /// Retrieves a list of supported cultures based on available language resources in the game.
-    /// This method checks the current culture settings and the satellite assemblies for available localized resources.
-    /// </summary>
-    /// <returns>A list of <see cref="CultureInfo"/> objects representing the cultures supported by the game.</returns>
-    /// <remarks>
-    /// This method iterates through all specific cultures defined in the satellite assemblies and attempts to load the corresponding resource set.
-    /// If a resource set is found for a particular culture, that culture is added to the list of supported cultures. The invariant culture
-    /// is always included in the returned list as it represents the default (non-localized) resources.
-    /// </remarks>
-    public static List<CultureInfo> GetSupportedCultures()
+    private static readonly string[] PreferredOrder =
     {
-        return new List<CultureInfo>
+        "pt-BR",
+        "en-US",
+        "fr-FR",
+        "es-ES"
+    };
+
+    private static readonly Lazy<IReadOnlyList<CultureInfo>> CachedSupportedCultures =
+        new(DiscoverSupportedCultures, LazyThreadSafetyMode.ExecutionAndPublication);
+
+    /// <summary>
+    /// Retrieves every culture backed by available localization resources.
+    /// </summary>
+    public static List<CultureInfo> GetSupportedCultures() =>
+        new(CachedSupportedCultures.Value);
+
+    /// <summary>
+    /// Checks whether the specified culture code corresponds to an available localization resource.
+    /// </summary>
+    public static bool IsSupportedCulture(string cultureCode) =>
+        TryResolveSupportedCulture(cultureCode, out _);
+
+    /// <summary>
+    /// Attempts to resolve the specified culture code to one of the supported cultures.
+    /// </summary>
+    public static bool TryResolveSupportedCulture(string cultureCode, out CultureInfo culture)
+    {
+        culture = null;
+        if (string.IsNullOrWhiteSpace(cultureCode))
+            return false;
+
+        var trimmed = cultureCode.Trim();
+        foreach (var supported in CachedSupportedCultures.Value)
         {
-            CultureInfo.GetCultureInfo("pt-BR"),
-            CultureInfo.GetCultureInfo("en-US"),
-            CultureInfo.GetCultureInfo("fr-FR")
-        };
+            if (string.Equals(supported.Name, trimmed, StringComparison.OrdinalIgnoreCase))
+            {
+                culture = supported;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
-    /// Sets the current culture of the game based on the specified culture code.
-    /// This method updates both the current culture and UI culture for the current thread.
+    /// Resolves a culture code to a canonical supported code, falling back to <see cref="DEFAULT_CULTURE_CODE"/>.
     /// </summary>
-    /// <param name="cultureCode">The culture code (e.g., "en-US", "fr-FR") to set for the game.</param>
-    /// <remarks>
-    /// This method modifies the <see cref="Thread.CurrentThread.CurrentCulture"/> and <see cref="Thread.CurrentThread.CurrentUICulture"/> properties,
-    /// which affect how dates, numbers, and other culture-specific values are formatted, as well as how localized resources are loaded.
-    /// </remarks>
-    public static void SetCulture(string cultureCode)
+    public static string ResolveOrDefaultCultureCode(string cultureCode)
     {
-        if (string.IsNullOrEmpty(cultureCode))
-            throw new ArgumentNullException(nameof(cultureCode), "A culture code must be provided.");
+        if (TryResolveSupportedCulture(cultureCode, out var supported))
+            return supported.Name;
 
-        // Create a CultureInfo object from the culture code
-        CultureInfo culture = new CultureInfo(cultureCode);
+        if (TryResolveSupportedCulture(DEFAULT_CULTURE_CODE, out var fallback))
+            return fallback.Name;
 
-        // Set the current culture and UI culture for the current thread
+        return CachedSupportedCultures.Value.Count > 0
+            ? CachedSupportedCultures.Value[0].Name
+            : DEFAULT_CULTURE_CODE;
+    }
+
+    /// <summary>
+    /// Applies the specified culture if and only if it is supported by the localization resources.
+    /// Rejects null, invalid, or unsupported culture codes safely without mutating the active culture.
+    /// </summary>
+    public static bool TrySetCulture(string cultureCode)
+    {
+        if (!TryResolveSupportedCulture(cultureCode, out var culture))
+            return false;
+
         Thread.CurrentThread.CurrentCulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        return true;
+    }
+
+    /// <summary>
+    /// Sets the current culture when supported; safely rejects unsupported culture codes.
+    /// </summary>
+    public static bool SetCulture(string cultureCode) => TrySetCulture(cultureCode);
+
+    /// <summary>
+    /// Returns a localized display name for the given culture, falling back to its native name
+    /// so newly added localization resources display cleanly without hardcoded switches.
+    /// </summary>
+    public static string GetDisplayLabel(CultureInfo culture)
+    {
+        if (culture is null)
+            return string.Empty;
+
+        var key = culture.Name switch
+        {
+            "pt-BR" => "Portuguese",
+            "en-US" => "English",
+            "fr-FR" => "French",
+            "es-ES" => "Spanish",
+            _ => $"Language_{culture.Name}"
+        };
+
+        var localized = Resources.ResourceManager.GetString(key, CultureInfo.CurrentUICulture);
+        if (!string.IsNullOrWhiteSpace(localized))
+            return localized;
+
+        var native = culture.NativeName;
+        return string.IsNullOrWhiteSpace(native) ? culture.Name : native;
+    }
+
+    private static IReadOnlyList<CultureInfo> DiscoverSupportedCultures()
+    {
+        var assembly = typeof(Resources).Assembly;
+        var candidateCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var attribute in assembly.GetCustomAttributes<AssemblyMetadataAttribute>())
+        {
+            if (string.Equals(attribute.Key, "SupportedCulture", StringComparison.Ordinal) &&
+                !string.IsNullOrWhiteSpace(attribute.Value))
+            {
+                candidateCodes.Add(attribute.Value.Trim());
+            }
+        }
+
+        // Also scan satellite assembly directories beside the assembly if available on disk.
+        var assemblyLocation = assembly.Location;
+        var baseDir = string.IsNullOrWhiteSpace(assemblyLocation)
+            ? AppContext.BaseDirectory
+            : Path.GetDirectoryName(assemblyLocation);
+        var satelliteFileName = $"{assembly.GetName().Name}.resources.dll";
+
+        if (!string.IsNullOrWhiteSpace(baseDir) && Directory.Exists(baseDir))
+        {
+            try
+            {
+                foreach (var dir in Directory.EnumerateDirectories(baseDir))
+                {
+                    var folderName = Path.GetFileName(dir);
+                    if (string.IsNullOrWhiteSpace(folderName))
+                        continue;
+
+                    if (File.Exists(Path.Combine(dir, satelliteFileName)))
+                        candidateCodes.Add(folderName);
+                }
+            }
+            catch
+            {
+                // Platforms with sandboxed or virtualized bundles rely on assembly metadata above.
+            }
+        }
+
+        var supported = new List<CultureInfo>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var code in candidateCodes)
+        {
+            CultureInfo culture;
+            try
+            {
+                culture = CultureInfo.GetCultureInfo(code);
+            }
+            catch (CultureNotFoundException)
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(culture.Name) || !seen.Add(culture.Name))
+                continue;
+
+            try
+            {
+                if (Resources.ResourceManager.GetResourceSet(culture, createIfNotExists: true, tryParents: false) is not null)
+                    supported.Add(culture);
+            }
+            catch
+            {
+                // Ignore invalid or unloadable satellite resources.
+            }
+        }
+
+        supported.Sort(CompareCultures);
+        return supported;
+    }
+
+    private static int CompareCultures(CultureInfo left, CultureInfo right)
+    {
+        var leftIndex = Array.FindIndex(PreferredOrder, code => string.Equals(code, left.Name, StringComparison.OrdinalIgnoreCase));
+        var rightIndex = Array.FindIndex(PreferredOrder, code => string.Equals(code, right.Name, StringComparison.OrdinalIgnoreCase));
+
+        if (leftIndex >= 0 && rightIndex >= 0)
+            return leftIndex.CompareTo(rightIndex);
+        if (leftIndex >= 0)
+            return -1;
+        if (rightIndex >= 0)
+            return 1;
+
+        return StringComparer.OrdinalIgnoreCase.Compare(left.Name, right.Name);
     }
 }

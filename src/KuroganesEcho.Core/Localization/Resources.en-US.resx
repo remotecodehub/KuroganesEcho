@@ -37,6 +37,7 @@
   <data name="Portuguese" xml:space="preserve"><value>Portuguese</value></data>
   <data name="English" xml:space="preserve"><value>English</value></data>
   <data name="French" xml:space="preserve"><value>French</value></data>
+  <data name="Spanish" xml:space="preserve"><value>Spanish</value></data>
   <data name="Act01" xml:space="preserve"><value>Act 1 - The Trail of Extinguished Lanterns</value></data>
   <data name="TestMode" xml:space="preserve"><value>TEST MODE - MOVEMENT</value></data>
   <data name="Actions" xml:space="preserve"><value>ACTIONS</value></data>
@@ -72,6 +73,10 @@
   <data name="SlotOccupied" xml:space="preserve"><value>SLOT {0} - OCCUPIED</value></data>
   <data name="SaveComplete" xml:space="preserve"><value>State saved to slot {0}</value></data>
   <data name="SlotUnavailable" xml:space="preserve"><value>Slot {0} is empty</value></data>
+  <data name="SlotDeleted" xml:space="preserve"><value>Slot {0} deleted</value></data>
+  <data name="DeleteSlotHintDesktop" xml:space="preserve"><value>DEL / RIGHT-CLICK: Delete slot</value></data>
+  <data name="DeleteSlotHintMobile" xml:space="preserve"><value>Hold occupied slot to delete</value></data>
+  <data name="SlotDeleteBadge" xml:space="preserve"><value>DEL</value></data>
   <data name="MainMenu" xml:space="preserve"><value>Main menu</value></data>
   <data name="SpecialPrimary" xml:space="preserve"><value>Primary special</value></data>
   <data name="SpecialSecondary" xml:space="preserve"><value>Secondary special</value></data>

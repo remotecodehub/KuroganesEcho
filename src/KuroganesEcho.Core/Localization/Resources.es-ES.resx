@@ -1,147 +1,70 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
-    Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
-    associated with the data types.
-    
-    Example:
-    
-    ... ado.net/XML headers & schema ...
-    <resheader name="resmimetype">text/microsoft-resx</resheader>
-    <resheader name="version">2.0</resheader>
-    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
-                
-    There are any number of "resheader" rows that contain simple 
-    name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
-    mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
-    extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
-    read any of the formats listed below.
-    
-    mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
-            : and then encoded with base64 encoding.
-    
-    mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-            : and then encoded with base64 encoding.
-
-    mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
-            : using a System.ComponentModel.TypeConverter
-            : and then encoded with base64 encoding.
-    -->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
-  <resheader name="resmimetype">
-    <value>text/microsoft-resx</value>
-  </resheader>
-  <resheader name="version">
-    <value>2.0</value>
-  </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <data name="TapAnywhere" xml:space="preserve">
-    <value>Toca En Cualquier Sitio</value>
-  </data>
-  <data name="ClickAnywhere" xml:space="preserve">
-    <value>Click Anywhere</value>
-  </data>
-  <data name="Power" xml:space="preserve"><value>Poder</value></data>
-  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Comer fruta (requiere poder; restaura stamina, vida o vida extra)</value></data>
-  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast: lanza Spine (sin gastar poder tras comer fruta)</value></data>
-  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (gasta poder; daño alto)</value></data>
-  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Sin ataque secundario</value></data>
-  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lanza Dart (sin gastar poder)</value></data>
-  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: defensa sin daño (gasta poder)</value></data>
-  <data name="Act01CTitle" xml:space="preserve"><value>El Santuario en Ruinas</value></data>
-  <data name="Act01CObjective" xml:space="preserve"><value>Derrota al Minotauro y recupera la primera parte del Sello de Cenizas.</value></data>
-  <data name="Act01CTutorial" xml:space="preserve"><value>Viaja de isla en isla siguiendo a los espíritus y guerreros corruptos.</value></data>
-  <data name="Act02ATitle" xml:space="preserve"><value>La Aldea de Ceniza Matinal</value></data>
-  <data name="Act02AObjective" xml:space="preserve"><value>Explora la isla devastada y encuentra el camino a la aldea feudal.</value></data>
-  <data name="Act02ATutorial" xml:space="preserve"><value>La luz revela casas, castillos y montañas destruidos.</value></data>
-  <data name="Act02BTitle" xml:space="preserve"><value>El Valle de las Banderas Rasgadas</value></data>
-  <data name="Act02BObjective" xml:space="preserve"><value>Resiste el viento y llega a la fortaleza al final de la isla.</value></data>
-  <data name="Act02BTutorial" xml:space="preserve"><value>Las ráfagas son visuales y no causan daño.</value></data>
-  <data name="Act02CTitle" xml:space="preserve"><value>La Fortaleza bajo Alas Negras</value></data>
-  <data name="Act02CObjective" xml:space="preserve"><value>Derrota al boss nocturno y recupera la segunda parte del Sello de Cenizas.</value></data>
-  <data name="Act02CTutorial" xml:space="preserve"><value>Los pájaros nocturnos distraen, pero no causan daño.</value></data>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="TapAnywhere" xml:space="preserve"><value>Toca en cualquier sitio</value></data>
+  <data name="ClickAnywhere" xml:space="preserve"><value>Haz clic en cualquier sitio</value></data>
+  <data name="Title" xml:space="preserve"><value>El Eco de Kurogane</value></data>
+  <data name="Health" xml:space="preserve"><value>Salud</value></data>
+  <data name="MenuSubtitle" xml:space="preserve"><value>16-BIT</value></data>
+  <data name="Play" xml:space="preserve"><value>Jugar</value></data>
+  <data name="Options" xml:space="preserve"><value>Opciones</value></data>
+  <data name="Quit" xml:space="preserve"><value>Salir</value></data>
+  <data name="Language" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Character" xml:space="preserve"><value>Personaje</value></data>
+  <data name="Controls" xml:space="preserve"><value>Controles</value></data>
+  <data name="Keyboard" xml:space="preserve"><value>Teclado</value></data>
+  <data name="Gamepad" xml:space="preserve"><value>Mando</value></data>
+  <data name="MoveLeft" xml:space="preserve"><value>Mover izquierda</value></data>
+  <data name="MoveRight" xml:space="preserve"><value>Mover derecha</value></data>
+  <data name="Attack1" xml:space="preserve"><value>Ataque 1</value></data>
+  <data name="Attack2" xml:space="preserve"><value>Ataque 2</value></data>
+  <data name="Jump" xml:space="preserve"><value>Salto</value></data>
+  <data name="Run" xml:space="preserve"><value>Correr</value></data>
+  <data name="PressKey" xml:space="preserve"><value>Pulsa una tecla o botón</value></data>
+  <data name="Bind" xml:space="preserve"><value>Asignar</value></data>
+  <data name="SelectPlayer" xml:space="preserve"><value>Elige tu personaje</value></data>
+  <data name="SelectDifficulty" xml:space="preserve"><value>Elige la dificultad</value></data>
+  <data name="Difficulty" xml:space="preserve"><value>Dificultad</value></data>
+  <data name="Easy" xml:space="preserve"><value>Fácil</value></data>
+  <data name="Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Hard" xml:space="preserve"><value>Difícil</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Kunoichi" xml:space="preserve"><value>Kunoichi</value></data>
+  <data name="Monk" xml:space="preserve"><value>Monje</value></data>
+  <data name="Peasant" xml:space="preserve"><value>Campesino</value></data>
+  <data name="Back" xml:space="preserve"><value>Volver</value></data>
+  <data name="Portuguese" xml:space="preserve"><value>Portugués</value></data>
+  <data name="English" xml:space="preserve"><value>Inglés</value></data>
+  <data name="French" xml:space="preserve"><value>Francés</value></data>
+  <data name="Spanish" xml:space="preserve"><value>Español</value></data>
+  <data name="Act01" xml:space="preserve"><value>Acto 1 - El Sendero de los Faroles Apagados</value></data>
+  <data name="TestMode" xml:space="preserve"><value>MODO PRUEBA - MOVIMIENTO</value></data>
+  <data name="Actions" xml:space="preserve"><value>ACCIONES</value></data>
+  <data name="Move" xml:space="preserve"><value>MUEVE AL PERSONAJE</value></data>
+  <data name="ExitHint" xml:space="preserve"><value>ESC / VOLVER</value></data>
+  <data name="BgmVolume" xml:space="preserve"><value>Volumen BGM</value></data>
+  <data name="SfxVolume" xml:space="preserve"><value>Volumen SFX</value></data>
+  <data name="Mute" xml:space="preserve"><value>Silencio</value></data>
+  <data name="On" xml:space="preserve"><value>Activado</value></data>
+  <data name="Off" xml:space="preserve"><value>Desactivado</value></data>
+  <data name="Fullscreen" xml:space="preserve"><value>Pantalla completa</value></data>
+  <data name="Lives" xml:space="preserve"><value>Vidas</value></data>
+  <data name="Stamina" xml:space="preserve"><value>Resistencia</value></data>
+  <data name="GameOver" xml:space="preserve"><value>GAME OVER</value></data>
+  <data name="Victory" xml:space="preserve"><value>VICTORIA</value></data>
+  <data name="PressToContinue" xml:space="preserve"><value>Pulsa para continuar</value></data>
+  <data name="Objective" xml:space="preserve"><value>OBJETIVO</value></data>
+  <data name="Tutorial" xml:space="preserve"><value>TUTORIAL</value></data>
+  <data name="Act01ATitle" xml:space="preserve"><value>El Sendero de los Faroles Apagados</value></data>
+  <data name="Act01AObjective" xml:space="preserve"><value>Atraviesa el sendero y alcanza la puerta del templo.</value></data>
+  <data name="Act01ATutorial" xml:space="preserve"><value>Muévete, salta, ataca y corre para conservar resistencia.</value></data>
+  <data name="Act01BTitle" xml:space="preserve"><value>La Fortaleza del Templo sin Luna</value></data>
+  <data name="Act01BObjective" xml:space="preserve"><value>Derrota al guardián y recupera la primera parte del Sello de Cenizas.</value></data>
+  <data name="Act01BTutorial" xml:space="preserve"><value>Usa las plataformas y recoge los objetos de salud y resistencia.</value></data>
+  <data name="LevelBriefingPrompt" xml:space="preserve"><value>ENTER / A  CONTINUAR</value></data>
   <data name="Paused" xml:space="preserve"><value>PAUSADO</value></data>
   <data name="PausePrompt" xml:space="preserve"><value>Usa ENTER/A para elegir; ESC/START para continuar</value></data>
   <data name="Resume" xml:space="preserve"><value>Continuar</value></data>
@@ -152,7 +75,76 @@
   <data name="SlotOccupied" xml:space="preserve"><value>SLOT {0} - OCUPADO</value></data>
   <data name="SaveComplete" xml:space="preserve"><value>Estado guardado en el slot {0}</value></data>
   <data name="SlotUnavailable" xml:space="preserve"><value>El slot {0} está vacío</value></data>
+  <data name="SlotDeleted" xml:space="preserve"><value>Slot {0} eliminado</value></data>
+  <data name="DeleteSlotHintDesktop" xml:space="preserve"><value>SUPR / CLIC DERECHO: Eliminar slot</value></data>
+  <data name="DeleteSlotHintMobile" xml:space="preserve"><value>Mantén pulsado un slot ocupado para eliminar</value></data>
+  <data name="SlotDeleteBadge" xml:space="preserve"><value>SUPR</value></data>
   <data name="MainMenu" xml:space="preserve"><value>Menú principal</value></data>
   <data name="SpecialPrimary" xml:space="preserve"><value>Especial primario</value></data>
   <data name="SpecialSecondary" xml:space="preserve"><value>Especial secundario</value></data>
+  <data name="IntroLine01" xml:space="preserve"><value>El clan Kurogane custodió el</value></data>
+  <data name="IntroLine02" xml:space="preserve"><value>Sello de Cenizas durante tres generaciones.</value></data>
+  <data name="IntroLine03" xml:space="preserve"><value></value></data>
+  <data name="IntroLine04" xml:space="preserve"><value>Una reliquia dividida en fragmentos,</value></data>
+  <data name="IntroLine05" xml:space="preserve"><value>con la sangre y la memoria de los</value></data>
+  <data name="IntroLine06" xml:space="preserve"><value>antiguos maestros ninja que la forjaron.</value></data>
+  <data name="IntroLine07" xml:space="preserve"><value></value></data>
+  <data name="IntroLine08" xml:space="preserve"><value>La reliquia mantiene encendida la</value></data>
+  <data name="IntroLine09" xml:space="preserve"><value>Llama Silenciosa, un vínculo espiritual</value></data>
+  <data name="IntroLine10" xml:space="preserve"><value>que impide que los espíritus errantes</value></data>
+  <data name="IntroLine11" xml:space="preserve"><value>y los guardianes corruptos de las montañas</value></data>
+  <data name="IntroLine12" xml:space="preserve"><value>invadan la aldea del clan.</value></data>
+  <data name="IntroLine13" xml:space="preserve"><value></value></data>
+  <data name="Power" xml:space="preserve"><value>Poder</value></data>
+  <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Comer fruta (requiere poder; restaura resistencia, salud o una vida extra)</value></data>
+  <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast: lanza Spine (sin gastar poder tras comer fruta)</value></data>
+  <data name="MonkSpecialPrimary" xml:space="preserve"><value>Blade (gasta poder; daño alto)</value></data>
+  <data name="MonkSpecialSecondary" xml:space="preserve"><value>Sin ataque secundario</value></data>
+  <data name="PeasantSpecialPrimary" xml:space="preserve"><value>Shot: lanza Dart (sin gastar poder)</value></data>
+  <data name="PeasantSpecialSecondary" xml:space="preserve"><value>Disguise: defensa sin daño (gasta poder)</value></data>
+  <data name="Act01CTitle" xml:space="preserve"><value>El Santuario en Ruinas</value></data>
+  <data name="Act01CObjective" xml:space="preserve"><value>Derrota al Minotauro y recupera la primera parte del Sello de Cenizas.</value></data>
+  <data name="Act01CTutorial" xml:space="preserve"><value>Viaja de isla en isla siguiendo a los espíritus y guerreros corruptos.</value></data>
+  <data name="Act02ATitle" xml:space="preserve"><value>La Aldea de Ceniza Matinal</value></data>
+  <data name="Act02AObjective" xml:space="preserve"><value>Explora la isla devastada y encuentra el camino a la aldea feudal.</value></data>
+  <data name="Act02ATutorial" xml:space="preserve"><value>La luz revela casas, castillos y montañas destruidos por espíritus y guerreros corruptos.</value></data>
+  <data name="Act02BTitle" xml:space="preserve"><value>El Valle de las Banderas Rasgadas</value></data>
+  <data name="Act02BObjective" xml:space="preserve"><value>Resiste el viento y llega a la fortaleza al final de la isla.</value></data>
+  <data name="Act02BTutorial" xml:space="preserve"><value>Las ráfagas son visuales y no causan daño; sigue avanzando entre las ruinas.</value></data>
+  <data name="Act02CTitle" xml:space="preserve"><value>La Fortaleza bajo Alas Negras</value></data>
+  <data name="Act02CObjective" xml:space="preserve"><value>Derrota al boss nocturno y recupera la segunda parte del Sello de Cenizas.</value></data>
+  <data name="Act02CTutorial" xml:space="preserve"><value>Los pájaros nocturnos cruzan el mapa para distraerte, pero no causan daño.</value></data>
+  <data name="Act03ATitle" xml:space="preserve"><value>La Muralla Rota del Castillo</value></data>
+  <data name="Act03AObjective" xml:space="preserve"><value>Cruza las ruinas calcinadas y alcanza la puerta interior del castillo.</value></data>
+  <data name="Act03ATutorial" xml:space="preserve"><value>Nuevos enemigos patrullan las murallas; usa tejados, plataformas y especiales.</value></data>
+  <data name="Act03BTitle" xml:space="preserve"><value>El Patio de las Brasas</value></data>
+  <data name="Act03BObjective" xml:space="preserve"><value>Ábrete paso por el patio en ruinas hasta la torre del trono muerto.</value></data>
+  <data name="Act03BTutorial" xml:space="preserve"><value>Cuidado con los ataques a distancia y las bestias ágiles entre las ruinas.</value></data>
+  <data name="Act03CTitle" xml:space="preserve"><value>El Salón del Trono Muerto</value></data>
+  <data name="Act03CObjective" xml:space="preserve"><value>Derrota al Minotauro III y a los tres guardianes arcanos para restaurar el Sello de Cenizas.</value></data>
+  <data name="Act03CTutorial" xml:space="preserve"><value>Recoge el Sello 3/4 para despertar el reto final y vence a los tres magos por el 4/4.</value></data>
+  <data name="BossMinotaur1" xml:space="preserve"><value>MINOTAURO I</value></data>
+  <data name="BossMinotaur2" xml:space="preserve"><value>MINOTAURO II</value></data>
+  <data name="BossMinotaur3" xml:space="preserve"><value>MINOTAURO III</value></data>
+  <data name="BossFireWizard" xml:space="preserve"><value>MAGO DE FUEGO</value></data>
+  <data name="BossLightningMage" xml:space="preserve"><value>MAGO DE RELÁMPAGO</value></data>
+  <data name="BossWandererMagican" xml:space="preserve"><value>MAGO ERRANTE</value></data>
+  <data name="AshSealHud" xml:space="preserve"><value>SELLO {0}/4</value></data>
+  <data name="AshSeal3Revealed" xml:space="preserve"><value>SELLO DE CENIZAS 3/4 REVELADO</value></data>
+  <data name="AshSeal4Revealed" xml:space="preserve"><value>SELLO DE CENIZAS 4/4 REVELADO</value></data>
+  <data name="CreditsHeadingComplete" xml:space="preserve"><value>SELLO DE CENIZAS RESTAURADO (4/4)</value></data>
+  <data name="CreditsLineSealRestored" xml:space="preserve"><value>La Llama Silenciosa vuelve a arder.</value></data>
+  <data name="CreditsLineFlameLives" xml:space="preserve"><value>La paz regresa al clan Kurogane.</value></data>
+  <data name="CreditsSectionDirection" xml:space="preserve"><value>DIRECCIÓN Y DISEÑO</value></data>
+  <data name="CreditsDirectionName" xml:space="preserve"><value>Equipo Kurogane's Echo</value></data>
+  <data name="CreditsSectionEngineering" xml:space="preserve"><value>PROGRAMACIÓN Y SISTEMAS</value></data>
+  <data name="CreditsEngineeringName" xml:space="preserve"><value>MonoGame y MonoGame.Extended</value></data>
+  <data name="CreditsSectionArt" xml:space="preserve"><value>PIXEL ART 16-BIT Y DISEÑO DE NIVELES</value></data>
+  <data name="CreditsArtName" xml:space="preserve"><value>Mapas Tiled y Paquetes de Sprites</value></data>
+  <data name="CreditsSectionAudio" xml:space="preserve"><value>MÚSICA Y SONIDO</value></data>
+  <data name="CreditsAudioName" xml:space="preserve"><value>Banda Sonora Feudal 16-Bit</value></data>
+  <data name="CreditsSectionTech" xml:space="preserve"><value>TECNOLOGÍA</value></data>
+  <data name="CreditsTechName" xml:space="preserve"><value>.NET y MonoGame Framework</value></data>
+  <data name="CreditsThankYou" xml:space="preserve"><value>GRACIAS POR JUGAR</value></data>
+  <data name="CreditsSkipHint" xml:space="preserve"><value>ENTER / ESPACIO / A / TOCAR PARA SALTAR</value></data>
 </root>

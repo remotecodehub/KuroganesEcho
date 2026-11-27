@@ -73,7 +73,6 @@ public class KuroganesEchoGame : Game
     };
 
     private readonly GraphicsDeviceManager _graphics;
-    private readonly string[] _languageCodes = { "pt-BR", "en-US", "fr-FR" };
     private readonly string[] _menuKeys = { "Play", "Continue", "Options", "Quit" };
     private readonly string[] _difficultyKeys = { "Easy", "Normal", "Hard" };
     private readonly string[] _controlKeys =
@@ -118,6 +117,13 @@ public class KuroganesEchoGame : Game
     private float _bossBannerRemaining;
     private readonly CombatEffectSystem _effects = new();
     private SaveProgressState _saveProgress = new();
+    private GameSettings _settings = GameSettings.CreateDefault();
+    private LanguageSelector _languageSelector = new();
+    private readonly HorizontalSwipeDetector _languageSwipeDetector = new();
+    private readonly SaveSlotInputController _pauseSlotInput = new();
+    private readonly SaveSlotInputController _loadSlotInput = new();
+    private string _cachedIntroCulture = string.Empty;
+    private List<IntroParagraphLine> _cachedIntroLines = new();
     private BoxingViewportAdapter _viewportAdapter = null!;
     private OrthographicCamera _camera = null!;
     private readonly string[] _characterIds = { "Kunoichi", "Ninja_Monk", "Ninja_Peasant" };
@@ -129,7 +135,6 @@ public class KuroganesEchoGame : Game
     private float _introScroll;
     private float _creditsScroll;
     private int _menuSelection;
-    private int _languageSelection;
     private int _optionsSelection;
     private int _characterSelection;
     private int _difficultySelection = 1;
@@ -192,7 +197,11 @@ public class KuroganesEchoGame : Game
 
     public KuroganesEchoGame()
     {
-        var startFullScreen = IsDesktop;
+        _settings = GameSettingsStore.Load(defaultFullScreen: IsDesktop);
+        _languageSelector = new LanguageSelector(initialCultureCode: _settings.Language);
+        LocalizationManager.SetCulture(_languageSelector.SelectedCode);
+
+        var startFullScreen = IsDesktop && _settings.FullScreen;
 #if DEBUG
         _visualValidationDir = Environment.GetEnvironmentVariable("KUROGANE_CAPTURE_DIR");
         if (!string.IsNullOrWhiteSpace(_visualValidationDir))
@@ -214,6 +223,13 @@ public class KuroganesEchoGame : Game
 
     protected override void Initialize()
     {
+        LocalizationManager.SetCulture(_languageSelector.SelectedCode);
+        if (IsDesktop && _graphics.IsFullScreen != _fullScreen)
+        {
+            _graphics.IsFullScreen = _fullScreen;
+            _graphics.ApplyChanges();
+        }
+
         _saveProgress = SaveProgressStore.Load();
         _livesRemaining = Math.Clamp(_saveProgress.LivesRemaining, 1, MaximumLives);
         _currentLevelId = "Act_01_A";
@@ -225,7 +241,6 @@ public class KuroganesEchoGame : Game
         var savedCharacterIndex = Array.IndexOf(_characterIds, _saveProgress.CharacterId);
         if (savedCharacterIndex >= 0)
             _characterSelection = savedCharacterIndex;
-        LocalizationManager.SetCulture(_languageCodes[_languageSelection]);
         _viewportAdapter = new BoxingViewportAdapter(Window, GraphicsDevice, VirtualWidth, VirtualHeight);
         TouchPanel.EnableMouseTouchPoint = true;
         TouchPanel.DisplayWidth = GraphicsDevice.Viewport.Width;
@@ -251,6 +266,7 @@ public class KuroganesEchoGame : Game
         _level = GameLevel.Load(GraphicsDevice, LevelDefinition.Act01A);
         _level.ConfigureDifficulty(_selectedDifficulty);
         _audio = AudioService.Load(Content);
+        _audio.ApplySettings(_settings);
         _audio.PlayIntroMusic();
         _player = PlayerCharacter.Load(Content, _characterIds[_characterSelection]);
         _spineTexture = Content.Load<Texture2D>("Tiled/Chars/GeneratedFrames/Kunoichi/Spine");
@@ -368,11 +384,11 @@ public class KuroganesEchoGame : Game
         }
         else if (_screen == GameScreen.Paused)
         {
-            UpdatePaused(keyboard, gamePad, touchState);
+            UpdatePaused(gameTime, keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.SaveSlotSelection)
         {
-            UpdateSaveSlotSelection(keyboard, gamePad, touchState);
+            UpdateSaveSlotSelection(gameTime, keyboard, gamePad, touchState);
         }
         else if (_screen == GameScreen.GameOver)
         {
@@ -736,72 +752,137 @@ public class KuroganesEchoGame : Game
     {
         _pauseSelection = 0;
         _pauseStatusMessage = string.Empty;
+        _pauseSlotInput.Reset();
         _screen = GameScreen.Paused;
     }
 
-    private void UpdatePaused(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    private void UpdatePaused(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
 #if DEBUG
         if (UpdateMobileDebugLongPressState(touches))
             return;
 #endif
 
+        var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var touchInputs = ConvertTouchesToVirtual(touches);
+
         if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
             _pauseSelection = (_pauseSelection + PauseOptionCount - 1) % PauseOptionCount;
         if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
             _pauseSelection = (_pauseSelection + 1) % PauseOptionCount;
 
-        var point = GetPressedPoint(touches);
-        if (point.HasValue)
-        {
-            if (PauseContinueButton().Contains(point.Value))
-            {
-                _pauseSelection = PauseContinueIndex;
-                OpenSaveSlotSelection(GameScreen.Paused);
-                return;
-            }
-
-            for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
-            {
-                if (!PauseSlotButton(slot).Contains(point.Value))
-                    continue;
-
-                _pauseSelection = slot;
-                SaveStateToSlot(slot);
-                return;
-            }
-
-            if (PauseResumeButton().Contains(point.Value))
-            {
-                _screen = GameScreen.Act01;
-                return;
-            }
-
-            if (PauseOptionsButton().Contains(point.Value))
-            {
-                OpenOptions(GameScreen.Paused);
-                return;
-            }
-
-            if (PauseMainMenuButton().Contains(point.Value))
-            {
-                LeaveToMainMenu();
-                return;
-            }
-        }
-
         if (IsNewKeyPress(keyboard, Keys.Escape) ||
             IsNewButtonPress(gamePad, Buttons.Back) ||
             IsNewButtonPress(gamePad, Buttons.Start))
         {
+            _pauseSlotInput.Reset();
             _screen = GameScreen.Act01;
             return;
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Enter) ||
-            IsNewKeyPress(keyboard, Keys.Space) ||
-            IsNewButtonPress(gamePad, Buttons.A))
+        var selectedSlot = GetSelectedPauseSlot();
+        var confirmPressed = IsNewKeyPress(keyboard, Keys.Enter) ||
+                             IsNewKeyPress(keyboard, Keys.Space) ||
+                             IsNewButtonPress(gamePad, Buttons.A);
+
+        if (IsMobile)
+        {
+            var slotResult = _pauseSlotInput.UpdateMobileTouch(
+                elapsedSeconds,
+                touchInputs,
+                slot => ToUiRect(PauseSlotButton(slot)),
+                SaveProgressStore.HasSlot);
+            if (slotResult.Action == SaveSlotAction.Delete)
+            {
+                _pauseSelection = PauseSaveSlotStartIndex + slotResult.Slot - 1;
+                DeleteSaveSlot(slotResult.Slot, isPauseScreen: true);
+                return;
+            }
+
+            if (slotResult.Action == SaveSlotAction.Activate)
+            {
+                _pauseSelection = PauseSaveSlotStartIndex + slotResult.Slot - 1;
+                SaveStateToSlot(slotResult.Slot);
+                return;
+            }
+
+            if (!_pauseSlotInput.HoldingSlot.HasValue)
+            {
+                var tapPoint = GetFreshTouchPressPoint(touchInputs);
+                if (tapPoint.HasValue && TryHandlePauseNonSlotClick(tapPoint.Value))
+                    return;
+            }
+
+            if (confirmPressed)
+                ActivatePauseSelection();
+            return;
+        }
+
+        var desktopSlotResult = SaveSlotInputController.EvaluateDesktopInput(
+            selectedSlot,
+            deleteKeyPressed: IsNewKeyPress(keyboard, Keys.Delete),
+            confirmPressed: confirmPressed,
+            rightClickPoint: ToUiPointNullable(GetFreshRightClickPoint()),
+            leftClickPoint: ToUiPointNullable(GetFreshLeftClickPoint()),
+            getSlotBounds: slot => ToUiRect(PauseSlotButton(slot)));
+
+        if (desktopSlotResult.Action == SaveSlotAction.Delete)
+        {
+            _pauseSelection = PauseSaveSlotStartIndex + desktopSlotResult.Slot - 1;
+            DeleteSaveSlot(desktopSlotResult.Slot, isPauseScreen: true);
+            return;
+        }
+
+        if (desktopSlotResult.Action == SaveSlotAction.Activate)
+        {
+            _pauseSelection = PauseSaveSlotStartIndex + desktopSlotResult.Slot - 1;
+            SaveStateToSlot(desktopSlotResult.Slot);
+            return;
+        }
+
+        var leftClick = GetFreshLeftClickPoint();
+        if (leftClick.HasValue && TryHandlePauseNonSlotClick(leftClick.Value))
+            return;
+
+        if (confirmPressed)
             ActivatePauseSelection();
+    }
+
+    private int? GetSelectedPauseSlot() =>
+        _pauseSelection >= PauseSaveSlotStartIndex &&
+        _pauseSelection < PauseSaveSlotStartIndex + SaveProgressStore.SlotCount
+            ? _pauseSelection - PauseSaveSlotStartIndex + 1
+            : null;
+
+    private bool TryHandlePauseNonSlotClick(Point point)
+    {
+        if (PauseContinueButton().Contains(point))
+        {
+            _pauseSelection = PauseContinueIndex;
+            OpenSaveSlotSelection(GameScreen.Paused);
+            return true;
+        }
+
+        if (PauseResumeButton().Contains(point))
+        {
+            _pauseSlotInput.Reset();
+            _screen = GameScreen.Act01;
+            return true;
+        }
+
+        if (PauseOptionsButton().Contains(point))
+        {
+            OpenOptions(GameScreen.Paused);
+            return true;
+        }
+
+        if (PauseMainMenuButton().Contains(point))
+        {
+            LeaveToMainMenu();
+            return true;
+        }
+
+        return false;
     }
 
     private const int PauseResumeIndex = 0;
@@ -853,41 +934,57 @@ public class KuroganesEchoGame : Game
         _audio.PlayCue(AudioCue.Collectable, 0.7f);
     }
 
+    private void DeleteSaveSlot(int slot, bool isPauseScreen)
+    {
+        string message;
+        if (!SaveProgressStore.HasSlot(slot))
+        {
+            message = string.Format(
+                CultureInfo.CurrentCulture,
+                LocalizedText.Get("SlotUnavailable"),
+                slot);
+        }
+        else if (SaveProgressStore.DeleteSlot(slot))
+        {
+            message = string.Format(
+                CultureInfo.CurrentCulture,
+                LocalizedText.Get("SlotDeleted"),
+                slot);
+            _audio?.PlayCue(AudioCue.UiClick, 0.7f);
+        }
+        else
+        {
+            message = string.Format(
+                CultureInfo.CurrentCulture,
+                LocalizedText.Get("SlotUnavailable"),
+                slot);
+        }
+
+        if (isPauseScreen)
+            _pauseStatusMessage = message;
+        else
+            _slotStatusMessage = message;
+    }
+
     private void OpenSaveSlotSelection(GameScreen returnScreen)
     {
         _slotSelectionReturnScreen = returnScreen;
         _slotSelection = 0;
         _slotStatusMessage = string.Empty;
+        _loadSlotInput.Reset();
         _screen = GameScreen.SaveSlotSelection;
     }
 
-    private void UpdateSaveSlotSelection(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
+    private void UpdateSaveSlotSelection(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
+        var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var touchInputs = ConvertTouchesToVirtual(touches);
         var optionCount = SaveProgressStore.SlotCount + 1;
+
         if (IsNewKeyPress(keyboard, Keys.Up) || IsNewGamepadUp(gamePad))
             _slotSelection = (_slotSelection + optionCount - 1) % optionCount;
         if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
             _slotSelection = (_slotSelection + 1) % optionCount;
-
-        var point = GetPressedPoint(touches);
-        if (point.HasValue)
-        {
-            for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
-            {
-                if (!SaveSlotButton(slot).Contains(point.Value))
-                    continue;
-
-                _slotSelection = slot - 1;
-                LoadStateFromSlot(slot);
-                return;
-            }
-
-            if (SaveSlotBackButton().Contains(point.Value))
-            {
-                ReturnFromSaveSlotSelection();
-                return;
-            }
-        }
 
         if (IsNewKeyPress(keyboard, Keys.Escape) ||
             IsNewButtonPress(gamePad, Buttons.B))
@@ -896,19 +993,91 @@ public class KuroganesEchoGame : Game
             return;
         }
 
-        if (IsNewKeyPress(keyboard, Keys.Enter) ||
-            IsNewKeyPress(keyboard, Keys.Space) ||
-            IsNewButtonPress(gamePad, Buttons.A))
+        var selectedSlot = _slotSelection < SaveProgressStore.SlotCount
+            ? _slotSelection + 1
+            : (int?)null;
+        var confirmPressed = IsNewKeyPress(keyboard, Keys.Enter) ||
+                             IsNewKeyPress(keyboard, Keys.Space) ||
+                             IsNewButtonPress(gamePad, Buttons.A);
+
+        if (IsMobile)
         {
-            if (_slotSelection < SaveProgressStore.SlotCount)
-                LoadStateFromSlot(_slotSelection + 1);
-            else
-                ReturnFromSaveSlotSelection();
+            var slotResult = _loadSlotInput.UpdateMobileTouch(
+                elapsedSeconds,
+                touchInputs,
+                slot => ToUiRect(SaveSlotButton(slot)),
+                SaveProgressStore.HasSlot);
+            if (slotResult.Action == SaveSlotAction.Delete)
+            {
+                _slotSelection = slotResult.Slot - 1;
+                DeleteSaveSlot(slotResult.Slot, isPauseScreen: false);
+                return;
+            }
+
+            if (slotResult.Action == SaveSlotAction.Activate)
+            {
+                _slotSelection = slotResult.Slot - 1;
+                LoadStateFromSlot(slotResult.Slot);
+                return;
+            }
+
+            if (!_loadSlotInput.HoldingSlot.HasValue)
+            {
+                var tapPoint = GetFreshTouchPressPoint(touchInputs);
+                if (tapPoint.HasValue && SaveSlotBackButton().Contains(tapPoint.Value))
+                {
+                    ReturnFromSaveSlotSelection();
+                    return;
+                }
+            }
+
+            if (confirmPressed)
+            {
+                if (selectedSlot.HasValue)
+                    LoadStateFromSlot(selectedSlot.Value);
+                else
+                    ReturnFromSaveSlotSelection();
+            }
+
+            return;
         }
+
+        var desktopSlotResult = SaveSlotInputController.EvaluateDesktopInput(
+            selectedSlot,
+            deleteKeyPressed: IsNewKeyPress(keyboard, Keys.Delete),
+            confirmPressed: confirmPressed,
+            rightClickPoint: ToUiPointNullable(GetFreshRightClickPoint()),
+            leftClickPoint: ToUiPointNullable(GetFreshLeftClickPoint()),
+            getSlotBounds: slot => ToUiRect(SaveSlotButton(slot)));
+
+        if (desktopSlotResult.Action == SaveSlotAction.Delete)
+        {
+            _slotSelection = desktopSlotResult.Slot - 1;
+            DeleteSaveSlot(desktopSlotResult.Slot, isPauseScreen: false);
+            return;
+        }
+
+        if (desktopSlotResult.Action == SaveSlotAction.Activate)
+        {
+            _slotSelection = desktopSlotResult.Slot - 1;
+            LoadStateFromSlot(desktopSlotResult.Slot);
+            return;
+        }
+
+        var leftClick = GetFreshLeftClickPoint();
+        if (leftClick.HasValue && SaveSlotBackButton().Contains(leftClick.Value))
+        {
+            ReturnFromSaveSlotSelection();
+            return;
+        }
+
+        if (confirmPressed && !selectedSlot.HasValue)
+            ReturnFromSaveSlotSelection();
     }
 
     private void ReturnFromSaveSlotSelection()
     {
+        _loadSlotInput.Reset();
         _screen = _slotSelectionReturnScreen;
         _slotStatusMessage = string.Empty;
     }
@@ -980,11 +1149,16 @@ public class KuroganesEchoGame : Game
     private void OpenOptions(GameScreen returnScreen)
     {
         _optionsReturnScreen = returnScreen;
-        _optionsSelection = _languageSelection;
+        _optionsSelection = LanguageOptionIndex;
+        _languageSwipeDetector.Reset();
         _screen = GameScreen.Options;
     }
 
-    private void ReturnFromOptions() => _screen = _optionsReturnScreen;
+    private void ReturnFromOptions()
+    {
+        _languageSwipeDetector.Reset();
+        _screen = _optionsReturnScreen;
+    }
 
     private void LeaveToMainMenu()
     {
@@ -995,7 +1169,8 @@ public class KuroganesEchoGame : Game
     private void UpdateIntro(GameTime gameTime, KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
         _introScroll += (float)gameTime.ElapsedGameTime.TotalSeconds * IntroScrollSpeed;
-        var introFinished = _introScroll >= VirtualHeight + IntroLineKeys.Length * IntroLineHeight + 24f;
+        var introLineCount = GetIntroLayoutLines().Count;
+        var introFinished = _introScroll >= VirtualHeight + introLineCount * IntroLineHeight + 24f;
         var skipRequested = IsNewKeyPress(keyboard, Keys.Enter) ||
                             IsNewKeyPress(keyboard, Keys.Space) ||
                             IsNewButtonPress(gamePad, Buttons.A) ||
@@ -1043,21 +1218,56 @@ public class KuroganesEchoGame : Game
         if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
             MoveOptionsSelection(1);
         if (IsNewKeyPress(keyboard, Keys.Left) || IsNewGamepadLeft(gamePad))
-            AdjustSelectedAudioOption(-1);
+            AdjustSelectedOption(-1);
         if (IsNewKeyPress(keyboard, Keys.Right) || IsNewGamepadRight(gamePad))
-            AdjustSelectedAudioOption(1);
+            AdjustSelectedOption(1);
 
-        var point = GetPressedPoint(touches);
+        var touchInputs = ConvertTouchesToVirtual(touches);
+        Point? point = null;
+        if (IsMobile)
+        {
+            var swipeDirection = _languageSwipeDetector.Update(
+                touchInputs,
+                ToUiRect(LanguageSelectorSwipeArea()),
+                out var swipeConsumed,
+                out var tapReleasedPoint);
+            if (swipeDirection != 0)
+            {
+                _optionsSelection = LanguageOptionIndex;
+                CycleLanguage(swipeDirection);
+                return;
+            }
+
+            if (tapReleasedPoint.HasValue)
+                point = new Point(tapReleasedPoint.Value.X, tapReleasedPoint.Value.Y);
+            else if (!swipeConsumed)
+                point = GetFreshTouchPressPoint(touchInputs);
+        }
+        else
+        {
+            point = GetFreshLeftClickPoint();
+        }
+
         if (point.HasValue)
         {
-            for (var index = 0; index < _languageCodes.Length; index++)
+            if (LanguagePreviousArrowButton().Contains(point.Value))
             {
-                if (LanguageButton(index).Contains(point.Value))
-                {
-                    _optionsSelection = index;
-                    SelectLanguage(index);
-                    return;
-                }
+                _optionsSelection = LanguageOptionIndex;
+                CycleLanguage(-1);
+                return;
+            }
+
+            if (LanguageNextArrowButton().Contains(point.Value))
+            {
+                _optionsSelection = LanguageOptionIndex;
+                CycleLanguage(1);
+                return;
+            }
+
+            if (LanguageSelectorBounds().Contains(point.Value))
+            {
+                _optionsSelection = LanguageOptionIndex;
+                return;
             }
 
             if (IsMobile && OptionsBackButton().Contains(point.Value))
@@ -1084,6 +1294,7 @@ public class KuroganesEchoGame : Game
             {
                 _optionsSelection = MuteOptionIndex;
                 _audio.ToggleMute();
+                SaveCurrentSettings();
                 return;
             }
 
@@ -1100,7 +1311,6 @@ public class KuroganesEchoGame : Game
                 ToggleFullscreen();
                 return;
             }
-
         }
 
         if (IsNewKeyPress(keyboard, Keys.Enter) || IsNewKeyPress(keyboard, Keys.Space) || IsNewButtonPress(gamePad, Buttons.A))
@@ -1109,11 +1319,13 @@ public class KuroganesEchoGame : Game
             ReturnFromOptions();
     }
 
-    private int ControlsOptionIndex => _languageCodes.Length;
+    private const int LanguageOptionIndex = 0;
 
-    private int FullScreenOptionIndex => ControlsOptionIndex + 1;
+    private int ControlsOptionIndex => 1;
 
-    private int BgmVolumeOptionIndex => _languageCodes.Length + (IsDesktop ? 2 : 0);
+    private int FullScreenOptionIndex => 2;
+
+    private int BgmVolumeOptionIndex => IsDesktop ? 3 : 1;
 
     private int SfxVolumeOptionIndex => BgmVolumeOptionIndex + 1;
 
@@ -1127,19 +1339,38 @@ public class KuroganesEchoGame : Game
     {
         var optionCount = OptionsOptionCount;
         _optionsSelection = (_optionsSelection + direction + optionCount) % optionCount;
-        if (_optionsSelection < _languageCodes.Length)
-            _languageSelection = _optionsSelection;
     }
 
-    private void AdjustSelectedAudioOption(int direction)
+    private void AdjustSelectedOption(int direction)
     {
-        const float step = 0.1f;
+        const float step = 0.05f;
+        if (_optionsSelection == LanguageOptionIndex)
+        {
+            CycleLanguage(direction);
+            return;
+        }
+
+        if (IsDesktop && _optionsSelection == FullScreenOptionIndex)
+        {
+            ToggleFullscreen();
+            return;
+        }
+
         if (_optionsSelection == BgmVolumeOptionIndex)
+        {
             _audio.SetBgmVolume(_audio.BgmVolume + direction * step);
+            SaveCurrentSettings();
+        }
         else if (_optionsSelection == SfxVolumeOptionIndex)
+        {
             _audio.SetSfxVolume(_audio.SfxVolume + direction * step);
+            SaveCurrentSettings();
+        }
         else if (_optionsSelection == MuteOptionIndex)
+        {
             _audio.ToggleMute();
+            SaveCurrentSettings();
+        }
     }
 
     private void SetAudioVolumeFromPoint(Rectangle bounds, Point point, bool bgm)
@@ -1149,16 +1380,19 @@ public class KuroganesEchoGame : Game
             _audio.SetBgmVolume(volume);
         else
             _audio.SetSfxVolume(volume);
+
+        SaveCurrentSettings();
     }
 
     private void ActivateOptionsSelection()
     {
-        _audio.PlayCue(AudioCue.UiClick, 0.65f);
-        if (_optionsSelection < _languageCodes.Length)
+        if (_optionsSelection == LanguageOptionIndex)
         {
-            SelectLanguage(_optionsSelection);
+            CycleLanguage(1);
             return;
         }
+
+        _audio.PlayCue(AudioCue.UiClick, 0.65f);
 
         if (IsDesktop && _optionsSelection == ControlsOptionIndex)
         {
@@ -1175,6 +1409,7 @@ public class KuroganesEchoGame : Game
         if (_optionsSelection == MuteOptionIndex)
         {
             _audio.ToggleMute();
+            SaveCurrentSettings();
             return;
         }
 
@@ -1401,10 +1636,13 @@ public class KuroganesEchoGame : Game
         StartAct01("Act_01_A");
     }
 
-    private void SelectLanguage(int index)
+    private void CycleLanguage(int direction)
     {
-        _languageSelection = Math.Clamp(index, 0, _languageCodes.Length - 1);
-        LocalizationManager.SetCulture(_languageCodes[_languageSelection]);
+        _languageSelector.Move(direction);
+        LocalizationManager.SetCulture(_languageSelector.SelectedCode);
+        _cachedIntroCulture = string.Empty;
+        SaveCurrentSettings();
+        _audio?.PlayCue(AudioCue.UiClick, 0.65f);
     }
 
     private void SelectCharacter(int index)
@@ -2813,6 +3051,21 @@ public class KuroganesEchoGame : Game
         _fullScreen = !_fullScreen;
         _graphics.IsFullScreen = _fullScreen;
         _graphics.ApplyChanges();
+        SaveCurrentSettings();
+    }
+
+    private void SaveCurrentSettings()
+    {
+#if DEBUG
+        if (!string.IsNullOrWhiteSpace(_visualValidationDir))
+            return;
+#endif
+        _settings.BgmVolume = _audio?.BgmVolume ?? _settings.BgmVolume;
+        _settings.SfxVolume = _audio?.SfxVolume ?? _settings.SfxVolume;
+        _settings.IsMuted = _audio?.IsMuted ?? _settings.IsMuted;
+        _settings.Language = _languageSelector.SelectedCode;
+        _settings.FullScreen = _fullScreen;
+        GameSettingsStore.Save(_settings);
     }
 
     private void SaveCurrentProgress()
@@ -2852,6 +3105,30 @@ public class KuroganesEchoGame : Game
         EndUi();
     }
 
+    private const float IntroSafeHorizontalMargin = 16f;
+    private const float IntroMaxHorizontalScale = 1.03f;
+
+    private List<IntroParagraphLine> GetIntroLayoutLines()
+    {
+        var cultureName = CultureInfo.CurrentUICulture.Name;
+        if (_cachedIntroLines.Count > 0 &&
+            string.Equals(_cachedIntroCulture, cultureName, StringComparison.OrdinalIgnoreCase))
+            return _cachedIntroLines;
+
+        var rawLines = new string[IntroLineKeys.Length];
+        for (var i = 0; i < IntroLineKeys.Length; i++)
+            rawLines[i] = LocalizedText.Get(IntroLineKeys[i]);
+
+        var safeWidth = VirtualWidth - IntroSafeHorizontalMargin * 2f;
+        var unscaledMaxWidth = safeWidth / IntroMaxHorizontalScale;
+        _cachedIntroLines = TextLayoutEngine.LayoutIntroParagraphs(
+            rawLines,
+            unscaledMaxWidth,
+            text => _fontWide.MeasureString(text).X);
+        _cachedIntroCulture = cultureName;
+        return _cachedIntroLines;
+    }
+
     private void DrawIntro()
     {
         GraphicsDevice.Clear(new Color(3, 5, 9));
@@ -2859,11 +3136,14 @@ public class KuroganesEchoGame : Game
 
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(3, 5, 9));
 
+        var introLines = GetIntroLayoutLines();
         var startY = VirtualHeight - 20f - _introScroll;
-        for (var index = 0; index < IntroLineKeys.Length; index++)
+        var originY = _fontWide.LineSpacing / 2f;
+
+        for (var index = 0; index < introLines.Count; index++)
         {
-            var line = LocalizedText.Get(IntroLineKeys[index]);
-            if (line.Length == 0)
+            var line = introLines[index];
+            if (line.IsEmpty)
                 continue;
 
             var y = startY + index * IntroLineHeight;
@@ -2874,12 +3154,22 @@ public class KuroganesEchoGame : Game
             var horizontalScale = 0.48f + depth * 0.55f;
             var verticalScale = 0.62f;
             var color = Color.Lerp(new Color(194, 158, 74), new Color(255, 224, 143), depth);
-            DrawTextCentered(
-                line,
-                new Vector2(VirtualWidth / 2f, y),
-                color,
-                _fontWide,
-                new Vector2(horizontalScale, verticalScale));
+            var scale = new Vector2(horizontalScale, verticalScale);
+
+            foreach (var word in line.Words)
+            {
+                var drawX = VirtualWidth / 2f + (word.X - line.BlockWidth / 2f) * horizontalScale;
+                _spriteBatch.DrawString(
+                    _fontWide,
+                    word.Text,
+                    new Vector2(drawX, y),
+                    color,
+                    0f,
+                    new Vector2(0f, originY),
+                    scale,
+                    SpriteEffects.None,
+                    0f);
+            }
         }
 
         var fadeHeight = 22;
@@ -2982,22 +3272,53 @@ public class KuroganesEchoGame : Game
         GraphicsDevice.Clear(new Color(12, 16, 24));
         BeginUi();
         DrawMenuBackground();
-        DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 27f), new Color(214, 191, 135), _fontSemibold, 1.2f);
-        DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 38f), new Color(156, 170, 169), 0.55f);
+        DrawTextCentered(LocalizedText.Get("Options"), new Vector2(VirtualWidth / 2f, 22f), new Color(214, 191, 135), _fontSemibold, 1.15f);
+        DrawTextCentered(LocalizedText.Get("Language"), new Vector2(VirtualWidth / 2f, 38f), new Color(156, 170, 169), 0.52f);
 
-        for (var index = 0; index < _languageCodes.Length; index++)
+        var languageSelected = _optionsSelection == LanguageOptionIndex;
+        var selectorBounds = LanguageSelectorBounds();
+        var prevArrow = LanguagePreviousArrowButton();
+        var nextArrow = LanguageNextArrowButton();
+        var fillColor = languageSelected ? new Color(78, 96, 105) : new Color(42, 53, 63);
+        var borderColor = languageSelected ? new Color(214, 191, 135) : new Color(77, 91, 99);
+        var arrowFill = languageSelected ? new Color(58, 74, 84) : new Color(34, 44, 53);
+        var arrowColor = languageSelected ? new Color(246, 214, 148) : new Color(156, 170, 169);
+
+        DrawRect(selectorBounds, fillColor);
+        DrawRect(prevArrow, arrowFill);
+        DrawRect(nextArrow, arrowFill);
+        DrawRect(selectorBounds, borderColor, false, languageSelected ? 2 : 1);
+        DrawRect(prevArrow, borderColor, false, 1);
+        DrawRect(nextArrow, borderColor, false, 1);
+
+        DrawTextCentered("<", prevArrow.Center.ToVector2(), arrowColor, _fontSemibold, 0.72f);
+        DrawTextCentered(">", nextArrow.Center.ToVector2(), arrowColor, _fontSemibold, 0.72f);
+
+        var currentCulture = _languageSelector.SelectedCulture;
+        var languageLabel = $"{currentCulture.Name} - {LocalizationManager.GetDisplayLabel(currentCulture)}";
+        DrawTextCentered(
+            languageLabel,
+            selectorBounds.Center.ToVector2(),
+            languageSelected ? new Color(255, 244, 214) : Color.White,
+            _fontSemibold,
+            0.58f);
+
+        var cultureCount = _languageSelector.SupportedCultures.Count;
+        if (cultureCount > 1)
         {
-            var selected = index == _optionsSelection;
-            var bounds = LanguageButton(index);
-            DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
-            DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
-            var label = _languageCodes[index] switch
+            const int dotSize = 3;
+            const int dotGap = 6;
+            var totalDotsWidth = cultureCount * dotSize + (cultureCount - 1) * dotGap;
+            var dotStartX = (VirtualWidth - totalDotsWidth) / 2;
+            var dotY = selectorBounds.Bottom + 4;
+            for (var index = 0; index < cultureCount; index++)
             {
-                "pt-BR" => LocalizedText.Get("Portuguese"),
-                "en-US" => LocalizedText.Get("English"),
-                _ => LocalizedText.Get("French")
-            };
-            DrawTextCentered($"{_languageCodes[index]} - {label}", bounds.Center.ToVector2(), Color.White, 0.55f);
+                var isActive = index == _languageSelector.SelectedIndex;
+                var dotColor = isActive
+                    ? new Color(214, 191, 135)
+                    : new Color(92, 106, 114);
+                DrawRect(new Rectangle(dotStartX + index * (dotSize + dotGap), dotY, dotSize, dotSize), dotColor);
+            }
         }
 
         if (IsDesktop)
@@ -3006,7 +3327,7 @@ public class KuroganesEchoGame : Game
             var selected = _optionsSelection == ControlsOptionIndex;
             DrawRect(controls, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
             DrawRect(controls, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
-            DrawTextCentered(LocalizedText.Get("Controls"), controls.Center.ToVector2(), Color.White, 0.58f);
+            DrawTextCentered(LocalizedText.Get("Controls"), controls.Center.ToVector2(), Color.White, 0.56f);
 
             DrawAudioOption(FullScreenButton(), _optionsSelection == FullScreenOptionIndex,
                 $"{LocalizedText.Get("Fullscreen")}: {(_fullScreen ? LocalizedText.Get("On") : LocalizedText.Get("Off"))}");
@@ -3112,10 +3433,33 @@ public class KuroganesEchoGame : Game
         }
 
         _player.SetLocomotion(PlayerAnimationState.Idle);
-        _player.Draw(_spriteBatch, new Vector2(VirtualWidth / 2f, 112f), 0.38f, SpriteEffects.None);
-        DrawTextCentered(CharacterLabel(_characterSelection), new Vector2(VirtualWidth / 2f, 126f), new Color(214, 191, 135), 0.62f);
-        DrawTextCentered(LocalizedText.Get(CharacterSpecialPrimaryKey()), new Vector2(VirtualWidth / 2f, 137f), new Color(156, 201, 191), 0.43f);
-        DrawTextCentered(LocalizedText.Get(CharacterSpecialSecondaryKey()), new Vector2(VirtualWidth / 2f, 147f), Color.White, 0.4f);
+        _player.Draw(_spriteBatch, new Vector2(VirtualWidth / 2f, 106f), 0.38f, SpriteEffects.None);
+        DrawTextCentered(CharacterLabel(_characterSelection), new Vector2(VirtualWidth / 2f, 118f), new Color(214, 191, 135), 0.62f);
+
+        const float primaryScale = 0.43f;
+        const float secondaryScale = 0.40f;
+        var descriptionBox = new UiRect(14, 125, VirtualWidth - 28, 33);
+        var descriptionLayout = TextLayoutEngine.LayoutVerticalStack(
+            descriptionBox,
+            horizontalPadding: 6f,
+            verticalPadding: 1f,
+            new[]
+            {
+                new TextSectionSpec(
+                    LocalizedText.Get(CharacterSpecialPrimaryKey()),
+                    _font.LineSpacing * primaryScale,
+                    0f,
+                    s => _font.MeasureString(s).X * primaryScale,
+                    JustifyMultiline: true),
+                new TextSectionSpec(
+                    LocalizedText.Get(CharacterSpecialSecondaryKey()),
+                    _font.LineSpacing * secondaryScale,
+                    2f,
+                    s => _font.MeasureString(s).X * secondaryScale,
+                    JustifyMultiline: true)
+            });
+        DrawTextBlock(descriptionLayout.Sections[0], _font, new Color(156, 201, 191), primaryScale);
+        DrawTextBlock(descriptionLayout.Sections[1], _font, Color.White, secondaryScale);
 
         DrawSelectionButtons();
         EndUi();
@@ -3345,38 +3689,79 @@ public class KuroganesEchoGame : Game
     {
         BeginUi();
         DrawRect(new Rectangle(0, 0, VirtualWidth, VirtualHeight), new Color(4, 7, 12, 220));
-        DrawRect(new Rectangle(20, 21, VirtualWidth - 40, 138), new Color(25, 35, 45));
-        DrawRect(new Rectangle(20, 21, VirtualWidth - 40, 138), new Color(214, 191, 135), false, 2);
-        var titleLines = SplitTitleIntoTwoLines(LocalizedText.Get(_level.Definition.BriefingTitleKey));
-        DrawTextCentered(titleLines.First, new Vector2(VirtualWidth / 2f, 32f), new Color(214, 191, 135), _fontSemibold, 0.68f);
-        DrawTextCentered(titleLines.Second, new Vector2(VirtualWidth / 2f, 45f), new Color(214, 191, 135), _fontSemibold, 0.68f);
-        DrawTextCentered(LocalizedText.Get("Objective"), new Vector2(VirtualWidth / 2f, 66f), new Color(130, 190, 177), 0.5f);
-        DrawTextCentered(LocalizedText.Get(_level.Definition.BriefingObjectiveKey), new Vector2(VirtualWidth / 2f, 81f), Color.White, 0.54f);
-        DrawTextCentered(LocalizedText.Get("Tutorial"), new Vector2(VirtualWidth / 2f, 104f), new Color(130, 190, 177), 0.5f);
-        DrawWrappedTextCentered(
-            LocalizedText.Get(_level.Definition.BriefingTutorialKey),
-            new Vector2(VirtualWidth / 2f, 119f),
-            264f,
-            Color.White,
-            0.46f,
-            10f);
-        DrawTextCentered(LocalizedText.Get("LevelBriefingPrompt"), new Vector2(VirtualWidth / 2f, 143f), new Color(214, 191, 135), 0.48f);
+
+        var panel = new Rectangle(16, 12, VirtualWidth - 32, VirtualHeight - 24);
+        DrawRect(panel, new Color(25, 35, 45));
+        DrawRect(panel, new Color(214, 191, 135), false, 2);
+
+        const float titleScale = 0.68f;
+        const float headingScale = 0.50f;
+        const float objectiveScale = 0.54f;
+        const float tutorialScale = 0.46f;
+        const float promptScale = 0.48f;
+
+        var promptAreaHeight = 18;
+        var contentRect = new UiRect(panel.Left, panel.Top, panel.Width, panel.Height - promptAreaHeight);
+        var layout = TextLayoutEngine.LayoutVerticalStack(
+            contentRect,
+            horizontalPadding: 12f,
+            verticalPadding: 8f,
+            new[]
+            {
+                new TextSectionSpec(
+                    LocalizedText.Get(_level.Definition.BriefingTitleKey),
+                    _fontSemibold.LineSpacing * titleScale,
+                    0f,
+                    s => _fontSemibold.MeasureString(s).X * titleScale,
+                    JustifyMultiline: false),
+                new TextSectionSpec(
+                    LocalizedText.Get("Objective"),
+                    _font.LineSpacing * headingScale,
+                    6f,
+                    s => _font.MeasureString(s).X * headingScale,
+                    JustifyMultiline: false),
+                new TextSectionSpec(
+                    LocalizedText.Get(_level.Definition.BriefingObjectiveKey),
+                    _font.LineSpacing * objectiveScale,
+                    2f,
+                    s => _font.MeasureString(s).X * objectiveScale,
+                    JustifyMultiline: true),
+                new TextSectionSpec(
+                    LocalizedText.Get("Tutorial"),
+                    _font.LineSpacing * headingScale,
+                    6f,
+                    s => _font.MeasureString(s).X * headingScale,
+                    JustifyMultiline: false),
+                new TextSectionSpec(
+                    LocalizedText.Get(_level.Definition.BriefingTutorialKey),
+                    _font.LineSpacing * tutorialScale,
+                    2f,
+                    s => _font.MeasureString(s).X * tutorialScale,
+                    JustifyMultiline: true)
+            });
+
+        DrawTextBlock(layout.Sections[0], _fontSemibold, new Color(214, 191, 135), titleScale);
+        DrawTextBlock(layout.Sections[1], _font, new Color(130, 190, 177), headingScale);
+        DrawTextBlock(layout.Sections[2], _font, Color.White, objectiveScale);
+        DrawTextBlock(layout.Sections[3], _font, new Color(130, 190, 177), headingScale);
+        DrawTextBlock(layout.Sections[4], _font, Color.White, tutorialScale);
+
+        var promptRect = new UiRect(panel.Left, panel.Bottom - promptAreaHeight, panel.Width, promptAreaHeight - 2);
+        var promptLayout = TextLayoutEngine.LayoutVerticalStack(
+            promptRect,
+            horizontalPadding: 12f,
+            verticalPadding: 2f,
+            new[]
+            {
+                new TextSectionSpec(
+                    LocalizedText.Get("LevelBriefingPrompt"),
+                    _font.LineSpacing * promptScale,
+                    0f,
+                    s => _font.MeasureString(s).X * promptScale,
+                    JustifyMultiline: false)
+            });
+        DrawTextBlock(promptLayout.Sections[0], _font, new Color(214, 191, 135), promptScale);
         EndUi();
-    }
-
-    private static (string First, string Second) SplitTitleIntoTwoLines(string title)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-            return (string.Empty, string.Empty);
-
-        var midpoint = title.Length / 2;
-        var split = title.LastIndexOf(' ', midpoint);
-        if (split <= 0)
-            split = title.IndexOf(' ', midpoint);
-        if (split <= 0)
-            return (title, string.Empty);
-
-        return (title[..split], title[(split + 1)..]);
     }
 
     private void DrawPauseOverlay()
@@ -3390,23 +3775,46 @@ public class KuroganesEchoGame : Game
         DrawPauseButton(PauseResumeButton(), _pauseSelection == PauseResumeIndex, LocalizedText.Get("Resume"));
         DrawPauseButton(PauseContinueButton(), _pauseSelection == PauseContinueIndex, LocalizedText.Get("ContinueFromState"));
         DrawText(LocalizedText.Get("MemoryCard"), new Vector2(42f, 61f), new Color(130, 190, 177), 0.42f);
+
+        var anyOccupied = false;
         for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
         {
-            var slotLabel = SaveProgressStore.HasSlot(slot)
+            var occupied = SaveProgressStore.HasSlot(slot);
+            if (occupied)
+                anyOccupied = true;
+
+            var slotLabel = occupied
                 ? string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotOccupied"), slot)
                 : string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotEmpty"), slot);
-            DrawPauseButton(
+            var selected = _pauseSelection == PauseSaveSlotStartIndex + slot - 1;
+            var holdProgress = _pauseSlotInput.HoldingSlot == slot ? _pauseSlotInput.HoldProgress : 0f;
+            DrawSaveSlotButton(
                 PauseSlotButton(slot),
-                _pauseSelection == PauseSaveSlotStartIndex + slot - 1,
-                slotLabel);
+                selected,
+                occupied,
+                slotLabel,
+                holdProgress);
         }
 
         DrawPauseButton(PauseOptionsButton(), _pauseSelection == PauseOptionsIndex, LocalizedText.Get("Options"));
         DrawPauseButton(PauseMainMenuButton(), _pauseSelection == PauseMainMenuIndex, LocalizedText.Get("MainMenu"));
+
+        var selectedSlot = GetSelectedPauseSlot();
+        var showDeleteHint = (selectedSlot.HasValue && SaveProgressStore.HasSlot(selectedSlot.Value)) ||
+                             (IsMobile && anyOccupied);
         if (!string.IsNullOrWhiteSpace(_pauseStatusMessage))
+        {
             DrawTextCentered(_pauseStatusMessage, new Vector2(VirtualWidth / 2f, 168f), new Color(156, 201, 191), 0.42f);
+        }
+        else if (showDeleteHint)
+        {
+            var hintKey = IsMobile ? "DeleteSlotHintMobile" : "DeleteSlotHintDesktop";
+            DrawTextCentered(LocalizedText.Get(hintKey), new Vector2(VirtualWidth / 2f, 168f), new Color(236, 188, 120), 0.40f);
+        }
         else
+        {
             DrawTextCentered(LocalizedText.Get("PausePrompt"), new Vector2(VirtualWidth / 2f, 168f), Color.White, 0.42f);
+        }
         EndUi();
     }
 
@@ -3431,19 +3839,44 @@ public class KuroganesEchoGame : Game
         DrawTextCentered(LocalizedText.Get("ContinueFromState"), new Vector2(VirtualWidth / 2f, 25f), new Color(214, 191, 135), _fontSemiboldWide, 0.72f);
         DrawTextCentered(LocalizedText.Get("SelectSaveSlot"), new Vector2(VirtualWidth / 2f, 39f), new Color(156, 201, 191), 0.42f);
 
+        var anyOccupied = false;
         for (var slot = 1; slot <= SaveProgressStore.SlotCount; slot++)
         {
-            var slotLabel = SaveProgressStore.HasSlot(slot)
+            var occupied = SaveProgressStore.HasSlot(slot);
+            if (occupied)
+                anyOccupied = true;
+
+            var slotLabel = occupied
                 ? string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotOccupied"), slot)
                 : string.Format(CultureInfo.CurrentCulture, LocalizedText.Get("SlotEmpty"), slot);
-            DrawPauseButton(SaveSlotButton(slot), _slotSelection == slot - 1, slotLabel);
+            var selected = _slotSelection == slot - 1;
+            var holdProgress = _loadSlotInput.HoldingSlot == slot ? _loadSlotInput.HoldProgress : 0f;
+            DrawSaveSlotButton(
+                SaveSlotButton(slot),
+                selected,
+                occupied,
+                slotLabel,
+                holdProgress);
         }
 
         DrawPauseButton(SaveSlotBackButton(), _slotSelection == SaveProgressStore.SlotCount, LocalizedText.Get("Back"));
+
+        var selectedSlot = _slotSelection < SaveProgressStore.SlotCount ? _slotSelection + 1 : (int?)null;
+        var showDeleteHint = (selectedSlot.HasValue && SaveProgressStore.HasSlot(selectedSlot.Value)) ||
+                             (IsMobile && anyOccupied);
         if (!string.IsNullOrWhiteSpace(_slotStatusMessage))
+        {
             DrawTextCentered(_slotStatusMessage, new Vector2(VirtualWidth / 2f, 161f), new Color(236, 188, 120), 0.42f);
+        }
+        else if (showDeleteHint)
+        {
+            var hintKey = IsMobile ? "DeleteSlotHintMobile" : "DeleteSlotHintDesktop";
+            DrawTextCentered(LocalizedText.Get(hintKey), new Vector2(VirtualWidth / 2f, 161f), new Color(236, 188, 120), 0.38f);
+        }
         else
+        {
             DrawTextCentered(LocalizedText.Get("PausePrompt"), new Vector2(VirtualWidth / 2f, 161f), Color.White, 0.38f);
+        }
         EndUi();
     }
 
@@ -3452,6 +3885,34 @@ public class KuroganesEchoGame : Game
         DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
         DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
         DrawTextCentered(label, bounds.Center.ToVector2(), Color.White, 0.48f);
+    }
+
+    private void DrawSaveSlotButton(Rectangle bounds, bool selected, bool occupied, string label, float holdProgress)
+    {
+        DrawRect(bounds, selected ? new Color(78, 96, 105) : new Color(42, 53, 63));
+        if (holdProgress > 0f)
+        {
+            var fillWidth = Math.Clamp((int)Math.Round(bounds.Width * holdProgress), 1, bounds.Width);
+            DrawRect(new Rectangle(bounds.Left, bounds.Top, fillWidth, bounds.Height), new Color(176, 56, 52, 175));
+        }
+
+        DrawRect(bounds, selected ? new Color(214, 191, 135) : new Color(77, 91, 99), false, 1);
+        DrawTextCentered(label, bounds.Center.ToVector2(), Color.White, 0.48f);
+
+        if (IsDesktop && selected && occupied)
+        {
+            var badgeText = LocalizedText.Get("SlotDeleteBadge");
+            var badgeWidth = Math.Max(22, (int)Math.Ceiling(_font.MeasureString(badgeText).X * 0.38f) + 6);
+            var badgeHeight = Math.Max(9, bounds.Height - 4);
+            var badgeRect = new Rectangle(
+                bounds.Right - badgeWidth - 3,
+                bounds.Top + (bounds.Height - badgeHeight) / 2,
+                badgeWidth,
+                badgeHeight);
+            DrawRect(badgeRect, new Color(138, 44, 42, 230));
+            DrawRect(badgeRect, new Color(236, 188, 120), false, 1);
+            DrawTextCentered(badgeText, badgeRect.Center.ToVector2(), new Color(255, 236, 210), 0.38f);
+        }
     }
 
     private void DrawWorldHealthBar(Vector2 feetPosition, int health, int maximumHealth, bool boss = false)
@@ -3532,7 +3993,7 @@ public class KuroganesEchoGame : Game
 
     private void DrawTextCentered(string text, Vector2 center, Color color, SpriteFont font, float scale)
     {
-        var size = font.MeasureString(text) * scale;
+        var size = font.MeasureString(text);
         _spriteBatch.DrawString(font, text, center, color, 0f, size / 2f, scale, SpriteEffects.None, 0f);
     }
 
@@ -3542,45 +4003,24 @@ public class KuroganesEchoGame : Game
         _spriteBatch.DrawString(font, text, center, color, 0f, size / 2f, scale, SpriteEffects.None, 0f);
     }
 
-    private void DrawWrappedTextCentered(string text, Vector2 center, float maxWidth, Color color, float scale, float lineHeight)
+    private void DrawTextBlock(TextBlockLayout block, SpriteFont font, Color color, float scale)
     {
-        var lines = WrapText(text, _font, maxWidth, scale);
-        if (lines.Count == 0)
-            return;
-
-        var blockHeight = lines.Count * lineHeight;
-        for (var index = 0; index < lines.Count; index++)
+        foreach (var line in block.Lines)
         {
-            var lineCenter = new Vector2(center.X, center.Y - blockHeight / 2f + lineHeight * (index + 0.5f));
-            DrawTextCentered(lines[index], lineCenter, color, scale);
-        }
-    }
-
-    private static List<string> WrapText(string text, SpriteFont font, float maxWidth, float scale)
-    {
-        var lines = new List<string>();
-        if (string.IsNullOrWhiteSpace(text))
-            return lines;
-
-        var current = string.Empty;
-        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var candidate = string.IsNullOrEmpty(current) ? word : $"{current} {word}";
-            if (!string.IsNullOrEmpty(current) && font.MeasureString(candidate).X * scale > maxWidth)
+            foreach (var word in line.Words)
             {
-                lines.Add(current);
-                current = word;
-            }
-            else
-            {
-                current = candidate;
+                _spriteBatch.DrawString(
+                    font,
+                    word.Text,
+                    new Vector2(word.X, word.Y),
+                    color,
+                    0f,
+                    Vector2.Zero,
+                    scale,
+                    SpriteEffects.None,
+                    0f);
             }
         }
-
-        if (!string.IsNullOrEmpty(current))
-            lines.Add(current);
-
-        return lines;
     }
 
     private void DrawRect(Rectangle bounds, Color color, bool filled = true, int thickness = 1)
@@ -3647,7 +4087,25 @@ public class KuroganesEchoGame : Game
 
     private Rectangle SaveSlotBackButton() => new(112, 125, 96, 18);
 
-    private Rectangle LanguageButton(int index) => new(66, 43 + index * 16, 188, 14);
+    private Rectangle LanguageSelectorBounds() => new(38, 46, 244, 22);
+
+    private Rectangle LanguagePreviousArrowButton()
+    {
+        var selector = LanguageSelectorBounds();
+        return new Rectangle(selector.Left, selector.Top, 26, selector.Height);
+    }
+
+    private Rectangle LanguageNextArrowButton()
+    {
+        var selector = LanguageSelectorBounds();
+        return new Rectangle(selector.Right - 26, selector.Top, 26, selector.Height);
+    }
+
+    private Rectangle LanguageSelectorSwipeArea()
+    {
+        var selector = LanguageSelectorBounds();
+        return new Rectangle(selector.Left - 14, selector.Top - 8, selector.Width + 28, selector.Height + 18);
+    }
 
     private Rectangle CharacterSelectionButton(int index) => new(8 + index * 104, 49, 96, 22);
 
@@ -3657,17 +4115,23 @@ public class KuroganesEchoGame : Game
 
     private Rectangle SelectionBackButton() => new(8, 160, 72, 18);
 
-    private Rectangle OptionsBackButton() => new(112, 164, 96, 12);
+    private Rectangle OptionsBackButton() => new(112, 152, 96, 16);
 
-    private Rectangle ControlsButton() => new(98, 92, 124, 14);
+    private Rectangle ControlsButton() => new(98, 80, 124, 15);
 
-    private Rectangle FullScreenButton() => new(16, 107, 288, 12);
+    private Rectangle FullScreenButton() => new(16, 98, 288, 14);
 
-    private Rectangle BgmVolumeButton() => new(16, 121, 288, 12);
+    private Rectangle BgmVolumeButton() => IsDesktop
+        ? new Rectangle(16, 115, 288, 14)
+        : new Rectangle(16, 82, 288, 16);
 
-    private Rectangle SfxVolumeButton() => new(16, 135, 288, 12);
+    private Rectangle SfxVolumeButton() => IsDesktop
+        ? new Rectangle(16, 132, 288, 14)
+        : new Rectangle(16, 102, 288, 16);
 
-    private Rectangle MuteButton() => new(16, 149, 288, 12);
+    private Rectangle MuteButton() => IsDesktop
+        ? new Rectangle(16, 149, 288, 14)
+        : new Rectangle(16, 122, 288, 16);
 
     private Rectangle ControlsKeyboardButton() => new(8, 27, 148, 14);
 
@@ -3737,6 +4201,64 @@ public class KuroganesEchoGame : Game
 
         var mouse = Mouse.GetState();
         if (mouse.LeftButton == ButtonState.Pressed && _previousMouse.LeftButton == ButtonState.Released)
+            return ToVirtualPoint(mouse.Position.ToVector2());
+
+        return null;
+    }
+
+    private SlotTouchInput[] ConvertTouchesToVirtual(TouchCollection touches)
+    {
+        if (touches.Count == 0)
+            return Array.Empty<SlotTouchInput>();
+
+        var result = new SlotTouchInput[touches.Count];
+        for (var i = 0; i < touches.Count; i++)
+        {
+            var touch = touches[i];
+            var vp = ToVirtualPoint(touch.Position);
+            result[i] = new SlotTouchInput(touch.Id, ToTouchPhase(touch.State), new UiPoint(vp.X, vp.Y));
+        }
+
+        return result;
+    }
+
+    private static TouchPhase ToTouchPhase(TouchLocationState state) => state switch
+    {
+        TouchLocationState.Pressed => TouchPhase.Pressed,
+        TouchLocationState.Moved => TouchPhase.Moved,
+        TouchLocationState.Released => TouchPhase.Released,
+        _ => TouchPhase.Invalid
+    };
+
+    private static UiRect ToUiRect(Rectangle rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
+
+    private static UiPoint? ToUiPointNullable(Point? point) =>
+        point.HasValue ? new UiPoint(point.Value.X, point.Value.Y) : null;
+
+    private static Point? GetFreshTouchPressPoint(IReadOnlyList<SlotTouchInput> touches)
+    {
+        foreach (var touch in touches)
+        {
+            if (touch.State == TouchPhase.Pressed)
+                return new Point(touch.Position.X, touch.Position.Y);
+        }
+
+        return null;
+    }
+
+    private Point? GetFreshLeftClickPoint()
+    {
+        var mouse = Mouse.GetState();
+        if (mouse.LeftButton == ButtonState.Pressed && _previousMouse.LeftButton == ButtonState.Released)
+            return ToVirtualPoint(mouse.Position.ToVector2());
+
+        return null;
+    }
+
+    private Point? GetFreshRightClickPoint()
+    {
+        var mouse = Mouse.GetState();
+        if (mouse.RightButton == ButtonState.Pressed && _previousMouse.RightButton == ButtonState.Released)
             return ToVirtualPoint(mouse.Position.ToVector2());
 
         return null;

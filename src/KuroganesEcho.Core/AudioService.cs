@@ -53,13 +53,17 @@ internal sealed class AudioService : IDisposable
     private readonly Dictionary<string, SoundEffect> _soundEffects = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<ActiveSfx> _activeSfx = new();
     private readonly Random _random = new();
+    private readonly AudioMixerState _mixer = new();
     private int _lastFootstepVariant = -1;
     private SoundEffectInstance _bgmInstance;
     private string _currentBgmAsset;
 
-    public float BgmVolume { get; private set; } = 1f;
-    public float SfxVolume { get; private set; } = 1f;
-    public bool IsMuted { get; private set; }
+    public const float DefaultBgmVolume = AudioMixerState.DefaultBgmVolume;
+    public const float DefaultSfxVolume = AudioMixerState.DefaultSfxVolume;
+
+    public float BgmVolume => _mixer.BgmVolume;
+    public float SfxVolume => _mixer.SfxVolume;
+    public bool IsMuted => _mixer.IsMuted;
 
     private AudioService(ContentManager content, SoundEffect[][] footstepSounds)
     {
@@ -82,6 +86,12 @@ internal sealed class AudioService : IDisposable
         }
 
         return service;
+    }
+
+    public void ApplySettings(GameSettings settings)
+    {
+        _mixer.ApplySettings(settings);
+        ApplyBgmVolume();
     }
 
     /// <summary>Reproduz um SFX carregado pelo caminho lógico do Content.</summary>
@@ -146,19 +156,23 @@ internal sealed class AudioService : IDisposable
 
     public void SetBgmVolume(float volume)
     {
-        BgmVolume = Math.Clamp(volume, 0f, 1f);
+        _mixer.SetBgmVolume(volume);
         ApplyBgmVolume();
     }
 
-    public void SetSfxVolume(float volume) => SfxVolume = Math.Clamp(volume, 0f, 1f);
+    public void SetSfxVolume(float volume) => _mixer.SetSfxVolume(volume);
 
     public void SetMuted(bool muted)
     {
-        IsMuted = muted;
+        _mixer.SetMuted(muted);
         ApplyBgmVolume();
     }
 
-    public void ToggleMute() => SetMuted(!IsMuted);
+    public void ToggleMute()
+    {
+        _mixer.ToggleMute();
+        ApplyBgmVolume();
+    }
 
     /// <summary>Inicia ou troca a música de fundo em loop usando o volume configurado.</summary>
     public void PlayBgm(string assetPath)
@@ -255,7 +269,7 @@ internal sealed class AudioService : IDisposable
         float pan,
         float? maxDuration)
     {
-        var effectiveVolume = IsMuted ? 0f : Math.Clamp(volume, 0f, 1f) * SfxVolume;
+        var effectiveVolume = _mixer.GetEffectiveSfxVolume(volume);
         if (effectiveVolume <= 0f)
             return;
 
@@ -296,6 +310,6 @@ internal sealed class AudioService : IDisposable
     private void ApplyBgmVolume()
     {
         if (_bgmInstance is not null)
-            _bgmInstance.Volume = IsMuted ? 0f : BgmVolume;
+            _bgmInstance.Volume = _mixer.EffectiveBgmVolume;
     }
 }

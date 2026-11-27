@@ -11,6 +11,10 @@ internal sealed class EnemyInstance
 {
     private const float PatrolHalfWidth = 72f;
     private const float AttackDistance = 78f;
+    private const float RangedAttackDuration = 0.75f;
+    private const float RangedAttackCooldown = 2f;
+    private const float RangedAttackReleaseRemaining = 0.25f;
+    private const float RangedAttackVerticalTolerance = 48f;
     private const float Gravity = 480f;
     private const float EnemyHalfWidth = 10f;
     private const float EnemyHeight = 32f;
@@ -21,7 +25,8 @@ internal sealed class EnemyInstance
     private float _attackCooldown;
     private float _damageInvulnerability;
     private float _verticalVelocity;
-    private bool _attackHitApplied;
+    private bool _attackConsumed;
+    private bool _rangedAttack;
     private int _facing = 1;
     private GameDifficulty _difficulty = GameDifficulty.Normal;
 
@@ -41,7 +46,9 @@ internal sealed class EnemyInstance
     public int MaxHealth => CombatBalance.GetEnemyMaxHealth(_difficulty);
     public int Health { get; private set; }
     public bool IsAlive => Health > 0;
+    public bool IsDeathAnimationComplete => !IsAlive && Character.IsDeadAnimationComplete;
     public bool IsAttacking => IsAlive && _attackRemaining > 0f;
+    public bool IsRangedAttacking => IsAttacking && _rangedAttack;
 
     public void ConfigureDifficulty(GameDifficulty difficulty)
     {
@@ -68,12 +75,13 @@ internal sealed class EnemyInstance
         _attackCooldown = 0f;
         _damageInvulnerability = 0f;
         _verticalVelocity = 0f;
-        _attackHitApplied = false;
+        _attackConsumed = false;
+        _rangedAttack = false;
         _facing = 1;
         Character.Reset();
     }
 
-    public void Update(float elapsedSeconds, Vector2 playerPosition, GameLevel level)
+    public void Update(float elapsedSeconds, Vector2 playerPosition, GameLevel level, Rectangle visibleBounds)
     {
         _attackCooldown = Math.Max(0f, _attackCooldown - elapsedSeconds);
         _damageInvulnerability = Math.Max(0f, _damageInvulnerability - elapsedSeconds);
@@ -89,18 +97,33 @@ internal sealed class EnemyInstance
         {
             _attackRemaining = Math.Max(0f, _attackRemaining - elapsedSeconds);
             _facing = horizontalDistance < 0f ? -1 : 1;
-            Character.SetAnimation(EnemyAnimationState.Attack1);
+            Character.SetAnimation(_rangedAttack ? Character.RangedAttackAnimation : EnemyAnimationState.Attack1);
+        }
+        else if (Character.HasRangedAttack &&
+                 visibleBounds.Intersects(Hitbox) &&
+                 Math.Abs(horizontalDistance) > AttackDistance &&
+                 Math.Abs(playerPosition.Y - Position.Y) <= RangedAttackVerticalTolerance &&
+                 _attackCooldown <= 0f)
+        {
+            _attackRemaining = RangedAttackDuration;
+            _attackCooldown = RangedAttackCooldown;
+            _attackConsumed = false;
+            _rangedAttack = true;
+            _facing = horizontalDistance < 0f ? -1 : 1;
+            Character.SetAnimation(Character.RangedAttackAnimation);
         }
         else if (Math.Abs(horizontalDistance) <= AttackDistance && _attackCooldown <= 0f)
         {
             _attackRemaining = 0.55f;
             _attackCooldown = 1.4f;
-            _attackHitApplied = false;
+            _attackConsumed = false;
+            _rangedAttack = false;
             _facing = horizontalDistance < 0f ? -1 : 1;
             Character.SetAnimation(EnemyAnimationState.Attack1);
         }
         else
         {
+            _rangedAttack = false;
             var speed = level.Difficulty switch
             {
                 GameDifficulty.Easy => 12f,
@@ -143,12 +166,28 @@ internal sealed class EnemyInstance
         Character.Update(elapsedSeconds);
     }
 
-    public bool TryConsumeAttackHit(Rectangle playerHitbox)
+    public bool TryLaunchRangedAttack(Vector2 targetPosition, out Vector2 origin, out Vector2 direction)
     {
-        if (!IsAttacking || _attackHitApplied || !AttackHitbox.Intersects(playerHitbox))
+        origin = default;
+        direction = default;
+        if (!IsRangedAttacking || _attackConsumed || _attackRemaining > RangedAttackReleaseRemaining)
             return false;
 
-        _attackHitApplied = true;
+        _attackConsumed = true;
+        origin = Position + new Vector2(_facing * (EnemyHalfWidth + 3f), -EnemyHeight * 0.7f);
+        direction = targetPosition - origin;
+        direction = direction.LengthSquared() > 0.001f
+            ? Vector2.Normalize(direction)
+            : new Vector2(_facing, 0f);
+        return true;
+    }
+
+    public bool TryConsumeAttackHit(Rectangle playerHitbox)
+    {
+        if (!IsAttacking || _rangedAttack || _attackConsumed || !AttackHitbox.Intersects(playerHitbox))
+            return false;
+
+        _attackConsumed = true;
         return true;
     }
 

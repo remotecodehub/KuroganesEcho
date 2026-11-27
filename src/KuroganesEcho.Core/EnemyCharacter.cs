@@ -21,6 +21,13 @@ internal enum EnemyAnimationState
     Special2
 }
 
+internal enum EnemyRangedAttackKind
+{
+    None,
+    Cast,
+    Shot
+}
+
 /// <summary>
 /// Loads and animates an enemy sprite-sheet set. Enemy movement and behavior
 /// remain outside this class so the same presentation can be reused by every act.
@@ -40,7 +47,10 @@ internal sealed class EnemyCharacter
         string Attack3 = null,
         string Jump = null,
         string Special1 = null,
-        string Special2 = null);
+        string Special2 = null,
+        EnemyRangedAttackKind RangedAttackKind = EnemyRangedAttackKind.None,
+        EnemyAnimationState RangedAttackAnimation = EnemyAnimationState.Attack1,
+        string ProjectileAsset = null);
 
     private static readonly IReadOnlyDictionary<string, EnemyDefinition> Definitions =
         new Dictionary<string, EnemyDefinition>(StringComparer.OrdinalIgnoreCase)
@@ -59,13 +69,19 @@ internal sealed class EnemyCharacter
                 "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump"),
             ["Kitsune"] = new(
                 "Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Kitsune",
-                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump", "Fire_1", "Fire_2"),
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump",
+                RangedAttackKind: EnemyRangedAttackKind.Cast,
+                RangedAttackAnimation: EnemyAnimationState.Attack2,
+                ProjectileAsset: "Fire_1"),
             ["Yamabushi_tengu"] = new(
                 "Tiled/Enemies/craftpix-net-605776-free-yokai-pixel-art-character-sprites/Yamabushi_tengu",
                 "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", "Attack_3", "Jump"),
             ["Skeleton_Archer"] = new(
                 "Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Archer",
-                "Idle", "Walk", "Attack_1", "Hurt", "Dead", null, "Attack_2", "Attack_3", null, "Shot_1", "Shot_2"),
+                "Idle", "Walk", "Attack_1", "Hurt", "Dead", null, "Attack_2", "Attack_3", null, "Shot_1", "Shot_2",
+                RangedAttackKind: EnemyRangedAttackKind.Shot,
+                RangedAttackAnimation: EnemyAnimationState.Special1,
+                ProjectileAsset: "Arrow"),
             ["Skeleton_Spearman"] = new(
                 "Tiled/Enemies/craftpix-net-957123-free-skeleton-pixel-art-sprite-sheets/Skeleton_Spearman",
                 "Idle", "Walk", "Attack_1", "Hurt", "Dead", "Run", "Attack_2", null, null, "Protect", "Run+attack"),
@@ -105,6 +121,8 @@ internal sealed class EnemyCharacter
     private float _animationClock;
 
     private const float DeadFrameRate = 3f;
+    private Texture2D _rangedProjectileTexture;
+    private int _rangedProjectileFrameCount;
 
     private EnemyCharacter(string id)
     {
@@ -114,6 +132,18 @@ internal sealed class EnemyCharacter
 
     public string Id { get; }
     public EnemyAnimationState Animation { get; private set; }
+    public bool IsDeadAnimationComplete =>
+        Animation == EnemyAnimationState.Dead &&
+        _animationClock >= _clips[EnemyAnimationState.Dead].FrameCount / DeadFrameRate;
+    public EnemyRangedAttackKind RangedAttackKind { get; private set; }
+    public bool HasRangedAttack =>
+        RangedAttackKind != EnemyRangedAttackKind.None &&
+        _clips.ContainsKey(RangedAttackAnimation) &&
+        _rangedProjectileTexture is not null &&
+        _rangedProjectileFrameCount > 0;
+    public EnemyAnimationState RangedAttackAnimation { get; private set; }
+    public Texture2D RangedProjectileTexture => _rangedProjectileTexture;
+    public int RangedProjectileFrameCount => _rangedProjectileFrameCount;
 
     public static EnemyCharacter Load(ContentManager content, string enemyType)
     {
@@ -167,6 +197,8 @@ internal sealed class EnemyCharacter
 
     private void LoadDefinition(ContentManager content, EnemyDefinition definition)
     {
+        RangedAttackKind = definition.RangedAttackKind;
+        RangedAttackAnimation = definition.RangedAttackAnimation;
         Add(content, EnemyAnimationState.Idle, definition.Root, definition.Idle);
         Add(content, EnemyAnimationState.Walk, definition.Root, definition.Walk);
         Add(content, EnemyAnimationState.Attack1, definition.Root, definition.Attack1);
@@ -178,6 +210,11 @@ internal sealed class EnemyCharacter
         AddOptional(content, EnemyAnimationState.Jump, definition.Root, definition.Jump);
         AddOptional(content, EnemyAnimationState.Special1, definition.Root, definition.Special1);
         AddOptional(content, EnemyAnimationState.Special2, definition.Root, definition.Special2);
+        if (definition.ProjectileAsset is not null)
+        {
+            _rangedProjectileTexture = content.Load<Texture2D>($"{definition.Root}/{definition.ProjectileAsset}");
+            _rangedProjectileFrameCount = GetFrameCount(_rangedProjectileTexture);
+        }
     }
 
     private void Add(ContentManager content, EnemyAnimationState state, string root, string assetName)

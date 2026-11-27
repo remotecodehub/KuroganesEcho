@@ -15,9 +15,25 @@ internal static class CombatBalance
     public const int PlayerPowerMaximum = 3;
     public const float SpecialPowerCost = 1f;
     public const float PowerFruitRestore = 1f;
-    public const float PlayerPowerRecoveryPerSecond = 0.18f;
+    public const float PlayerPowerRecoveryIntervalSeconds = 3f;
     public const float KunoichiFruitStaminaRestore = 2.5f;
     public const float KunoichiFruitHealthRestoreFraction = 0.25f;
+
+    public static float GetSecondarySpecialPowerCost(GameDifficulty difficulty) =>
+        PlayerPowerMaximum * (difficulty switch
+        {
+            GameDifficulty.Easy => 0.05f,
+            GameDifficulty.Hard => 0.10f,
+            _ => 0.075f
+        });
+
+    public static float GetPlayerPowerRecoveryAmount(GameDifficulty difficulty) =>
+        PlayerPowerMaximum * (difficulty switch
+        {
+            GameDifficulty.Easy => 0.20f,
+            GameDifficulty.Hard => 0.05f,
+            _ => 0.10f
+        });
 
     public static int GetPlayerMaxHealth(GameDifficulty difficulty) => difficulty switch
     {

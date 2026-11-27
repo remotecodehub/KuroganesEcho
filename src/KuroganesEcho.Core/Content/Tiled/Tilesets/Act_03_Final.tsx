@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.12.2" name="Act_03_Final" tilewidth="16" tileheight="16" tilecount="300" columns="0">
+<tileset version="1.10" tiledversion="1.12.2" name="Act_03_Final" tilewidth="16" tileheight="16" tilecount="305" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
   <image source="Castle/tile_r00_c00_000.png" width="16" height="16"/>
@@ -900,5 +900,20 @@
  </tile>
  <tile id="299">
   <image source="Castle/tile_r14_c19_299.png" width="16" height="16"/>
+ </tile>
+ <tile id="300">
+  <image source="Castle/tile_r03_c18_078_A.png" width="16" height="16"/>
+ </tile>
+ <tile id="301">
+  <image source="Castle/tile_r04_c01_081_A.png" width="16" height="16"/>
+ </tile>
+ <tile id="302">
+  <image source="Castle/tile_r04_c01_081_B.png" width="16" height="16"/>
+ </tile>
+ <tile id="303">
+  <image source="Castle/tile_r04_c01_081_C.png" width="16" height="16"/>
+ </tile>
+ <tile id="304">
+  <image source="Castle/tile_r01_c01_021_A.png" width="16" height="16"/>
  </tile>
 </tileset>

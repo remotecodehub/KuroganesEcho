@@ -174,4 +174,84 @@ public sealed class SaveSlotInputControllerTests
         Assert.Equal(SaveSlotAction.Activate, confirmResult.Action);
         Assert.Equal(2, confirmResult.Slot);
     }
+
+    [Fact]
+    public void GamepadButtonB_OnOccupiedSlot_TriggersDeletionInPauseAndSelectionScreens()
+    {
+        Func<int, bool> occupied = slot => slot == 2;
+
+        // Pause menu: B on occupied slot triggers Delete
+        var pauseResult = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot: 2,
+            gamepadBPressed: true,
+            isSlotOccupied: occupied,
+            allowBackWhenNotDeleting: false);
+        Assert.Equal(SaveSlotAction.Delete, pauseResult.Action);
+        Assert.Equal(2, pauseResult.Slot);
+
+        // Save slot selection screen: B on occupied slot triggers Delete instead of Back
+        var selectionResult = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot: 2,
+            gamepadBPressed: true,
+            isSlotOccupied: occupied,
+            allowBackWhenNotDeleting: true);
+        Assert.Equal(SaveSlotAction.Delete, selectionResult.Action);
+        Assert.Equal(2, selectionResult.Slot);
+    }
+
+    [Fact]
+    public void GamepadButtonB_OnEmptySlot_DoesNotTriggerDeletion()
+    {
+        Func<int, bool> occupied = slot => slot == 1;
+
+        // Pause menu: B on empty slot does nothing (does not delete)
+        var pauseEmpty = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot: 2,
+            gamepadBPressed: true,
+            isSlotOccupied: occupied,
+            allowBackWhenNotDeleting: false);
+        Assert.Equal(SaveSlotAction.None, pauseEmpty.Action);
+        Assert.Equal(0, pauseEmpty.Slot);
+
+        // Save slot selection screen: B on empty slot does NOT delete and preserves Back behavior
+        var selectionEmpty = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot: 2,
+            gamepadBPressed: true,
+            isSlotOccupied: occupied,
+            allowBackWhenNotDeleting: true);
+        Assert.Equal(SaveSlotAction.Back, selectionEmpty.Action);
+        Assert.Equal(0, selectionEmpty.Slot);
+    }
+
+    [Fact]
+    public void GamepadButtonB_WhenNoSlotSelected_PreservesBackBehaviorOnSelectionScreenAndNoOpOnPause()
+    {
+        Func<int, bool> occupied = _ => true;
+
+        // Selection screen with Back option selected (selectedSlot == null): preserves Back
+        var selectionBack = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot: null,
+            gamepadBPressed: true,
+            isSlotOccupied: occupied,
+            allowBackWhenNotDeleting: true);
+        Assert.Equal(SaveSlotAction.Back, selectionBack.Action);
+        Assert.Equal(0, selectionBack.Slot);
+
+        // Pause screen with non-slot option selected (selectedSlot == null): does not delete or exit
+        var pauseNonSlot = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot: null,
+            gamepadBPressed: true,
+            isSlotOccupied: occupied,
+            allowBackWhenNotDeleting: false);
+        Assert.Equal(SaveSlotAction.None, pauseNonSlot.Action);
+        Assert.Equal(0, pauseNonSlot.Slot);
+
+        // When B is not pressed: returns None regardless of selected slot
+        var notPressed = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot: 1,
+            gamepadBPressed: false,
+            isSlotOccupied: occupied,
+            allowBackWhenNotDeleting: true);
+        Assert.Equal(SaveSlotAction.None, notPressed.Action);
+    }
 }

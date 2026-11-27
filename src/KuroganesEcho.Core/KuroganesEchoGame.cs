@@ -781,6 +781,17 @@ public class KuroganesEchoGame : Game
         }
 
         var selectedSlot = GetSelectedPauseSlot();
+        var gamepadBResult = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot,
+            gamepadBPressed: IsNewButtonPress(gamePad, Buttons.B),
+            isSlotOccupied: SaveProgressStore.HasSlot,
+            allowBackWhenNotDeleting: false);
+        if (gamepadBResult.Action == SaveSlotAction.Delete)
+        {
+            DeleteSaveSlot(gamepadBResult.Slot, isPauseScreen: true);
+            return;
+        }
+
         var confirmPressed = IsNewKeyPress(keyboard, Keys.Enter) ||
                              IsNewKeyPress(keyboard, Keys.Space) ||
                              IsNewButtonPress(gamePad, Buttons.A);
@@ -986,8 +997,7 @@ public class KuroganesEchoGame : Game
         if (IsNewKeyPress(keyboard, Keys.Down) || IsNewGamepadDown(gamePad))
             _slotSelection = (_slotSelection + 1) % optionCount;
 
-        if (IsNewKeyPress(keyboard, Keys.Escape) ||
-            IsNewButtonPress(gamePad, Buttons.B))
+        if (IsNewKeyPress(keyboard, Keys.Escape))
         {
             ReturnFromSaveSlotSelection();
             return;
@@ -996,6 +1006,24 @@ public class KuroganesEchoGame : Game
         var selectedSlot = _slotSelection < SaveProgressStore.SlotCount
             ? _slotSelection + 1
             : (int?)null;
+
+        var gamepadBResult = SaveSlotInputController.EvaluateGamepadCancelInput(
+            selectedSlot,
+            gamepadBPressed: IsNewButtonPress(gamePad, Buttons.B),
+            isSlotOccupied: SaveProgressStore.HasSlot,
+            allowBackWhenNotDeleting: true);
+        if (gamepadBResult.Action == SaveSlotAction.Delete)
+        {
+            DeleteSaveSlot(gamepadBResult.Slot, isPauseScreen: false);
+            return;
+        }
+
+        if (gamepadBResult.Action == SaveSlotAction.Back)
+        {
+            ReturnFromSaveSlotSelection();
+            return;
+        }
+
         var confirmPressed = IsNewKeyPress(keyboard, Keys.Enter) ||
                              IsNewKeyPress(keyboard, Keys.Space) ||
                              IsNewButtonPress(gamePad, Buttons.A);

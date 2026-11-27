@@ -17,7 +17,8 @@ internal enum SaveSlotAction
 {
     None,
     Activate,
-    Delete
+    Delete,
+    Back
 }
 
 internal readonly record struct SaveSlotInputResult(
@@ -216,6 +217,34 @@ internal sealed class SaveSlotInputController
             return new SaveSlotInputResult(SaveSlotAction.Activate, selectedSlot.Value, null, 0f);
 
         return new SaveSlotInputResult(SaveSlotAction.None, 0, null, 0f);
+    }
+
+    /// <summary>
+    /// Evaluates gamepad B button (Cancel/Back) input for save-slot screens.
+    /// Deletes the selected slot only when it is occupied; empty slots never trigger deletion.
+    /// When no occupied slot is selected and <paramref name="allowBackWhenNotDeleting"/> is true,
+    /// preserves the back navigation action.
+    /// </summary>
+    public static SaveSlotInputResult EvaluateGamepadCancelInput(
+        int? selectedSlot,
+        bool gamepadBPressed,
+        Func<int, bool> isSlotOccupied,
+        bool allowBackWhenNotDeleting)
+    {
+        if (!gamepadBPressed)
+            return new SaveSlotInputResult(SaveSlotAction.None, 0, null, 0f);
+
+        if (selectedSlot.HasValue &&
+            SaveProgressStore.IsValidSlot(selectedSlot.Value) &&
+            isSlotOccupied is not null &&
+            isSlotOccupied(selectedSlot.Value))
+        {
+            return new SaveSlotInputResult(SaveSlotAction.Delete, selectedSlot.Value, null, 0f);
+        }
+
+        return allowBackWhenNotDeleting
+            ? new SaveSlotInputResult(SaveSlotAction.Back, 0, null, 0f)
+            : new SaveSlotInputResult(SaveSlotAction.None, 0, null, 0f);
     }
 
     private static int FindSlotAt(UiPoint point, Func<int, UiRect> getSlotBounds)

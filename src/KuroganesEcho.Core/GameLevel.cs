@@ -193,9 +193,10 @@ internal sealed class GameLevel
     public static GameLevel Load(GraphicsDevice graphicsDevice, LevelDefinition definition)
     {
         var mapDirectory = Path.GetDirectoryName(definition.MapAssetPath)?.Replace('\\', '/') ?? "Content/Tiled/Maps";
+        var tiledResourceDirectory = Path.Combine(mapDirectory, "..", "Tilesets").Replace('\\', '/');
         using var mapStream = TitleContainer.OpenStream(definition.MapAssetPath);
-        var parser = new TiledTmxParser(mapDirectory, OpenTiledResource);
-        var tilemap = parser.ParseFromStream(mapStream, graphicsDevice, mapDirectory);
+        var parser = new TiledTmxParser(tiledResourceDirectory, OpenTiledResource);
+        var tilemap = parser.ParseFromStream(mapStream, graphicsDevice, tiledResourceDirectory);
         var renderer = new TilemapSpriteBatchRenderer
         {
             BlendState = BlendState.AlphaBlend,
@@ -588,6 +589,22 @@ internal sealed class GameLevel
         if (!normalized.StartsWith("Content/", StringComparison.OrdinalIgnoreCase))
             normalized = "Content/" + normalized.TrimStart('/');
 
+        var pathSegments = new List<string>();
+        foreach (var segment in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment == ".")
+                continue;
+            if (segment == "..")
+            {
+                if (pathSegments.Count > 1)
+                    pathSegments.RemoveAt(pathSegments.Count - 1);
+                continue;
+            }
+
+            pathSegments.Add(segment);
+        }
+
+        normalized = string.Join('/', pathSegments);
         return TitleContainer.OpenStream(normalized);
     }
 }

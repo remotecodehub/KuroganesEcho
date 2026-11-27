@@ -33,8 +33,10 @@ internal readonly record struct Act03SealCollectionResult(
 internal sealed class Act03EncounterStateMachine
 {
     public const int Seal3RestoredLives = 3;
+    public const float SealCollectionDelaySeconds = 0.65f;
 
     public Act03BossStage Stage { get; private set; } = Act03BossStage.None;
+    public float SealRevealGraceRemaining { get; private set; }
 
     public string ActiveBossVariant => Stage switch
     {
@@ -47,6 +49,8 @@ internal sealed class Act03EncounterStateMachine
 
     public void InitializeForLevel(string levelId, SaveProgressState save)
     {
+        SealRevealGraceRemaining = 0f;
+
         if (!string.Equals(levelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
         {
             Stage = Act03BossStage.None;
@@ -70,12 +74,19 @@ internal sealed class Act03EncounterStateMachine
         Stage = Act03BossStage.Minotaur3;
     }
 
+    public void Update(float elapsedSeconds)
+    {
+        if (SealRevealGraceRemaining > 0f && elapsedSeconds > 0f)
+            SealRevealGraceRemaining = Math.Max(0f, SealRevealGraceRemaining - elapsedSeconds);
+    }
+
     public Act03BossDefeatResult OnBossDefeated()
     {
         switch (Stage)
         {
             case Act03BossStage.Minotaur3:
                 Stage = Act03BossStage.AwaitingSeal3;
+                SealRevealGraceRemaining = SealCollectionDelaySeconds;
                 return new Act03BossDefeatResult(Transitioned: true, RevealedSealPartIndex: 3);
 
             case Act03BossStage.FireWizard:
@@ -88,6 +99,7 @@ internal sealed class Act03EncounterStateMachine
 
             case Act03BossStage.WandererMagican:
                 Stage = Act03BossStage.AwaitingSeal4;
+                SealRevealGraceRemaining = SealCollectionDelaySeconds;
                 return new Act03BossDefeatResult(Transitioned: true, RevealedSealPartIndex: 4);
 
             default:
@@ -95,7 +107,10 @@ internal sealed class Act03EncounterStateMachine
         }
     }
 
-    public bool IsSealAvailable(int partIndex, SaveProgressState save)
+    /// <summary>
+    /// True immediately once the boss is defeated so the seal renders visibly on screen.
+    /// </summary>
+    public bool IsSealVisible(int partIndex, SaveProgressState save)
     {
         if (partIndex == 3)
         {
@@ -108,6 +123,13 @@ internal sealed class Act03EncounterStateMachine
 
         return false;
     }
+
+    /// <summary>
+    /// True only once the seal is visible AND the brief reveal grace period has elapsed,
+    /// preventing accidental instant same-frame collection before the player sees the seal.
+    /// </summary>
+    public bool IsSealAvailable(int partIndex, SaveProgressState save) =>
+        IsSealVisible(partIndex, save) && SealRevealGraceRemaining <= 0f;
 
     public Act03SealCollectionResult TryCollectSeal(int partIndex, SaveProgressState save)
     {
@@ -124,6 +146,7 @@ internal sealed class Act03EncounterStateMachine
             }
 
             Stage = Act03BossStage.FireWizard;
+            SealRevealGraceRemaining = 0f;
             return new Act03SealCollectionResult(
                 Collected: true,
                 ShouldRestorePlayerResources: shouldRestore,
@@ -136,6 +159,7 @@ internal sealed class Act03EncounterStateMachine
                 return new Act03SealCollectionResult(Collected: false);
 
             Stage = Act03BossStage.Completed;
+            SealRevealGraceRemaining = 0f;
             if (save is not null)
             {
                 save.SealAshesParts = 4;

@@ -24,20 +24,33 @@ public sealed class Act03EncounterStateMachineTests
         // 1. Minotaur_3 appears first; no mage is active yet
         Assert.Equal(Act03BossStage.Minotaur3, machine.Stage);
         Assert.Equal("Minotaur_3", machine.ActiveBossVariant);
+        Assert.False(machine.IsSealVisible(3, save));
         Assert.False(machine.IsSealAvailable(3, save));
-        Assert.False(machine.IsSealAvailable(4, save));
+        Assert.False(machine.IsSealVisible(4, save));
 
-        // 2. Defeating Minotaur_3 reveals Ash Seal 3/4 and does NOT spawn any mage yet
+        // 2. Defeating Minotaur_3 immediately reveals Ash Seal 3/4 visually and spawns NO mage
         var minotaurDefeat = machine.OnBossDefeated();
         Assert.True(minotaurDefeat.Transitioned);
         Assert.Equal(3, minotaurDefeat.RevealedSealPartIndex);
         Assert.Null(minotaurDefeat.NextBossVariant);
         Assert.Equal(Act03BossStage.AwaitingSeal3, machine.Stage);
         Assert.Null(machine.ActiveBossVariant);
-        Assert.True(machine.IsSealAvailable(3, save));
-        Assert.False(machine.IsSealAvailable(4, save));
+        Assert.True(machine.IsSealVisible(3, save));
+        Assert.False(machine.IsSealVisible(4, save));
 
-        // 3 & 4. Collecting Ash Seal 3/4 restores resources and starts Fire Wizard
+        // Same-frame instant collection is blocked until the reveal grace elapses
+        Assert.False(machine.IsSealAvailable(3, save));
+        Assert.False(machine.TryCollectSeal(3, save).Collected);
+        Assert.Equal(Act03BossStage.AwaitingSeal3, machine.Stage);
+        Assert.Null(machine.ActiveBossVariant);
+
+        // After reveal grace elapses, Ash Seal 3/4 is collectible, and still NO wizard spawns on its own
+        machine.Update(Act03EncounterStateMachine.SealCollectionDelaySeconds);
+        Assert.True(machine.IsSealAvailable(3, save));
+        Assert.Equal(Act03BossStage.AwaitingSeal3, machine.Stage);
+        Assert.Null(machine.ActiveBossVariant);
+
+        // 3 & 4. Collecting Ash Seal 3/4 restores resources and only then starts Fire Wizard
         var lives = 1;
         var health = 12;
         var stamina = 0.5f;
@@ -70,8 +83,9 @@ public sealed class Act03EncounterStateMachineTests
         // 5. Only Fire Wizard is active
         Assert.Equal(Act03BossStage.FireWizard, machine.Stage);
         Assert.Equal("Fire Wizard", machine.ActiveBossVariant);
+        Assert.False(machine.IsSealVisible(3, save));
         Assert.False(machine.IsSealAvailable(3, save));
-        Assert.False(machine.IsSealAvailable(4, save));
+        Assert.False(machine.IsSealVisible(4, save));
 
         // 6a. Defeating Fire Wizard spawns Lightning Mage (not Wanderer Magican, not Seal 4/4)
         var fireDefeat = machine.OnBossDefeated();
@@ -80,7 +94,7 @@ public sealed class Act03EncounterStateMachineTests
         Assert.Null(fireDefeat.RevealedSealPartIndex);
         Assert.Equal(Act03BossStage.LightningMage, machine.Stage);
         Assert.Equal("Lightning Mage", machine.ActiveBossVariant);
-        Assert.False(machine.IsSealAvailable(4, save));
+        Assert.False(machine.IsSealVisible(4, save));
 
         // 6b. Defeating Lightning Mage spawns Wanderer Magican (not Seal 4/4)
         var lightningDefeat = machine.OnBossDefeated();
@@ -89,7 +103,7 @@ public sealed class Act03EncounterStateMachineTests
         Assert.Null(lightningDefeat.RevealedSealPartIndex);
         Assert.Equal(Act03BossStage.WandererMagican, machine.Stage);
         Assert.Equal("Wanderer Magican", machine.ActiveBossVariant);
-        Assert.False(machine.IsSealAvailable(4, save));
+        Assert.False(machine.IsSealVisible(4, save));
 
         // 6c. Defeating Wanderer Magican reveals Ash Seal 4/4
         var wandererDefeat = machine.OnBossDefeated();
@@ -98,6 +112,9 @@ public sealed class Act03EncounterStateMachineTests
         Assert.Null(wandererDefeat.NextBossVariant);
         Assert.Equal(Act03BossStage.AwaitingSeal4, machine.Stage);
         Assert.Null(machine.ActiveBossVariant);
+        Assert.True(machine.IsSealVisible(4, save));
+
+        machine.Update(Act03EncounterStateMachine.SealCollectionDelaySeconds);
         Assert.True(machine.IsSealAvailable(4, save));
 
         // 6d. Collecting Ash Seal 4/4 completes the sequence and opens Credits
@@ -111,7 +128,7 @@ public sealed class Act03EncounterStateMachineTests
     }
 
     [Fact]
-    public void MageSequenceCannotStartBeforeAshSeal3IsCollected()
+    public void NoWizardCanAppearBeforeAshSeal3IsCollectedEvenAfterLongWait()
     {
         var save = new SaveProgressState { SealAshesParts = 2 };
         var machine = new Act03EncounterStateMachine();
@@ -121,12 +138,22 @@ public sealed class Act03EncounterStateMachineTests
         Assert.False(machine.TryCollectSeal(3, save).Collected);
         Assert.Equal(Act03BossStage.Minotaur3, machine.Stage);
 
-        // Defeat Minotaur_3 -> enters AwaitingSeal3
+        // Defeat Minotaur_3 -> enters AwaitingSeal3, Seal 3 is immediately visible, no wizard active
         machine.OnBossDefeated();
         Assert.Equal(Act03BossStage.AwaitingSeal3, machine.Stage);
         Assert.Null(machine.ActiveBossVariant);
+        Assert.True(machine.IsSealVisible(3, save));
 
-        // Calling OnBossDefeated again while awaiting Seal 3 does not spawn Fire Wizard
+        // Simulate 15 full seconds passing without collecting Ash Seal 3/4
+        for (var i = 0; i < 150; i++)
+            machine.Update(0.1f);
+
+        Assert.Equal(Act03BossStage.AwaitingSeal3, machine.Stage);
+        Assert.Null(machine.ActiveBossVariant);
+        Assert.True(machine.IsSealVisible(3, save));
+        Assert.True(machine.IsSealAvailable(3, save));
+
+        // Calling OnBossDefeated again while awaiting Seal 3 does not spawn any wizard
         var spuriousDefeat = machine.OnBossDefeated();
         Assert.False(spuriousDefeat.Transitioned);
         Assert.Equal(Act03BossStage.AwaitingSeal3, machine.Stage);
@@ -135,6 +162,7 @@ public sealed class Act03EncounterStateMachineTests
         // Cannot collect Seal 4 while awaiting Seal 3
         Assert.False(machine.TryCollectSeal(4, save).Collected);
         Assert.Equal(Act03BossStage.AwaitingSeal3, machine.Stage);
+        Assert.Null(machine.ActiveBossVariant);
     }
 
     [Theory]
@@ -183,6 +211,7 @@ public sealed class Act03EncounterStateMachineTests
         var machine = new Act03EncounterStateMachine();
         machine.InitializeForLevel("Act_03_C", save);
         machine.OnBossDefeated();
+        machine.Update(Act03EncounterStateMachine.SealCollectionDelaySeconds);
 
         var firstCollect = machine.TryCollectSeal(3, save);
         Assert.True(firstCollect.Collected);
@@ -203,6 +232,7 @@ public sealed class Act03EncounterStateMachineTests
         reloadedMachine.InitializeForLevel("Act_03_C", reloadedSave);
         Assert.Equal(Act03BossStage.FireWizard, reloadedMachine.Stage);
         Assert.Equal("Fire Wizard", reloadedMachine.ActiveBossVariant);
+        Assert.False(reloadedMachine.IsSealVisible(3, reloadedSave));
         Assert.False(reloadedMachine.IsSealAvailable(3, reloadedSave));
         Assert.False(reloadedMachine.TryCollectSeal(3, reloadedSave).Collected);
         Assert.Equal(2, reloadedSave.LivesRemaining);
@@ -211,8 +241,6 @@ public sealed class Act03EncounterStateMachineTests
     [Fact]
     public void LegacySaveWithSeal3WithoutRestorationFlagStillSpawnsMinotaur3First()
     {
-        // Reproduces real save files (e.g. legacy Act 01/02/03 saves) that already have
-        // SealAshesParts=3 without Act03Seal3RestorationApplied: Minotaur_3 MUST still spawn first.
         const string legacyJson = """
             {
               "CurrentLevelId": "Act_03_C",
@@ -233,13 +261,16 @@ public sealed class Act03EncounterStateMachineTests
 
         Assert.Equal(Act03BossStage.Minotaur3, machine.Stage);
         Assert.Equal("Minotaur_3", machine.ActiveBossVariant);
-        Assert.False(machine.IsSealAvailable(3, legacySave));
+        Assert.False(machine.IsSealVisible(3, legacySave));
 
         // Defeating Minotaur_3 reveals Ash Seal 3/4 and still keeps wizards gated
         var defeat = machine.OnBossDefeated();
         Assert.True(defeat.Transitioned);
         Assert.Equal(3, defeat.RevealedSealPartIndex);
         Assert.Null(defeat.NextBossVariant);
+        Assert.True(machine.IsSealVisible(3, legacySave));
+
+        machine.Update(Act03EncounterStateMachine.SealCollectionDelaySeconds);
         Assert.True(machine.IsSealAvailable(3, legacySave));
 
         // Collecting Ash Seal 3/4 applies restoration once and starts Fire Wizard
@@ -251,7 +282,7 @@ public sealed class Act03EncounterStateMachineTests
     }
 
     [Fact]
-    public void Minotaur3TilesetAndAct03CMapBossSpawnAreValidAndContainNoPreMinotaurWizard()
+    public void Minotaur3TilesetAndAct03CMapBossAndSealPositionsAreValid()
     {
         var repoRoot = FindRepoRoot();
         var tilesetPath = System.IO.Path.Combine(
@@ -288,6 +319,13 @@ public sealed class Act03EncounterStateMachineTests
         var mapPath = System.IO.Path.Combine(
             repoRoot, "src", "KuroganesEcho.Core", "Content", "Tiled", "Maps", "Act_03_C.tmx");
         var tmxDoc = System.Xml.Linq.XDocument.Load(mapPath);
+        var mapProps = tmxDoc.Root!.Element("properties")!.Elements("property")
+            .ToDictionary(p => (string)p.Attribute("name")!, p => (string)p.Attribute("value")!, System.StringComparer.OrdinalIgnoreCase);
+
+        // Verify Seal 3/4 is positioned cleanly at (236,19) -> x=3776, y=304 (reachable on ground, not under melee fight at x<=3720)
+        Assert.Equal("236,19", mapProps["SealRubyPartTiles"]);
+        Assert.Equal("238,19", mapProps["FinalSealRubyPartTiles"]);
+
         var gameplay = tmxDoc.Root!.Elements("objectgroup")
             .First(g => string.Equals((string)g.Attribute("name"), "Gameplay", System.StringComparison.OrdinalIgnoreCase));
 
@@ -301,7 +339,6 @@ public sealed class Act03EncounterStateMachineTests
         Assert.Equal("Minotaur", bossProps["BossType"]);
         Assert.Equal("Minotaur_3", bossProps["BossVariant"]);
 
-        // Ensure no wizard is configured as an enemy spawn on Act_03_C
         var enemyTypes = gameplay.Elements("object")
             .Where(o => string.Equals((string)o.Attribute("type"), "EnemySpawn", System.StringComparison.OrdinalIgnoreCase))
             .Select(o => o.Element("properties")?.Elements("property")
@@ -311,19 +348,6 @@ public sealed class Act03EncounterStateMachineTests
         Assert.DoesNotContain("Fire Wizard", enemyTypes);
         Assert.DoesNotContain("Lightning Mage", enemyTypes);
         Assert.DoesNotContain("Wanderer Magican", enemyTypes);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (System.IO.File.Exists(System.IO.Path.Combine(dir.FullName, "KuroganesEcho.slnx")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-
-        throw new System.InvalidOperationException("Could not locate repository root (KuroganesEcho.slnx).");
     }
 
     [Fact]
@@ -343,8 +367,8 @@ public sealed class Act03EncounterStateMachineTests
 
         Assert.Equal(Act03BossStage.Completed, machine.Stage);
         Assert.Null(machine.ActiveBossVariant);
-        Assert.False(machine.IsSealAvailable(3, save));
-        Assert.False(machine.IsSealAvailable(4, save));
+        Assert.False(machine.IsSealVisible(3, save));
+        Assert.False(machine.IsSealVisible(4, save));
     }
 
     [Theory]
@@ -362,5 +386,18 @@ public sealed class Act03EncounterStateMachineTests
 
         Assert.Equal(Act03BossStage.None, machine.Stage);
         Assert.Null(machine.ActiveBossVariant);
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (System.IO.File.Exists(System.IO.Path.Combine(dir.FullName, "KuroganesEcho.slnx")))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+
+        throw new System.InvalidOperationException("Could not locate repository root (KuroganesEcho.slnx).");
     }
 }

@@ -568,27 +568,50 @@ public class KuroganesEchoGame : Game
                 break;
 
             case 4:
-                // Defeat Minotaur_3 -> verify Ash Seal 3/4 revealed & NO wizard yet -> deplete resources -> collect Seal 3 -> verify restoration & Fire Wizard
+                // Defeat Minotaur_3 -> verify Ash Seal 3/4 is visibly revealed at (236,19) and NO wizard spawns even after waiting 2 full seconds
                 _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
                 for (var i = 0; i < 120; i++)
                 {
                     _boss?.Update(0.05f, _playerPosition);
                     UpdateBossProgression();
                 }
+                // Wait 2.0 seconds while player stays at fighting spot (x=3680) without touching Seal 3/4 (x=3776)
+                for (var i = 0; i < 40; i++)
+                {
+                    _act03Encounter.Update(0.05f);
+                    UpdateBossProgression();
+                    CollectLevelItems();
+                }
                 if (_act03Encounter.Stage != Act03BossStage.AwaitingSeal3 || _boss is not null)
-                    throw new InvalidOperationException($"Expected AwaitingSeal3 with no active boss after Minotaur_3 defeat, got {_act03Encounter.Stage} / {_boss?.VariantId ?? "null"}");
+                    throw new InvalidOperationException($"Expected AwaitingSeal3 with NO wizard active after Minotaur_3 defeat, got {_act03Encounter.Stage} / {_boss?.VariantId ?? "null"}");
+                var seal3Visible = false;
+                foreach (var c in _level.Collectibles)
+                {
+                    if (IsSealCollectible(c) && GetSealPartIndex(c) == 3 && IsSealCollectibleVisible(c) && IsSealCollectibleAvailable(c))
+                        seal3Visible = true;
+                }
+                if (!seal3Visible)
+                    throw new InvalidOperationException("Ash Seal 3/4 is not visibly revealed and collectible after Minotaur_3 defeat.");
+                _playerPosition = new Vector2(3710f, 320f);
+                UpdateCamera();
+                _visualValidationFrameWait = 6;
+                break;
+
+            case 5:
+                // Deplete resources -> walk player onto Ash Seal 3/4 at (236,19) -> x=3784, y=320 -> verify restoration & Fire Wizard spawn
                 _livesRemaining = 1;
                 _playerHealth = 15;
                 _stamina = 0.5f;
                 _power = 0f;
-                // Move player onto Ash Seal 3/4 tile (230,19) -> x=3680, y=320
-                _playerPosition = new Vector2(3688f, 320f);
+                _playerPosition = new Vector2(3784f, 320f);
                 CollectLevelItems();
                 if (_livesRemaining != 3 ||
                     _playerHealth != CombatBalance.GetPlayerMaxHealth(_selectedDifficulty) ||
                     Math.Abs(_stamina - StaminaMaximum) > 0.01f ||
                     Math.Abs(_power - CombatBalance.PlayerPowerMaximum) > 0.01f)
                     throw new InvalidOperationException($"Resource restoration failed: Lives={_livesRemaining} HP={_playerHealth} Stam={_stamina} Pwr={_power}");
+                if (!_saveProgress.Act03Seal3RestorationApplied)
+                    throw new InvalidOperationException("Expected Act03Seal3RestorationApplied=true after Seal 3/4 collection.");
                 if (_boss is null || _boss.VariantId != "Fire Wizard")
                     throw new InvalidOperationException($"Expected Fire Wizard after Seal 3/4 collection, got {_boss?.VariantId ?? "null"}");
                 _playerPosition = new Vector2(3660f, 320f);
@@ -596,7 +619,7 @@ public class KuroganesEchoGame : Game
                 _visualValidationFrameWait = 12;
                 break;
 
-            case 5:
+            case 6:
                 // Defeat Fire Wizard -> spawns Lightning Mage
                 _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
                 for (var i = 0; i < 120; i++)
@@ -611,7 +634,7 @@ public class KuroganesEchoGame : Game
                 _visualValidationFrameWait = 12;
                 break;
 
-            case 6:
+            case 7:
                 // Defeat Lightning Mage -> spawns Wanderer Magican
                 _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
                 for (var i = 0; i < 120; i++)
@@ -626,18 +649,21 @@ public class KuroganesEchoGame : Game
                 _visualValidationFrameWait = 12;
                 break;
 
-            case 7:
-                // Defeat Wanderer Magican -> reveal & collect Ash Seal 4/4 -> opens Credits
+            case 8:
+                // Defeat Wanderer Magican -> wait grace -> collect Ash Seal 4/4 at (238,19) -> x=3816, y=320 -> opens Credits
                 _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
                 for (var i = 0; i < 120; i++)
                 {
                     _boss?.Update(0.05f, _playerPosition);
                     UpdateBossProgression();
                 }
-                _playerPosition = new Vector2(3720f, 320f);
+                _act03Encounter.Update(Act03EncounterStateMachine.SealCollectionDelaySeconds);
+                _playerPosition = new Vector2(3816f, 320f);
                 CollectLevelItems();
                 if (_act03Encounter.Stage == Act03BossStage.Completed && _saveProgress.SealAshesParts >= 4)
                     EnterCreditsScreen();
+                else
+                    throw new InvalidOperationException($"Expected Completed & Seal 4/4, got {_act03Encounter.Stage} & {_saveProgress.SealAshesParts}/4");
                 _creditsScroll = 95f;
                 _visualValidationFrameWait = 6;
                 break;
@@ -656,6 +682,7 @@ public class KuroganesEchoGame : Game
             "02_Act_03_B.png",
             "03_Act_03_C.png",
             "04_Minotaur_3.png",
+            "04b_Ash_Seal_3_Waiting.png",
             "05_Fire_Wizard.png",
             "06_Lightning_Mage.png",
             "07_Wanderer_Magican.png",
@@ -1825,6 +1852,7 @@ public class KuroganesEchoGame : Game
     {
         var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
         _atmosphereTime += elapsedSeconds;
+        _act03Encounter.Update(elapsedSeconds);
         if (_bossBannerRemaining > 0f)
             _bossBannerRemaining = Math.Max(0f, _bossBannerRemaining - elapsedSeconds);
         _effects.Update(elapsedSeconds);
@@ -2100,6 +2128,11 @@ public class KuroganesEchoGame : Game
                 continue;
 
             _level.RevealCollectibleTile(collectible);
+            _effects.Spawn(
+                new Vector2(collectible.Bounds.Center.X, collectible.Bounds.Center.Y),
+                CombatEffectKind.Magic,
+                Vector2.UnitY,
+                1.35f);
         }
     }
 
@@ -2115,6 +2148,14 @@ public class KuroganesEchoGame : Game
             int.TryParse(configuredPart, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedPart))
             return Math.Clamp(parsedPart, 1, 4);
         return 1;
+    }
+
+    private bool IsSealCollectibleVisible(LevelObjectData collectible)
+    {
+        if (!string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+            return _finalBossDefeated && !_finalBossRewardCollected;
+
+        return _act03Encounter.IsSealVisible(GetSealPartIndex(collectible), _saveProgress);
     }
 
     private bool IsSealCollectibleAvailable(LevelObjectData collectible)
@@ -3241,7 +3282,7 @@ public class KuroganesEchoGame : Game
         {
             if (!_collectedCollectibles.Contains(collectible.Name) &&
                 IsSealCollectible(collectible) &&
-                IsSealCollectibleAvailable(collectible))
+                IsSealCollectibleVisible(collectible))
             {
                 DrawSealRubyTile(collectible.Bounds);
             }
@@ -3252,6 +3293,8 @@ public class KuroganesEchoGame : Game
     {
         var x = bounds.X;
         var y = bounds.Y;
+        var pulse = 0.55f + 0.45f * MathF.Sin(_atmosphereTime * 6f);
+        DrawRect(new Rectangle(x - 2, y - 2, bounds.Width + 4, bounds.Height + 4), new Color(255, 214, 130) * (0.45f + pulse * 0.45f), false, 1);
         DrawRect(new Rectangle(x, y, bounds.Width, bounds.Height), new Color(42, 7, 22, 235));
         DrawRect(new Rectangle(x + 2, y + 2, Math.Max(1, bounds.Width - 4), Math.Max(1, bounds.Height - 4)), new Color(145, 12, 36, 245));
         DrawLine(new Vector2(x + 3, y + bounds.Height - 4), new Vector2(x + bounds.Width / 2f, y + 3), 2f, new Color(255, 86, 97, 245));

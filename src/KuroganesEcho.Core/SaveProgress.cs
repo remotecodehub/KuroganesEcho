@@ -12,6 +12,8 @@ internal sealed class SaveProgressState
     public GameDifficulty Difficulty { get; set; } = GameDifficulty.Normal;
     public int LivesRemaining { get; set; } = 3;
     public int SealAshesParts { get; set; }
+    public bool Act03Seal3RestorationApplied { get; set; }
+    public bool Act03FinalBossesCompleted { get; set; }
     public string CheckpointLevelId { get; set; } = "Act_01_A";
     public int CheckpointId { get; set; }
 }
@@ -51,7 +53,9 @@ internal static class SaveProgressStore
 
     public static bool HasProgress(SaveProgressState state) =>
         !string.Equals(state.CurrentLevelId, DefaultLevelId, StringComparison.OrdinalIgnoreCase) ||
-        !string.Equals(state.UnlockedLevelId, DefaultLevelId, StringComparison.OrdinalIgnoreCase);
+        !string.Equals(state.UnlockedLevelId, DefaultLevelId, StringComparison.OrdinalIgnoreCase) ||
+        state.SealAshesParts > 0 ||
+        state.Act03FinalBossesCompleted;
 
     public static bool HasSlot(int slot) => File.Exists(GetSlotPath(slot));
 

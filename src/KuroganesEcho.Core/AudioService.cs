@@ -55,6 +55,7 @@ internal sealed class AudioService : IDisposable
     private readonly Random _random = new();
     private int _lastFootstepVariant = -1;
     private SoundEffectInstance _bgmInstance;
+    private string _currentBgmAsset;
 
     public float BgmVolume { get; private set; } = 1f;
     public float SfxVolume { get; private set; } = 1f;
@@ -162,8 +163,14 @@ internal sealed class AudioService : IDisposable
     /// <summary>Inicia ou troca a música de fundo em loop usando o volume configurado.</summary>
     public void PlayBgm(string assetPath)
     {
+        if (string.Equals(_currentBgmAsset, assetPath, StringComparison.OrdinalIgnoreCase) &&
+            _bgmInstance is not null &&
+            _bgmInstance.State == SoundState.Playing)
+            return;
+
         StopAllSfx();
         StopBgm();
+        _currentBgmAsset = assetPath;
         _bgmInstance = LoadSoundEffect(assetPath).CreateInstance();
         _bgmInstance.IsLooped = true;
         ApplyBgmVolume();
@@ -176,15 +183,32 @@ internal sealed class AudioService : IDisposable
 
     public void PlayActMusic(string levelId)
     {
-        var assetPath = levelId is "Act_01_B" or "Act_01_C" or "Act_02_C"
-            ? "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai"
-            : "Audio/BGM/BGM_Along_The_Mountain_Path";
+        var assetPath = levelId switch
+        {
+            "Act_01_B" or "Act_01_C" or "Act_02_C" or "Act_03_C" => "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai",
+            "Act_03_B" => "Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow",
+            _ => "Audio/BGM/BGM_Along_The_Mountain_Path"
+        };
+        PlayBgm(assetPath);
+    }
+
+    public void PlayFinalBossMusic(string bossVariant)
+    {
+        var assetPath = bossVariant switch
+        {
+            "Fire Wizard" => "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai",
+            "Lightning Mage" => "Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow",
+            "Wanderer Magican" => "Audio/BGM/BGM_Japan_Epic_Music",
+            _ => "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai"
+        };
         PlayBgm(assetPath);
     }
 
     public void PlayGameOverMusic() => PlayBgm("Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow");
 
     public void PlayVictoryMusic() => PlayBgm("Audio/BGM/BGM_Japan_Epic_Music");
+
+    public void PlayCreditsMusic() => PlayBgm("Audio/BGM/BGM_Samurai_and_horse");
 
     public void StopBgm()
     {
@@ -194,6 +218,7 @@ internal sealed class AudioService : IDisposable
         _bgmInstance.Stop();
         _bgmInstance.Dispose();
         _bgmInstance = null;
+        _currentBgmAsset = null;
     }
 
     public void Dispose()

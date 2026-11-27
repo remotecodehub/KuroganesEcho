@@ -40,6 +40,7 @@
   </data>
  </layer>
  <objectgroup id="8" name="Gameplay">
+  <object id="28" name="Bell_01" type="Bell" x="256" y="292" width="24" height="28"/>
   <object id="1" name="PlayerSpawn" type="PlayerSpawn" x="26" y="288" width="13" height="32">
    <properties>
     <property name="Facing" value="Right" />

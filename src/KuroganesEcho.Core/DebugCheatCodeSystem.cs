@@ -34,6 +34,7 @@ internal sealed class DebugCheatCodeSystem
     private bool _isOpen;
     private bool _isMobile;
     private string _lastInput = "-";
+    private string _typedOptionsCode = string.Empty;
     private bool _restoreResourcesRequested;
     private CheckpointOption? _selectedCheckpoint;
     private IReadOnlyList<CheckpointOption> _checkpoints = Array.Empty<CheckpointOption>();
@@ -46,6 +47,44 @@ internal sealed class DebugCheatCodeSystem
     public bool OneHitDamage { get; private set; }
 
     public readonly record struct CheckpointOption(int Id, string Name, Vector2 RespawnPosition);
+
+    public void ResetOptionsCodeInput() => _typedOptionsCode = string.Empty;
+
+    public void UpdateOptionsCodeInput(KeyboardState currentKeyboard, KeyboardState previousKeyboard)
+    {
+        foreach (var key in currentKeyboard.GetPressedKeys())
+        {
+            if (previousKeyboard.IsKeyDown(key))
+                continue;
+
+            if (key is Keys.LeftShift or Keys.RightShift)
+                continue;
+
+            var keyName = key.ToString();
+            if (keyName.Length == 1 && keyName[0] is >= 'A' and <= 'Z')
+            {
+                _typedOptionsCode += keyName;
+                if (_typedOptionsCode.EndsWith("KUROGANE", StringComparison.OrdinalIgnoreCase))
+                {
+                    InfiniteHealth = true;
+                    _typedOptionsCode = string.Empty;
+                }
+                else if (_typedOptionsCode.EndsWith("CLEAR", StringComparison.OrdinalIgnoreCase))
+                {
+                    InfiniteHealth = false;
+                    _typedOptionsCode = string.Empty;
+                }
+                else if (_typedOptionsCode.Length > 8)
+                {
+                    _typedOptionsCode = _typedOptionsCode.Substring(_typedOptionsCode.Length - 8);
+                }
+            }
+            else
+            {
+                _typedOptionsCode = string.Empty;
+            }
+        }
+    }
 
     public bool Update(
         GamePadState currentGamePad,

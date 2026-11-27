@@ -78,6 +78,7 @@
   <object id="15" name="HouseRoof_05" type="Collision" x="3302" y="224" width="102" height="16"/>
  </objectgroup>
  <objectgroup id="20" name="Gameplay">
+  <object id="191" name="Bell_01" type="Bell" x="800" y="324" width="24" height="28"/>
   <object id="101" name="PlayerSpawn" type="Spawn" x="38" y="336">
    <properties>
     <property name="Island" value="Act_02_C"/>
@@ -268,6 +269,7 @@
   </object>
   <object id="150" name="FinalBoss_Minotaur_2" type="BossSpawn" x="3994" y="320" width="13" height="32">
    <properties>
+    <property name="LockArena" type="bool" value="true"/>
     <property name="BossType" value="Minotaur"/>
     <property name="BossVariant" value="Minotaur_2"/>
     <property name="Reward" value="SealRubyPart02"/>

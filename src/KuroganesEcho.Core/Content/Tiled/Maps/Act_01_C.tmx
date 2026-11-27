@@ -73,6 +73,7 @@
   <object id="160" name="Platform_08" type="Collision" x="3661" y="240" width="179" height="16"/>
  </objectgroup>
  <objectgroup id="6" name="Gameplay">
+  <object id="161" name="Bell_01" type="Bell" x="256" y="324" width="24" height="28"/>
   <object id="11" name="PlayerSpawn" type="Spawn" x="38" y="336">
    <properties>
     <property name="Character" value="Kunoichi"/>
@@ -195,6 +196,7 @@
   </object>
   <object id="120" name="FinalBoss_Minotaur_1" type="BossSpawn" x="3840" y="256" width="205" height="96">
    <properties>
+    <property name="LockArena" type="bool" value="true"/>
     <property name="BossType" value="Minotaur"/>
     <property name="BossVariant" value="Minotaur_1"/>
     <property name="Trigger" value="OnEnter"/>

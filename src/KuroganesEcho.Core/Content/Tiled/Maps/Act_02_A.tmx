@@ -76,6 +76,7 @@
   <object id="15" name="HouseRoof_05" type="Collision" x="3302" y="224" width="102" height="16"/>
  </objectgroup>
  <objectgroup id="22" name="Gameplay">
+  <object id="191" name="Bell_01" type="Bell" x="768" y="324" width="24" height="28"/>
   <object id="101" name="PlayerSpawn" type="Spawn" x="38" y="336">
    <properties>
     <property name="Island" value="Act_02_A"/>

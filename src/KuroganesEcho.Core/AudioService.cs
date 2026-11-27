@@ -17,6 +17,9 @@ internal enum AudioCue
 {
     UiClick,
     Collectable,
+    Chain,
+    Bell,
+    SealRuby,
     Sword,
     SlashImpact,
     Whoosh,
@@ -106,6 +109,9 @@ internal sealed class AudioService : IDisposable
         {
             AudioCue.UiClick => "Audio/SFX/SFX_Interface_Click",
             AudioCue.Collectable => "Audio/SFX/SFX_Collectable_UI_Sound",
+            AudioCue.Chain => "Audio/SFX/SFX-Chain",
+            AudioCue.Bell => "Audio/SFX/SFX--Bell",
+            AudioCue.SealRuby => "Audio/SFX/SFX--rubi",
             AudioCue.Sword => "Audio/SFX/SFX_Sword_Sound",
             AudioCue.SlashImpact => "Audio/SFX/SFX_Sword_Slash_With_Metallic_Impact",
             AudioCue.Whoosh => "Audio/SFX/SFX_Whoosh_Slash_Pitches_Vol2",
@@ -199,24 +205,16 @@ internal sealed class AudioService : IDisposable
     {
         var assetPath = levelId switch
         {
-            "Act_01_B" or "Act_01_C" or "Act_02_C" or "Act_03_C" => "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai",
+            "Act_01_C" or "Act_02_C" => "Audio/BGM/BGM--Bossfight2",
+            "Act_03_C" => "Audio/BGM/BGM--FinalBossFight",
+            "Act_01_B" => "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai",
             "Act_03_B" => "Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow",
             _ => "Audio/BGM/BGM_Along_The_Mountain_Path"
         };
         PlayBgm(assetPath);
     }
 
-    public void PlayFinalBossMusic(string bossVariant)
-    {
-        var assetPath = bossVariant switch
-        {
-            "Fire Wizard" => "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai",
-            "Lightning Mage" => "Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow",
-            "Wanderer Magican" => "Audio/BGM/BGM_Japan_Epic_Music",
-            _ => "Audio/BGM/BGM_Japanese_Dark_Temple_Samurai"
-        };
-        PlayBgm(assetPath);
-    }
+    public void PlayFinalBossMusic() => PlayBgm("Audio/BGM/BGM--FinalBossFight");
 
     public void PlayGameOverMusic() => PlayBgm("Audio/BGM/BGM_Kakashi_Samurai_or_Scarecrow");
 
@@ -285,6 +283,9 @@ internal sealed class AudioService : IDisposable
     {
         AudioCue.UiClick => 0.70f,
         AudioCue.Collectable => 0.80f,
+        AudioCue.Chain => 1.15f,
+        AudioCue.Bell => 3.65f,
+        AudioCue.SealRuby => 10f,
         AudioCue.Sword => 0.50f,
         AudioCue.SlashImpact => 0.45f,
         // The source is a 16-second whoosh bank. The first whoosh ends near

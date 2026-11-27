@@ -15,6 +15,8 @@ internal sealed class EnemyInstance
     private const float RangedAttackCooldown = 2f;
     private const float RangedAttackReleaseRemaining = 0.25f;
     private const float RangedAttackVerticalTolerance = 48f;
+    private const float StunDuration = 1f;
+    private const int HitsToStun = 2;
     private const float Gravity = 480f;
     private const float EnemyHalfWidth = 10f;
     private const float EnemyHeight = 32f;
@@ -24,7 +26,9 @@ internal sealed class EnemyInstance
     private float _attackRemaining;
     private float _attackCooldown;
     private float _damageInvulnerability;
+    private float _stunRemaining;
     private float _verticalVelocity;
+    private int _hitsSinceLastStun;
     private bool _attackConsumed;
     private bool _rangedAttack;
     private int _facing = 1;
@@ -46,6 +50,7 @@ internal sealed class EnemyInstance
     public int MaxHealth => CombatBalance.GetEnemyMaxHealth(_difficulty);
     public int Health { get; private set; }
     public bool IsAlive => Health > 0;
+    public bool IsStunned => _stunRemaining > 0f;
     public bool IsDeathAnimationComplete => !IsAlive && Character.IsDeadAnimationComplete;
     public bool IsAttacking => IsAlive && _attackRemaining > 0f;
     public bool IsRangedAttacking => IsAttacking && _rangedAttack;
@@ -74,7 +79,9 @@ internal sealed class EnemyInstance
         _attackRemaining = 0f;
         _attackCooldown = 0f;
         _damageInvulnerability = 0f;
+        _stunRemaining = 0f;
         _verticalVelocity = 0f;
+        _hitsSinceLastStun = 0;
         _attackConsumed = false;
         _rangedAttack = false;
         _facing = 1;
@@ -85,6 +92,7 @@ internal sealed class EnemyInstance
     {
         _attackCooldown = Math.Max(0f, _attackCooldown - elapsedSeconds);
         _damageInvulnerability = Math.Max(0f, _damageInvulnerability - elapsedSeconds);
+        _stunRemaining = Math.Max(0f, _stunRemaining - elapsedSeconds);
 
         if (!IsAlive)
         {
@@ -93,7 +101,13 @@ internal sealed class EnemyInstance
         }
 
         var horizontalDistance = playerPosition.X - Position.X;
-        if (_attackRemaining > 0f)
+        if (IsStunned)
+        {
+            _attackRemaining = 0f;
+            _rangedAttack = false;
+            Character.SetAnimation(EnemyAnimationState.Hurt);
+        }
+        else if (_attackRemaining > 0f)
         {
             _attackRemaining = Math.Max(0f, _attackRemaining - elapsedSeconds);
             _facing = horizontalDistance < 0f ? -1 : 1;
@@ -201,6 +215,18 @@ internal sealed class EnemyInstance
         _facing = attackerX < Position.X ? 1 : -1;
         _verticalVelocity = -65f;
         Position = new Vector2(Position.X + (attackerX < Position.X ? 8f : -8f), Position.Y);
+        if (!IsStunned && ++_hitsSinceLastStun >= HitsToStun)
+        {
+            _hitsSinceLastStun = 0;
+            _stunRemaining = StunDuration;
+            _attackRemaining = 0f;
+            _rangedAttack = false;
+        }
+        if (!IsAlive)
+        {
+            _stunRemaining = 0f;
+            _hitsSinceLastStun = 0;
+        }
         Character.SetAnimation(IsAlive ? EnemyAnimationState.Hurt : EnemyAnimationState.Dead);
         return true;
     }

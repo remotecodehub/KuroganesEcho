@@ -24,11 +24,16 @@ internal sealed class BossInstance
     private const float LightningMageScale = 1.25f;
     private const float WandererMagicanScale = 1.20f;
     private const float MinotaurAttackDistance = 112f;
+    private const float MinotaurRetreatDistance = 72f;
+    private const float MinotaurAdvanceDistance = 96f;
     private const float WizardMeleeDistance = 64f;
     private const float WizardFlameJetDistance = 96f;
     private const float WizardRangedDistance = 260f;
     private const float AttackDuration = 0.8f;
     private const float AttackCooldown = 1.6f;
+    private const float WizardAttackCooldownMultiplier = 1.5f;
+    private const int HitsToStun = 5;
+    private const int WizardHitsToBreakStun = 2;
     private const float BossHalfWidth = 16f;
     private const float BossHeight = 48f;
     private const float ArenaHalfWidth = 68f;
@@ -47,7 +52,12 @@ internal sealed class BossInstance
     private EnemyAnimationState _activeAttackAnimation = EnemyAnimationState.Attack1;
     private int _attackPatternIndex;
     private int _facing = 1;
+    private int _hitsSinceLastStun;
+    private int _hitsWhileStunned;
+    private bool _isStunned;
+    private bool _minotaurAdvancing = true;
     private GameDifficulty _difficulty = GameDifficulty.Normal;
+    private bool _recoveryApplied;
 
     public BossInstance(
         ContentManager content,
@@ -73,10 +83,16 @@ internal sealed class BossInstance
     public string VariantId { get; }
     public LevelObjectData Spawn { get; }
     public EnemyCharacter Character { get; }
+    public bool LocksArena =>
+        Spawn.Properties.TryGetValue("LockArena", out var lockArena) &&
+        bool.TryParse(lockArena, out var enabled) &&
+        enabled;
     public Vector2 Position { get; private set; }
     public int MaxHealth => CombatBalance.GetBossMaxHealth(_difficulty);
     public int Health { get; private set; }
     public bool IsAlive => Health > 0;
+    public bool IsStunned => _isStunned;
+    public bool RecoveryApplied => _recoveryApplied;
     public bool IsDeathAnimationComplete => !IsAlive && Character.IsDeadAnimationComplete;
     public bool IsEnraged => IsAlive && Health <= MaxHealth / 2;
     public bool IsAttacking => IsAlive && _attackRemaining > 0f;
@@ -149,6 +165,11 @@ internal sealed class BossInstance
         _activeAttackAnimation = EnemyAnimationState.Attack1;
         _attackPatternIndex = 0;
         _facing = 1;
+        _hitsSinceLastStun = 0;
+        _hitsWhileStunned = 0;
+        _isStunned = false;
+        _minotaurAdvancing = true;
+        _recoveryApplied = false;
         Character.Reset();
     }
 
@@ -156,9 +177,19 @@ internal sealed class BossInstance
     {
         _attackCooldown = Math.Max(0f, _attackCooldown - elapsedSeconds);
         _jumpCooldown = Math.Max(0f, _jumpCooldown - elapsedSeconds);
-
         if (!IsAlive)
         {
+            ApplyGravity(elapsedSeconds);
+            Character.Update(elapsedSeconds);
+            return;
+        }
+
+        if (IsStunned)
+        {
+            _attackRemaining = 0f;
+            _rangedAttack = false;
+            _rangedReleased = false;
+            Character.SetAnimation(EnemyAnimationState.Hurt);
             ApplyGravity(elapsedSeconds);
             Character.Update(elapsedSeconds);
             return;
@@ -196,17 +227,19 @@ internal sealed class BossInstance
             _activeAttackAnimation = EnemyAnimationState.Attack1;
             Character.SetAnimation(EnemyAnimationState.Attack1);
         }
-        else if (VariantId == "Minotaur_3" && absDistance > MinotaurAttackDistance * 0.8f && absDistance <= 220f)
+        else
         {
-            var walkSpeed = IsEnraged ? 38f : 28f;
-            var nextX = Math.Clamp(Position.X + _facing * walkSpeed * elapsedSeconds, _arenaLeft, _arenaRight);
+            if (absDistance >= MinotaurAdvanceDistance)
+                _minotaurAdvancing = true;
+            else if (absDistance <= MinotaurRetreatDistance)
+                _minotaurAdvancing = false;
+
+            var walkSpeed = IsEnraged ? 45f : 34f;
+            var movementDirection = _facing * (_minotaurAdvancing ? 1 : -1);
+            var nextX = Math.Clamp(Position.X + movementDirection * walkSpeed * elapsedSeconds, _arenaLeft, _arenaRight);
             var moved = Math.Abs(nextX - Position.X) > 0.05f;
             Position = new Vector2(nextX, Position.Y);
             Character.SetAnimation(moved ? EnemyAnimationState.Walk : EnemyAnimationState.Idle);
-        }
-        else
-        {
-            Character.SetAnimation(EnemyAnimationState.Idle);
         }
     }
 
@@ -293,6 +326,7 @@ internal sealed class BossInstance
             GameDifficulty.Hard => 0.8f,
             _ => 1f
         };
+        cooldownFactor *= WizardAttackCooldownMultiplier;
         if (IsEnraged)
             cooldownFactor *= 0.8f;
 
@@ -477,8 +511,39 @@ internal sealed class BossInstance
         var hitHeight = Math.Clamp((Position.Y - hitPointY) / BossHeight, 0f, 1f);
         var heightMultiplier = 0.75f + hitHeight * 0.5f;
         Health = Math.Max(0, Health - Math.Max(1, (int)Math.Round(damage * heightMultiplier)));
+        if (Kind != BossKind.Wizard &&
+            IsAlive &&
+            !_recoveryApplied &&
+            Health <= CombatBalance.BossRecoveryThreshold)
+        {
+            Health = CombatBalance.BossRecoveryHealth;
+            _recoveryApplied = true;
+        }
+        if (IsAlive && IsStunned)
+        {
+            _hitsWhileStunned++;
+            var hitsToBreakStun = Kind == BossKind.Wizard ? WizardHitsToBreakStun : 1;
+            if (_hitsWhileStunned >= hitsToBreakStun)
+            {
+                _isStunned = false;
+                _hitsSinceLastStun = 0;
+                _hitsWhileStunned = 0;
+            }
+        }
+        else if (IsAlive && ++_hitsSinceLastStun >= HitsToStun)
+        {
+            _hitsSinceLastStun = 0;
+            _hitsWhileStunned = 0;
+            _isStunned = true;
+            _attackRemaining = 0f;
+            _rangedAttack = false;
+            _rangedReleased = false;
+        }
         if (!IsAlive)
         {
+            _isStunned = false;
+            _hitsSinceLastStun = 0;
+            _hitsWhileStunned = 0;
             _attackRemaining = 0f;
             _rangedAttack = false;
         }

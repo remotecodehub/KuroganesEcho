@@ -1397,11 +1397,41 @@
 /processorParam:Quality=Best
 /build:Audio/BGM/BGM_Samurai_and_horse.wav
 
+#begin Audio/BGM/BGM--Bossfight2.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/BGM/BGM--Bossfight2.wav
+
+#begin Audio/BGM/BGM--FinalBossFight.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/BGM/BGM--FinalBossFight.wav
+
 #begin Audio/SFX/SFX_Collectable_UI_Sound.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Audio/SFX/SFX_Collectable_UI_Sound.wav
+
+#begin Audio/SFX/SFX-Chain.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX-Chain.wav
+
+#begin Audio/SFX/SFX--Bell.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX--Bell.wav
+
+#begin Audio/SFX/SFX--rubi.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/SFX/SFX--rubi.wav
 
 #begin Audio/SFX/SFX_Flame_Spell_Impact.wav
 /importer:WavImporter

@@ -123,6 +123,9 @@
   <data name="ClickAnywhere" xml:space="preserve">
     <value>Click Anywhere</value>
   </data>
+  <data name="CheatStatus" xml:space="preserve">
+    <value>Cheat: {0}</value>
+  </data>
   <data name="Power" xml:space="preserve"><value>Power</value></data>
   <data name="KunoichiSpecialPrimary" xml:space="preserve"><value>Eat fruit (requires power; restores stamina, health or an extra life)</value></data>
   <data name="KunoichiSpecialSecondary" xml:space="preserve"><value>Cast: launches Spine (no power cost after eating fruit)</value></data>

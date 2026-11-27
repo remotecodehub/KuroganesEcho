@@ -165,6 +165,7 @@
   <data name="BgmVolume" xml:space="preserve"><value>Volume BGM</value></data>
   <data name="SfxVolume" xml:space="preserve"><value>Volume SFX</value></data>
   <data name="Mute" xml:space="preserve"><value>Sourdine</value></data>
+  <data name="CheatStatus" xml:space="preserve"><value>Cheat: {0}</value></data>
   <data name="On" xml:space="preserve"><value>Oui</value></data>
   <data name="Off" xml:space="preserve"><value>Non</value></data>
   <data name="Fullscreen" xml:space="preserve"><value>Plein écran</value></data>

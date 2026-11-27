@@ -188,9 +188,11 @@ internal sealed class GameLevel
 {
     private const float PlayerCollisionHalfWidth = 10f;
     private const uint DefaultCollectibleTileFirstGid = 73;
+    private const uint TiledGidMask = 0x1FFFFFFF;
     private readonly List<Rectangle> _collisionPlatforms = new();
     private readonly List<FootstepSurface> _collisionSurfaces = new();
     private readonly List<LevelObjectData> _gameplayObjects = new();
+    private readonly List<Rectangle> _bellHitboxes = new();
 
     private GameLevel(LevelDefinition definition, Tilemap tilemap, TilemapSpriteBatchRenderer renderer)
     {
@@ -225,7 +227,9 @@ internal sealed class GameLevel
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     public GameDifficulty Difficulty { get; private set; } = GameDifficulty.Normal;
     public IReadOnlyList<Rectangle> CollisionPlatforms => _collisionPlatforms;
+    public IReadOnlyList<Rectangle> BellHitboxes => _bellHitboxes;
     public IReadOnlyList<LevelObjectData> GameplayObjects => _gameplayObjects;
+    public IEnumerable<LevelObjectData> Bells => _gameplayObjects.Where(item => item.Type == "Bell");
     public IEnumerable<LevelObjectData> Collectibles => _gameplayObjects.Where(item => item.Type == "Collectible");
     public IEnumerable<LevelObjectData> Checkpoints => _gameplayObjects.Where(item => item.Type == "Checkpoint");
     public IEnumerable<LevelObjectData> EnemySpawns => _gameplayObjects.Where(item => item.Type == "EnemySpawn");
@@ -259,11 +263,18 @@ internal sealed class GameLevel
 
     public void ConfigureDifficulty(GameDifficulty difficulty) => Difficulty = difficulty;
 
-    public float? FindLandingTop(float playerX, float previousY, float currentY, float playerHalfWidth = PlayerCollisionHalfWidth)
+    public float? FindLandingTop(
+        float playerX,
+        float previousY,
+        float currentY,
+        float playerHalfWidth = PlayerCollisionHalfWidth,
+        Rectangle? ignoredPlatform = null)
     {
         float? landingTop = null;
         foreach (var platform in _collisionPlatforms)
         {
+            if (ignoredPlatform.HasValue && platform == ignoredPlatform.Value)
+                continue;
             if (playerX + playerHalfWidth <= platform.Left || playerX - playerHalfWidth >= platform.Right)
                 continue;
 
@@ -273,6 +284,23 @@ internal sealed class GameLevel
         }
 
         return landingTop;
+    }
+
+    public Rectangle? FindDropThroughPlatform(float playerX, float feetY, float playerHalfWidth = PlayerCollisionHalfWidth)
+    {
+        for (var index = 0; index < _collisionPlatforms.Count; index++)
+        {
+            var platform = _collisionPlatforms[index];
+            if (_collisionSurfaces[index] == FootstepSurface.Snow ||
+                playerX + playerHalfWidth <= platform.Left ||
+                playerX - playerHalfWidth >= platform.Right ||
+                Math.Abs(platform.Top - feetY) > 2f)
+                continue;
+
+            return platform;
+        }
+
+        return null;
     }
 
     /// <summary>Piso sob os pés do jogador, a partir do nome do objeto de colisão.</summary>
@@ -356,7 +384,92 @@ internal sealed class GameLevel
             }
         }
 
+        LoadTileBellHitboxes(root);
         LoadTileCollectibles(root);
+    }
+
+    private void LoadTileBellHitboxes(XElement root)
+    {
+        var bellGids = new HashSet<uint>();
+        foreach (var bell in Bells)
+        {
+            if (bell.Bounds.Width > 0 && bell.Bounds.Height > 0)
+                _bellHitboxes.Add(bell.Bounds);
+        }
+
+        var mapDirectory = Path.GetDirectoryName(Definition.MapAssetPath)?.Replace('\\', '/') ?? "Content/Tiled/Maps";
+        foreach (var tileset in root.Elements("tileset"))
+        {
+            if (!uint.TryParse(
+                    (string)tileset.Attribute("firstgid"),
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out var firstGid))
+                continue;
+
+            XElement tilesetRoot;
+            var source = (string)tileset.Attribute("source");
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                tilesetRoot = tileset;
+            }
+            else
+            {
+                var tilesetPath = Path.Combine(mapDirectory, source).Replace('\\', '/');
+                using var tilesetStream = OpenTiledResource(tilesetPath);
+                tilesetRoot = XDocument.Load(tilesetStream).Root
+                    ?? throw new InvalidDataException($"Tileset '{tilesetPath}' has no root element.");
+            }
+
+            foreach (var tile in tilesetRoot.Elements("tile"))
+            {
+                var properties = ReadProperties(tile);
+                if (!properties.TryGetValue("TileRole", out var role) ||
+                    !string.Equals(role, "ToriiBell", StringComparison.OrdinalIgnoreCase) ||
+                    !uint.TryParse(
+                        (string)tile.Attribute("id"),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out var localId))
+                    continue;
+
+                bellGids.Add(firstGid + localId);
+            }
+        }
+
+        if (bellGids.Count == 0)
+            return;
+
+        var mapTileWidth = (int?)root.Attribute("tilewidth") ?? 16;
+        var mapTileHeight = (int?)root.Attribute("tileheight") ?? 16;
+        foreach (var layer in root.Elements("layer"))
+        {
+            var width = (int?)layer.Attribute("width") ?? 0;
+            var height = (int?)layer.Attribute("height") ?? 0;
+            var data = layer.Element("data");
+            if (width <= 0 || height <= 0 || data is null)
+                continue;
+
+            var layerName = (string)layer.Attribute("name") ?? string.Empty;
+            var tileLayer = Tilemap.Layers.TryGetValue(layerName, out var loadedLayer) &&
+                            loadedLayer is TilemapTileLayer loadedTileLayer
+                ? loadedTileLayer
+                : null;
+            var tileWidth = tileLayer?.TileWidth ?? mapTileWidth;
+            var tileHeight = tileLayer?.TileHeight ?? mapTileHeight;
+            var gids = ReadTileValues(data, width * height);
+            for (var index = 0; index < gids.Count; index++)
+            {
+                if (!bellGids.Contains(gids[index] & TiledGidMask))
+                    continue;
+
+                _bellHitboxes.Add(new Rectangle(
+                    (index % width) * tileWidth,
+                    (index / width) * tileHeight,
+                    tileWidth,
+                    tileHeight));
+            }
+        }
     }
 
     public void RemoveCollectibleTile(LevelObjectData collectible)

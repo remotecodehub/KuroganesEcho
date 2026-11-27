@@ -53,13 +53,13 @@ internal sealed class Act03EncounterStateMachine
             return;
         }
 
-        if (save is not null && (save.Act03FinalBossesCompleted || save.SealAshesParts >= 4))
+        if (save is not null && save.Act03FinalBossesCompleted)
         {
             Stage = Act03BossStage.Completed;
             return;
         }
 
-        if (save is not null && (save.Act03Seal3RestorationApplied || save.SealAshesParts >= 3))
+        if (save is not null && save.Act03Seal3RestorationApplied)
         {
             // Seal 3/4 was already collected and restored resources in this save;
             // resume at Fire Wizard without re-awarding Seal 3/4 or restoring resources again.
@@ -100,7 +100,7 @@ internal sealed class Act03EncounterStateMachine
         if (partIndex == 3)
         {
             return Stage == Act03BossStage.AwaitingSeal3 &&
-                   (save is null || (!save.Act03Seal3RestorationApplied && save.SealAshesParts < 3));
+                   (save is null || !save.Act03Seal3RestorationApplied);
         }
 
         if (partIndex == 4)

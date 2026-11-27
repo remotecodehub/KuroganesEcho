@@ -464,7 +464,7 @@ public class KuroganesEchoGame : Game
 #if DEBUG
     private void UpdateVisualValidation(GameTime gameTime)
     {
-        if (_visualValidationFrameWait > 0)
+        if (_visualValidationFrameWait > 1)
         {
             _visualValidationFrameWait--;
             if (_screen == GameScreen.Act01)
@@ -487,6 +487,14 @@ public class KuroganesEchoGame : Game
                 _creditsScroll += 0.016f * CreditsScrollSpeed;
             }
             return;
+        }
+
+        if (_visualValidationFrameWait == 1)
+        {
+            // Wait until Draw() has captured this step before advancing to the next step.
+            if (!_visualValidationCapturedStep)
+                return;
+            _visualValidationFrameWait = 0;
         }
 
         _visualValidationCapturedStep = false;
@@ -522,8 +530,21 @@ public class KuroganesEchoGame : Game
                 break;
 
             case 2:
+                // Also verify legacy save with SealAshesParts=3 and Act03Seal3RestorationApplied=false
+                // STILL spawns Minotaur_3 first and NEVER spawns a wizard immediately.
+                _saveProgress.SealAshesParts = 3;
+                _saveProgress.Act03Seal3RestorationApplied = false;
+                _saveProgress.Act03FinalBossesCompleted = false;
                 LoadLevel("Act_03_C");
                 StartAct01("Act_03_C");
+                if (_boss is null || _boss.Kind != BossKind.Minotaur || _boss.VariantId != "Minotaur_3")
+                    throw new InvalidOperationException($"Expected Minotaur_3 on Act_03_C entry, got {_boss?.VariantId ?? "null"}");
+                if (!_boss.Character.HasAnimation(EnemyAnimationState.Idle) ||
+                    !_boss.Character.HasAnimation(EnemyAnimationState.Walk) ||
+                    !_boss.Character.HasAnimation(EnemyAnimationState.Attack1) ||
+                    !_boss.Character.HasAnimation(EnemyAnimationState.Hurt) ||
+                    !_boss.Character.HasAnimation(EnemyAnimationState.Dead))
+                    throw new InvalidOperationException("Minotaur_3 is missing required animation states.");
                 _levelBriefingRemaining = 0f;
                 _playerPosition = new Vector2(540f, 320f);
                 ActivatePendingEnemySpawns();
@@ -532,24 +553,44 @@ public class KuroganesEchoGame : Game
                 break;
 
             case 3:
-                // Minotaur_3 encounter at boss spawn
-                _playerPosition = new Vector2(3680f, 320f);
+                // Minotaur_3 encounter at boss spawn: verify Walk + Attack1 + Hurt animations
+                _playerPosition = new Vector2(3600f, 320f);
                 _enemies.Clear();
+                _boss!.Update(0.05f, _playerPosition);
+                if (_boss.Character.Animation != EnemyAnimationState.Walk)
+                    throw new InvalidOperationException($"Expected Minotaur_3 Walk when player approaches, got {_boss.Character.Animation}");
+                _playerPosition = new Vector2(3680f, 320f);
+                _boss.Update(0.05f, _playerPosition);
+                if (_boss.Character.Animation != EnemyAnimationState.Attack1)
+                    throw new InvalidOperationException($"Expected Minotaur_3 Attack1 in range, got {_boss.Character.Animation}");
                 UpdateCamera();
                 _visualValidationFrameWait = 8;
                 break;
 
             case 4:
-                // Defeat Minotaur_3, reveal & collect Ash Seal 3/4 -> spawns Fire Wizard
+                // Defeat Minotaur_3 -> verify Ash Seal 3/4 revealed & NO wizard yet -> deplete resources -> collect Seal 3 -> verify restoration & Fire Wizard
                 _boss?.TakeDamage(9999, _boss.Position.Y - 24f);
                 for (var i = 0; i < 120; i++)
                 {
                     _boss?.Update(0.05f, _playerPosition);
                     UpdateBossProgression();
                 }
+                if (_act03Encounter.Stage != Act03BossStage.AwaitingSeal3 || _boss is not null)
+                    throw new InvalidOperationException($"Expected AwaitingSeal3 with no active boss after Minotaur_3 defeat, got {_act03Encounter.Stage} / {_boss?.VariantId ?? "null"}");
+                _livesRemaining = 1;
+                _playerHealth = 15;
+                _stamina = 0.5f;
+                _power = 0f;
                 // Move player onto Ash Seal 3/4 tile (230,19) -> x=3680, y=320
                 _playerPosition = new Vector2(3688f, 320f);
                 CollectLevelItems();
+                if (_livesRemaining != 3 ||
+                    _playerHealth != CombatBalance.GetPlayerMaxHealth(_selectedDifficulty) ||
+                    Math.Abs(_stamina - StaminaMaximum) > 0.01f ||
+                    Math.Abs(_power - CombatBalance.PlayerPowerMaximum) > 0.01f)
+                    throw new InvalidOperationException($"Resource restoration failed: Lives={_livesRemaining} HP={_playerHealth} Stam={_stamina} Pwr={_power}");
+                if (_boss is null || _boss.VariantId != "Fire Wizard")
+                    throw new InvalidOperationException($"Expected Fire Wizard after Seal 3/4 collection, got {_boss?.VariantId ?? "null"}");
                 _playerPosition = new Vector2(3660f, 320f);
                 UpdateCamera();
                 _visualValidationFrameWait = 12;
@@ -563,6 +604,8 @@ public class KuroganesEchoGame : Game
                     _boss?.Update(0.05f, _playerPosition);
                     UpdateBossProgression();
                 }
+                if (_boss is null || _boss.VariantId != "Lightning Mage")
+                    throw new InvalidOperationException($"Expected Lightning Mage after Fire Wizard defeat, got {_boss?.VariantId ?? "null"}");
                 _playerPosition = new Vector2(3660f, 320f);
                 UpdateCamera();
                 _visualValidationFrameWait = 12;
@@ -576,6 +619,8 @@ public class KuroganesEchoGame : Game
                     _boss?.Update(0.05f, _playerPosition);
                     UpdateBossProgression();
                 }
+                if (_boss is null || _boss.VariantId != "Wanderer Magican")
+                    throw new InvalidOperationException($"Expected Wanderer Magican after Lightning Mage defeat, got {_boss?.VariantId ?? "null"}");
                 _playerPosition = new Vector2(3660f, 320f);
                 UpdateCamera();
                 _visualValidationFrameWait = 12;
@@ -1646,12 +1691,19 @@ public class KuroganesEchoGame : Game
 
         foreach (var spawn in _level.BossSpawns)
         {
+            if (string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+            {
+                _act03BossSpawn = spawn;
+                var minotaur = new BossInstance(Content, BossKind.Minotaur, spawn, "Minotaur_3");
+                minotaur.ConfigureDifficulty(_selectedDifficulty);
+                _boss = minotaur;
+                break;
+            }
+
             if (BossInstance.TryCreate(Content, spawn, out var boss))
             {
                 boss.ConfigureDifficulty(_selectedDifficulty);
                 _boss = boss;
-                if (string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
-                    _act03BossSpawn = spawn;
                 break;
             }
         }
@@ -1668,7 +1720,22 @@ public class KuroganesEchoGame : Game
             return;
         }
 
-        if (_act03Encounter.Stage == Act03BossStage.FireWizard && _act03BossSpawn is not null)
+        if (_act03BossSpawn is null)
+            return;
+
+        if (_act03Encounter.Stage == Act03BossStage.Minotaur3)
+        {
+            if (_boss is null ||
+                _boss.Kind != BossKind.Minotaur ||
+                !string.Equals(_boss.VariantId, "Minotaur_3", StringComparison.Ordinal))
+            {
+                _boss = new BossInstance(Content, BossKind.Minotaur, _act03BossSpawn, "Minotaur_3");
+                _boss.ConfigureDifficulty(_selectedDifficulty);
+            }
+            return;
+        }
+
+        if (_act03Encounter.Stage == Act03BossStage.FireWizard)
         {
             // Seal 3/4 was already collected and restored resources in this save;
             // resume at Fire Wizard without re-awarding Ash Seal 3/4 or restoring resources again.
@@ -1943,6 +2010,11 @@ public class KuroganesEchoGame : Game
         if (PlayerAtLevelExit() && !string.IsNullOrWhiteSpace(_level.NextLevelId))
         {
             var nextLevelId = _level.NextLevelId;
+            if (string.Equals(nextLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+            {
+                _saveProgress.Act03Seal3RestorationApplied = false;
+                _saveProgress.Act03FinalBossesCompleted = false;
+            }
             LoadLevel(nextLevelId);
             _saveProgress.UnlockedLevelId = nextLevelId;
             StartAct01(nextLevelId);
@@ -2704,6 +2776,10 @@ public class KuroganesEchoGame : Game
 
     private void SaveCurrentProgress()
     {
+#if DEBUG
+        if (!string.IsNullOrWhiteSpace(_visualValidationDir))
+            return;
+#endif
         _saveProgress.CurrentLevelId = _currentLevelId;
         _saveProgress.CharacterId = _characterIds[_characterSelection];
         _saveProgress.Difficulty = _selectedDifficulty;

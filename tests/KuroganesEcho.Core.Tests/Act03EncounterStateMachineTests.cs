@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text.Json;
 using KuroganesEcho.Core;
 using Xunit;
@@ -208,17 +209,19 @@ public sealed class Act03EncounterStateMachineTests
     }
 
     [Fact]
-    public void LegacySaveWithSeal3ResumesAtFireWizardWithoutReTriggeringRestoration()
+    public void LegacySaveWithSeal3WithoutRestorationFlagStillSpawnsMinotaur3First()
     {
-        // Simulates a save file created before Act03Seal3RestorationApplied existed
+        // Reproduces real save files (e.g. legacy Act 01/02/03 saves) that already have
+        // SealAshesParts=3 without Act03Seal3RestorationApplied: Minotaur_3 MUST still spawn first.
         const string legacyJson = """
             {
               "CurrentLevelId": "Act_03_C",
               "UnlockedLevelId": "Act_03_C",
               "CharacterId": "Kunoichi",
-              "Difficulty": 1,
-              "LivesRemaining": 2,
+              "Difficulty": 0,
+              "LivesRemaining": 5,
               "SealAshesParts": 3,
+              "Act03FinalBossesCompleted": false,
               "CheckpointLevelId": "Act_03_C",
               "CheckpointId": 3
             }
@@ -228,10 +231,99 @@ public sealed class Act03EncounterStateMachineTests
         var machine = new Act03EncounterStateMachine();
         machine.InitializeForLevel("Act_03_C", legacySave);
 
-        Assert.Equal(Act03BossStage.FireWizard, machine.Stage);
-        Assert.Equal("Fire Wizard", machine.ActiveBossVariant);
+        Assert.Equal(Act03BossStage.Minotaur3, machine.Stage);
+        Assert.Equal("Minotaur_3", machine.ActiveBossVariant);
         Assert.False(machine.IsSealAvailable(3, legacySave));
-        Assert.False(machine.TryCollectSeal(3, legacySave).Collected);
+
+        // Defeating Minotaur_3 reveals Ash Seal 3/4 and still keeps wizards gated
+        var defeat = machine.OnBossDefeated();
+        Assert.True(defeat.Transitioned);
+        Assert.Equal(3, defeat.RevealedSealPartIndex);
+        Assert.Null(defeat.NextBossVariant);
+        Assert.True(machine.IsSealAvailable(3, legacySave));
+
+        // Collecting Ash Seal 3/4 applies restoration once and starts Fire Wizard
+        var collect = machine.TryCollectSeal(3, legacySave);
+        Assert.True(collect.Collected);
+        Assert.True(collect.ShouldRestorePlayerResources);
+        Assert.Equal("Fire Wizard", collect.NextBossVariant);
+        Assert.True(legacySave.Act03Seal3RestorationApplied);
+    }
+
+    [Fact]
+    public void Minotaur3TilesetAndAct03CMapBossSpawnAreValidAndContainNoPreMinotaurWizard()
+    {
+        var repoRoot = FindRepoRoot();
+        var tilesetPath = System.IO.Path.Combine(
+            repoRoot, "src", "KuroganesEcho.Core", "Content", "Tiled", "Tilesets", "Enemies", "Minotaur_3.tsx");
+        Assert.True(System.IO.File.Exists(tilesetPath), $"Missing Minotaur_3.tsx at {tilesetPath}");
+
+        var tsxDoc = System.Xml.Linq.XDocument.Load(tilesetPath);
+        var tilesetDir = System.IO.Path.GetDirectoryName(tilesetPath)!;
+        var states = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+
+        foreach (var tile in tsxDoc.Root!.Elements("tile"))
+        {
+            var imageSource = (string)tile.Element("image")?.Attribute("source");
+            Assert.False(string.IsNullOrWhiteSpace(imageSource));
+            var fullFramePath = System.IO.Path.GetFullPath(System.IO.Path.Combine(tilesetDir, imageSource!));
+            Assert.True(System.IO.File.Exists(fullFramePath), $"Missing frame: {fullFramePath}");
+
+            var stateProp = tile.Element("properties")?.Elements("property")
+                .FirstOrDefault(p => string.Equals((string)p.Attribute("name"), "State", System.StringComparison.OrdinalIgnoreCase));
+            if (stateProp is not null)
+            {
+                var stateName = (string)stateProp.Attribute("value") ?? string.Empty;
+                states.Add(stateName);
+                Assert.NotEmpty(tile.Element("animation")?.Elements("frame") ?? System.Linq.Enumerable.Empty<System.Xml.Linq.XElement>());
+            }
+        }
+
+        Assert.Contains("Idle", states);
+        Assert.Contains("Walk", states);
+        Assert.Contains("Attack1", states);
+        Assert.Contains("Hurt", states);
+        Assert.Contains("Dead", states);
+
+        var mapPath = System.IO.Path.Combine(
+            repoRoot, "src", "KuroganesEcho.Core", "Content", "Tiled", "Maps", "Act_03_C.tmx");
+        var tmxDoc = System.Xml.Linq.XDocument.Load(mapPath);
+        var gameplay = tmxDoc.Root!.Elements("objectgroup")
+            .First(g => string.Equals((string)g.Attribute("name"), "Gameplay", System.StringComparison.OrdinalIgnoreCase));
+
+        var bossSpawns = gameplay.Elements("object")
+            .Where(o => string.Equals((string)o.Attribute("type"), "BossSpawn", System.StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        Assert.Single(bossSpawns);
+
+        var bossProps = bossSpawns[0].Element("properties")!.Elements("property")
+            .ToDictionary(p => (string)p.Attribute("name")!, p => (string)p.Attribute("value")!, System.StringComparer.OrdinalIgnoreCase);
+        Assert.Equal("Minotaur", bossProps["BossType"]);
+        Assert.Equal("Minotaur_3", bossProps["BossVariant"]);
+
+        // Ensure no wizard is configured as an enemy spawn on Act_03_C
+        var enemyTypes = gameplay.Elements("object")
+            .Where(o => string.Equals((string)o.Attribute("type"), "EnemySpawn", System.StringComparison.OrdinalIgnoreCase))
+            .Select(o => o.Element("properties")?.Elements("property")
+                .FirstOrDefault(p => string.Equals((string)p.Attribute("name"), "EnemyType", System.StringComparison.OrdinalIgnoreCase))?
+                .Attribute("value")?.Value)
+            .ToList();
+        Assert.DoesNotContain("Fire Wizard", enemyTypes);
+        Assert.DoesNotContain("Lightning Mage", enemyTypes);
+        Assert.DoesNotContain("Wanderer Magican", enemyTypes);
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (System.IO.File.Exists(System.IO.Path.Combine(dir.FullName, "KuroganesEcho.slnx")))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+
+        throw new System.InvalidOperationException("Could not locate repository root (KuroganesEcho.slnx).");
     }
 
     [Fact]

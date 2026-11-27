@@ -180,13 +180,14 @@ internal sealed class BossInstance
     private void UpdateMinotaur(float elapsedSeconds, Vector2 playerPosition)
     {
         var horizontalDistance = playerPosition.X - Position.X;
+        var absDistance = Math.Abs(horizontalDistance);
         _facing = horizontalDistance < 0f ? -1 : 1;
         if (_attackRemaining > 0f)
         {
             _attackRemaining = Math.Max(0f, _attackRemaining - elapsedSeconds);
             Character.SetAnimation(EnemyAnimationState.Attack1);
         }
-        else if (Math.Abs(horizontalDistance) <= MinotaurAttackDistance && _attackCooldown <= 0f)
+        else if (absDistance <= MinotaurAttackDistance && _attackCooldown <= 0f)
         {
             _attackRemaining = AttackDuration;
             _attackCooldown = IsEnraged ? AttackCooldown * 0.8f : AttackCooldown;
@@ -194,6 +195,14 @@ internal sealed class BossInstance
             _rangedAttack = false;
             _activeAttackAnimation = EnemyAnimationState.Attack1;
             Character.SetAnimation(EnemyAnimationState.Attack1);
+        }
+        else if (VariantId == "Minotaur_3" && absDistance > MinotaurAttackDistance * 0.8f && absDistance <= 220f)
+        {
+            var walkSpeed = IsEnraged ? 38f : 28f;
+            var nextX = Math.Clamp(Position.X + _facing * walkSpeed * elapsedSeconds, _arenaLeft, _arenaRight);
+            var moved = Math.Abs(nextX - Position.X) > 0.05f;
+            Position = new Vector2(nextX, Position.Y);
+            Character.SetAnimation(moved ? EnemyAnimationState.Walk : EnemyAnimationState.Idle);
         }
         else
         {

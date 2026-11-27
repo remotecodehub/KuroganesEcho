@@ -113,7 +113,7 @@ public class KuroganesEchoGame : Game
     private readonly List<EnemyProjectile> _enemyProjectiles = new();
     private BossInstance _boss;
     private LevelObjectData _act03BossSpawn;
-    private Act03BossStage _act03BossStage = Act03BossStage.None;
+    private readonly Act03EncounterStateMachine _act03Encounter = new();
     private string _bossBannerText = string.Empty;
     private float _bossBannerRemaining;
     private readonly CombatEffectSystem _effects = new();
@@ -591,7 +591,7 @@ public class KuroganesEchoGame : Game
                 }
                 _playerPosition = new Vector2(3720f, 320f);
                 CollectLevelItems();
-                if (_act03BossStage == Act03BossStage.Completed && _saveProgress.SealAshesParts >= 4)
+                if (_act03Encounter.Stage == Act03BossStage.Completed && _saveProgress.SealAshesParts >= 4)
                     EnterCreditsScreen();
                 _creditsScroll = 95f;
                 _visualValidationFrameWait = 6;
@@ -628,7 +628,7 @@ public class KuroganesEchoGame : Game
             var outPath = System.IO.Path.Combine(_visualValidationDir, names[_visualValidationStep]);
             using var stream = System.IO.File.Create(outPath);
             tex.SaveAsPng(stream, w, h);
-            var logLine = $"Captured {names[_visualValidationStep]} | Screen={_screen} Level={_currentLevelId} Stage={_act03BossStage} Boss={_boss?.VariantId ?? "None"} Scale={_boss?.VisualScale ?? 0f:F2} Seal={_saveProgress.SealAshesParts}/4 Enemies={_enemies.Count}";
+            var logLine = $"Captured {names[_visualValidationStep]} | Screen={_screen} Level={_currentLevelId} Stage={_act03Encounter.Stage} Boss={_boss?.VariantId ?? "None"} Scale={_boss?.VisualScale ?? 0f:F2} Seal={_saveProgress.SealAshesParts}/4 Lives={_livesRemaining} HP={_playerHealth} Stam={_stamina:F1} Pwr={_power:F1} Enemies={_enemies.Count}";
             System.IO.File.AppendAllText(System.IO.Path.Combine(_visualValidationDir, "validation.log"), logLine + Environment.NewLine);
         }
         _visualValidationStep++;
@@ -853,6 +853,7 @@ public class KuroganesEchoGame : Game
         }
 
         _saveProgress = SaveProgressStore.LoadSlot(slot);
+        _livesRemaining = Math.Clamp(_saveProgress.LivesRemaining, 1, MaximumLives);
         _selectedDifficulty = Enum.IsDefined(typeof(GameDifficulty), _saveProgress.Difficulty)
             ? _saveProgress.Difficulty
             : GameDifficulty.Normal;
@@ -898,6 +899,7 @@ public class KuroganesEchoGame : Game
         Difficulty = source.Difficulty,
         LivesRemaining = source.LivesRemaining,
         SealAshesParts = source.SealAshesParts,
+        Act03Seal3RestorationApplied = source.Act03Seal3RestorationApplied,
         Act03FinalBossesCompleted = source.Act03FinalBossesCompleted,
         CheckpointLevelId = source.CheckpointLevelId,
         CheckpointId = source.CheckpointId
@@ -1321,6 +1323,7 @@ public class KuroganesEchoGame : Game
         _saveProgress.CheckpointId = 0;
         _saveProgress.UnlockedLevelId = "Act_01_A";
         _saveProgress.SealAshesParts = 0;
+        _saveProgress.Act03Seal3RestorationApplied = false;
         _saveProgress.Act03FinalBossesCompleted = false;
         LoadLevel("Act_01_A");
         StartAct01("Act_01_A");
@@ -1656,29 +1659,28 @@ public class KuroganesEchoGame : Game
 
     private void InitializeAct03BossState()
     {
-        if (!string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
+        _act03Encounter.InitializeForLevel(_currentLevelId, _saveProgress);
+        if (_act03Encounter.Stage == Act03BossStage.Completed)
         {
-            _act03BossStage = Act03BossStage.None;
+            _boss = null;
+            _finalBossDefeated = true;
+            _finalBossRewardCollected = true;
             return;
         }
 
-        if (_saveProgress.SealAshesParts >= 3 && !_saveProgress.Act03FinalBossesCompleted && _act03BossSpawn is not null)
+        if (_act03Encounter.Stage == Act03BossStage.FireWizard && _act03BossSpawn is not null)
         {
-            // Player already defeated Minotaur_3 and collected Ash Seal 3/4 in this save;
-            // resume at Fire Wizard without re-awarding Ash Seal 3/4.
-            SpawnFinalSequenceBoss(Act03BossStage.FireWizard, "Fire Wizard");
-            return;
+            // Seal 3/4 was already collected and restored resources in this save;
+            // resume at Fire Wizard without re-awarding Ash Seal 3/4 or restoring resources again.
+            SpawnFinalSequenceBoss("Fire Wizard");
         }
-
-        _act03BossStage = Act03BossStage.Minotaur3;
     }
 
-    private void SpawnFinalSequenceBoss(Act03BossStage stage, string variantId)
+    private void SpawnFinalSequenceBoss(string variantId)
     {
         if (_act03BossSpawn is null)
             return;
 
-        _act03BossStage = stage;
         _enemyProjectiles.Clear();
         _boss = new BossInstance(Content, BossKind.Wizard, _act03BossSpawn, variantId);
         _boss.ConfigureDifficulty(_selectedDifficulty);
@@ -1964,7 +1966,7 @@ public class KuroganesEchoGame : Game
             return;
         }
         if (_currentLevelId == "Act_03_C" &&
-            _act03BossStage == Act03BossStage.Completed &&
+            _act03Encounter.Stage == Act03BossStage.Completed &&
             _saveProgress.SealAshesParts >= 4)
         {
             _saveProgress.CurrentLevelId = "Act_03_C";
@@ -1993,38 +1995,25 @@ public class KuroganesEchoGame : Game
             return;
         }
 
-        switch (_act03BossStage)
+        var result = _act03Encounter.OnBossDefeated();
+        if (!result.Transitioned)
+            return;
+
+        _boss = null;
+        _enemyProjectiles.Clear();
+        if (result.RevealedSealPartIndex.HasValue)
         {
-            case Act03BossStage.Minotaur3:
-                _act03BossStage = Act03BossStage.AwaitingSeal3;
+            var partIndex = result.RevealedSealPartIndex.Value;
+            if (partIndex == 3)
                 _finalBossDefeated = true;
-                _boss = null;
-                _enemyProjectiles.Clear();
-                RevealSealCollectibles(partIndex: 3);
-                _audio.PlayCue(AudioCue.Collectable, 1f);
-                ShowBossBanner(LocalizedText.Get("AshSeal3Revealed"));
-                break;
 
-            case Act03BossStage.FireWizard:
-                _boss = null;
-                _enemyProjectiles.Clear();
-                SpawnFinalSequenceBoss(Act03BossStage.LightningMage, "Lightning Mage");
-                break;
-
-            case Act03BossStage.LightningMage:
-                _boss = null;
-                _enemyProjectiles.Clear();
-                SpawnFinalSequenceBoss(Act03BossStage.WandererMagican, "Wanderer Magican");
-                break;
-
-            case Act03BossStage.WandererMagican:
-                _act03BossStage = Act03BossStage.AwaitingSeal4;
-                _boss = null;
-                _enemyProjectiles.Clear();
-                RevealSealCollectibles(partIndex: 4);
-                _audio.PlayCue(AudioCue.Collectable, 1f);
-                ShowBossBanner(LocalizedText.Get("AshSeal4Revealed"));
-                break;
+            RevealSealCollectibles(partIndex);
+            _audio.PlayCue(AudioCue.Collectable, 1f);
+            ShowBossBanner(LocalizedText.Get(partIndex == 3 ? "AshSeal3Revealed" : "AshSeal4Revealed"));
+        }
+        else if (!string.IsNullOrWhiteSpace(result.NextBossVariant))
+        {
+            SpawnFinalSequenceBoss(result.NextBossVariant);
         }
     }
 
@@ -2061,9 +2050,7 @@ public class KuroganesEchoGame : Game
         if (!string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
             return _finalBossDefeated && !_finalBossRewardCollected;
 
-        var partIndex = GetSealPartIndex(collectible);
-        return (partIndex == 3 && _act03BossStage == Act03BossStage.AwaitingSeal3) ||
-               (partIndex == 4 && _act03BossStage == Act03BossStage.AwaitingSeal4);
+        return _act03Encounter.IsSealAvailable(GetSealPartIndex(collectible), _saveProgress);
     }
 
     private bool PlayerAtLevelExit()
@@ -2216,23 +2203,29 @@ public class KuroganesEchoGame : Game
         var partIndex = GetSealPartIndex(collectible);
         if (string.Equals(_currentLevelId, "Act_03_C", StringComparison.OrdinalIgnoreCase))
         {
-            if (partIndex == 3 && _act03BossStage == Act03BossStage.AwaitingSeal3)
+            var result = _act03Encounter.TryCollectSeal(partIndex, _saveProgress);
+            if (!result.Collected)
+                return false;
+
+            if (result.ShouldRestorePlayerResources)
             {
-                _saveProgress.SealAshesParts = Math.Clamp(Math.Max(_saveProgress.SealAshesParts, 3), 0, 4);
-                SpawnFinalSequenceBoss(Act03BossStage.FireWizard, "Fire Wizard");
-                return true;
+                Act03EncounterStateMachine.ApplySeal3ResourceRestoration(
+                    _selectedDifficulty,
+                    StaminaMaximum,
+                    ref _livesRemaining,
+                    ref _playerHealth,
+                    ref _stamina,
+                    ref _power,
+                    ref _powerRecoveryElapsed);
             }
 
-            if (partIndex == 4 && _act03BossStage == Act03BossStage.AwaitingSeal4)
-            {
-                _act03BossStage = Act03BossStage.Completed;
+            if (result.ShouldOpenCredits)
                 _finalBossRewardCollected = true;
-                _saveProgress.SealAshesParts = 4;
-                _saveProgress.Act03FinalBossesCompleted = true;
-                return true;
-            }
 
-            return false;
+            if (!string.IsNullOrWhiteSpace(result.NextBossVariant))
+                SpawnFinalSequenceBoss(result.NextBossVariant);
+
+            return true;
         }
 
         if (_finalBossRewardCollected)
@@ -3696,18 +3689,6 @@ public class KuroganesEchoGame : Game
         GameOver,
         Victory,
         Credits
-    }
-
-    private enum Act03BossStage
-    {
-        None,
-        Minotaur3,
-        AwaitingSeal3,
-        FireWizard,
-        LightningMage,
-        WandererMagican,
-        AwaitingSeal4,
-        Completed
     }
 
     private enum BindingDevice

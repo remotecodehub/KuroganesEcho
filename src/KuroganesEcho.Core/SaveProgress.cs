@@ -12,6 +12,7 @@ internal sealed class SaveProgressState
     public GameDifficulty Difficulty { get; set; } = GameDifficulty.Normal;
     public int LivesRemaining { get; set; } = 3;
     public int SealAshesParts { get; set; }
+    public bool Act03Seal3RestorationApplied { get; set; }
     public bool Act03FinalBossesCompleted { get; set; }
     public string CheckpointLevelId { get; set; } = "Act_01_A";
     public int CheckpointId { get; set; }

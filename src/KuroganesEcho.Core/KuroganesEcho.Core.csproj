@@ -4,6 +4,9 @@
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="KuroganesEcho.Core.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MonoGame.Framework.Native" Version="3.8.6.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>

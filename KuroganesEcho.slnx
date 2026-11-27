@@ -31,4 +31,7 @@
   <Folder Name="/tools/">
     <Project Path="tools/Audio16BitConverter/Audio16BitConverter.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KuroganesEcho.Core.Tests/KuroganesEcho.Core.Tests.csproj" />
+  </Folder>
 </Solution>

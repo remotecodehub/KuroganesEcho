@@ -1,9 +1,13 @@
 [CmdletBinding()]
 param(
+    [Alias("d")]
     [switch]$desktop,
+    [Alias("a")]
     [switch]$android,
+    [Alias("i")]
     [switch]$ios,
     [ValidateSet('Debug', 'Release')]
+    [Alias("c")]
     [string]$Configuration = 'Debug',
     [switch]$SkipRun,
     [string[]]$RunArguments,

@@ -10,6 +10,7 @@ internal enum PlayerAnimationState
 {
     Idle,
     Run,
+    Dash,
     Attack1,
     Attack2,
     Cast,
@@ -62,6 +63,7 @@ internal sealed class PlayerCharacter
 
         player.Add(content, PlayerAnimationState.Idle, $"{root}/Idle", FrameCount(characterId, PlayerAnimationState.Idle));
         player.Add(content, PlayerAnimationState.Run, $"{root}/Run", FrameCount(characterId, PlayerAnimationState.Run));
+        player.Add(content, PlayerAnimationState.Dash, $"{root}/Dash", FrameCount(characterId, PlayerAnimationState.Dash));
         player.Add(content, PlayerAnimationState.Walk, $"{root}/Walk", FrameCount(characterId, PlayerAnimationState.Walk));
         player.Add(content, PlayerAnimationState.Attack1, $"{root}/Attack_1", FrameCount(characterId, PlayerAnimationState.Attack1));
         player.Add(content, PlayerAnimationState.Attack2, $"{root}/Attack_2", FrameCount(characterId, PlayerAnimationState.Attack2));
@@ -104,6 +106,7 @@ internal sealed class PlayerCharacter
         ActionRemaining = animation switch
         {
             PlayerAnimationState.Jump or PlayerAnimationState.Eating or PlayerAnimationState.Disguise => 0.9f,
+            PlayerAnimationState.Dash => FrameCountForAnimation(animation) / 10f,
             _ => 0.65f
         };
         _animationClock = 0f;
@@ -226,6 +229,7 @@ internal sealed class PlayerCharacter
         {
             PlayerAnimationState.Idle or PlayerAnimationState.Eating => 9,
             PlayerAnimationState.Run or PlayerAnimationState.Walk => 8,
+            PlayerAnimationState.Dash => 6,
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 8,
             PlayerAnimationState.Cast => 6,
@@ -242,6 +246,7 @@ internal sealed class PlayerCharacter
             // Run.png is 768x96: eight 96px frames. Using five frames made the
             // animation read as a clipped attack instead of a full run cycle.
             PlayerAnimationState.Run => 8,
+            PlayerAnimationState.Dash => 6,
             PlayerAnimationState.Attack1 or PlayerAnimationState.Attack2 or PlayerAnimationState.Cast => 5,
             PlayerAnimationState.Hurt => 4,
             PlayerAnimationState.Blade => 6,
@@ -253,6 +258,7 @@ internal sealed class PlayerCharacter
         {
             PlayerAnimationState.Idle => 6,
             PlayerAnimationState.Run => 6,
+            PlayerAnimationState.Dash => 6,
             PlayerAnimationState.Walk => 8,
             PlayerAnimationState.Attack1 => 6,
             PlayerAnimationState.Attack2 => 4,

@@ -48,7 +48,6 @@
   <data name="BgmVolume" xml:space="preserve"><value>Volumen BGM</value></data>
   <data name="SfxVolume" xml:space="preserve"><value>Volumen SFX</value></data>
   <data name="Mute" xml:space="preserve"><value>Silencio</value></data>
-  <data name="CheatStatus" xml:space="preserve"><value>Cheat: {0}</value></data>
   <data name="On" xml:space="preserve"><value>Activado</value></data>
   <data name="Off" xml:space="preserve"><value>Desactivado</value></data>
   <data name="Fullscreen" xml:space="preserve"><value>Pantalla completa</value></data>

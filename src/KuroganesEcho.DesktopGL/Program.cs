@@ -1,4 +1,6 @@
-﻿using KuroganesEcho.Core;
+﻿using System;
+using System.Runtime.InteropServices;
+using KuroganesEcho.Core;
 
 internal class Program
 {
@@ -9,7 +11,10 @@ internal class Program
     /// <param name="args">Command-line arguments passed to the application.</param>
     private static void Main(string[] args)
     {
-        using var game = new KuroganesEchoGame();
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            Environment.SetEnvironmentVariable("ALSOFT_DRIVERS", "pipewire,pulse,alsa,oss,jack,port,null");
+        
+        using KuroganesEchoGame game = new();
         game.Run();
     }
 }

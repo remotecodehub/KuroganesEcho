@@ -32,6 +32,7 @@ function Get-FrameDuration([string] $state) {
         '^Run$' { return 80 }
         '^Jump$' { return 110 }
         '^Hurt$' { return 100 }
+        "^Dash$" { return 80 }
         '^Dead$' { return 140 }
         '^Eating$' { return 130 }
         '^Cast$' { return 110 }

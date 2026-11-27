@@ -23,6 +23,7 @@ public class KuroganesEchoGame : Game
     private const float BossArenaHalfWidth = 160f;
     private const float PlayerSpeed = 72f;
     private const float RunSpeed = 132f;
+    private const float DashSpeed = 216f;
     private const float PlayerScale = 0.5f;
     private const float Gravity = 480f;
     private const float JumpVelocity = -180f;
@@ -40,6 +41,7 @@ public class KuroganesEchoGame : Game
     private const float StaminaMaximum = 5f;
     private const float StaminaRecoveryPerSecond = 0.85f;
     private const float RunStaminaCost = 1f;
+    private const float DashStaminaCost = 1.5f;
     private const float LevelBriefingDuration = 5f;
     private const int StartingLives = 3;
     private const int MaximumLives = 5;
@@ -163,6 +165,7 @@ public class KuroganesEchoGame : Game
     private float _verticalVelocity;
     private bool _isGrounded;
     private float _runRemaining;
+    private float _dashDirection;
     private float _stamina = StaminaMaximum;
     private float _power;
     private float _powerRecoveryElapsed;
@@ -303,9 +306,12 @@ public class KuroganesEchoGame : Game
         if (_screen == GameScreen.Paused)
         {
             var debugMenuHandled = _debugCheatCodes.Update(
+                keyboard,
+                _previousKeyboard,
                 gamePad,
                 _previousGamePad,
                 touchState,
+                IsDesktop,
                 IsMobile,
                 ToVirtualPoint,
                 GetDebugCheckpointOptions());
@@ -1185,9 +1191,6 @@ public class KuroganesEchoGame : Game
 
     private void OpenOptions(GameScreen returnScreen)
     {
-#if DEBUG
-        _debugCheatCodes.ResetOptionsCodeInput();
-#endif
         _optionsReturnScreen = returnScreen;
         _optionsSelection = LanguageOptionIndex;
         _languageSwipeDetector.Reset();
@@ -1196,9 +1199,6 @@ public class KuroganesEchoGame : Game
 
     private void ReturnFromOptions()
     {
-#if DEBUG
-        _debugCheatCodes.ResetOptionsCodeInput();
-#endif
         _languageSwipeDetector.Reset();
         _screen = _optionsReturnScreen;
     }
@@ -1251,10 +1251,6 @@ public class KuroganesEchoGame : Game
 
     private void UpdateOptions(KeyboardState keyboard, GamePadState gamePad, TouchCollection touches)
     {
-#if DEBUG
-        _debugCheatCodes.UpdateOptionsCodeInput(keyboard, _previousKeyboard);
-#endif
-
         if (IsDesktop && IsNewKeyPress(keyboard, Keys.Tab))
         {
             _optionsSelection = ControlsOptionIndex;
@@ -1296,11 +1292,6 @@ public class KuroganesEchoGame : Game
         {
             point = GetFreshLeftClickPoint();
         }
-
-#if DEBUG
-        if (point.HasValue)
-            _debugCheatCodes.ResetOptionsCodeInput();
-#endif
 
         if (point.HasValue)
         {
@@ -1352,14 +1343,6 @@ public class KuroganesEchoGame : Game
                 return;
             }
 
-#if DEBUG
-            if (TestInvulnerabilityButton().Contains(point.Value))
-            {
-                _optionsSelection = TestInvulnerabilityOptionIndex;
-                return;
-            }
-#endif
-
             if (IsDesktop && ControlsButton().Contains(point.Value))
             {
                 _optionsSelection = ControlsOptionIndex;
@@ -1393,13 +1376,7 @@ public class KuroganesEchoGame : Game
 
     private int MuteOptionIndex => SfxVolumeOptionIndex + 1;
 
-#if DEBUG
-    private int TestInvulnerabilityOptionIndex => MuteOptionIndex + 1;
-
-    private int BackOptionIndex => TestInvulnerabilityOptionIndex + (IsMobile ? 1 : 0);
-#else
     private int BackOptionIndex => MuteOptionIndex + (IsMobile ? 1 : 0);
-#endif
 
     private int OptionsOptionCount => BackOptionIndex + 1;
 
@@ -1480,11 +1457,6 @@ public class KuroganesEchoGame : Game
             SaveCurrentSettings();
             return;
         }
-
-#if DEBUG
-        if (_optionsSelection == TestInvulnerabilityOptionIndex)
-            return;
-#endif
 
         if (_optionsSelection == BackOptionIndex)
             ReturnFromOptions();
@@ -2193,6 +2165,7 @@ public class KuroganesEchoGame : Game
         _playerInvulnerability = Math.Max(0f, _playerInvulnerability - elapsedSeconds);
         _lowHealthProtectionRemaining = Math.Max(0f, _lowHealthProtectionRemaining - elapsedSeconds);
         if (_runRemaining <= 0f &&
+            !IsPlayerDashing &&
             !(_player.Animation == PlayerAnimationState.Attack2 && _player.IsActionActive))
             _stamina = Math.Min(StaminaMaximum, _stamina + StaminaRecoveryPerSecond * elapsedSeconds);
         UpdatePlayerPowerRecovery(elapsedSeconds);
@@ -2224,7 +2197,9 @@ public class KuroganesEchoGame : Game
                     TryJump();
             }
             else if (IsNewKeyPress(keyboard, _keyboardBindings[5]) || IsNewButtonPress(gamePad, _gamepadBindings[5]))
-                StartAction(PlayerAnimationState.Run);
+                StartAction(IsDownHeld(keyboard, gamePad, touchDownHeld)
+                    ? PlayerAnimationState.Dash
+                    : PlayerAnimationState.Run);
             else if (IsNewKeyPress(keyboard, _keyboardBindings[6]) || IsNewButtonPress(gamePad, _gamepadBindings[6]))
                 StartPrimarySpecial();
             else if (IsNewKeyPress(keyboard, _keyboardBindings[7]) || IsNewButtonPress(gamePad, _gamepadBindings[7]))
@@ -2268,7 +2243,9 @@ public class KuroganesEchoGame : Game
                 else if (ActionButtonBounds(4).Contains(point))
                     StartPrimarySpecial();
                 else if (ActionButtonBounds(5).Contains(point))
-                    StartAction(PlayerAnimationState.Run);
+                    StartAction(IsDownHeld(keyboard, gamePad, touchDownHeld)
+                        ? PlayerAnimationState.Dash
+                        : PlayerAnimationState.Run);
             }
         }
 
@@ -2293,8 +2270,11 @@ public class KuroganesEchoGame : Game
             _moveInput.Normalize();
         if (Math.Abs(_moveInput.X) > 0.05f)
             _playerFacing = _moveInput.X < 0f ? -1 : 1;
-        var movementSpeed = _runRemaining > 0f ? RunSpeed : PlayerSpeed;
-        _playerPosition.X += (_moveInput.X * movementSpeed + _playerKnockbackVelocity) * elapsedSeconds;
+        var movementSpeed = IsPlayerDashing ? DashSpeed : _runRemaining > 0f ? RunSpeed : PlayerSpeed;
+        var movementDirection = IsPlayerDashing
+            ? (Math.Abs(_moveInput.X) > 0.05f ? Math.Sign(_moveInput.X) : _dashDirection)
+            : _moveInput.X;
+        _playerPosition.X += (movementDirection * movementSpeed + _playerKnockbackVelocity) * elapsedSeconds;
         _playerKnockbackVelocity = MathHelper.Lerp(_playerKnockbackVelocity, 0f, Math.Min(1f, elapsedSeconds * 8f));
         _verticalVelocity += Gravity * elapsedSeconds;
         _playerPosition.Y += _verticalVelocity * elapsedSeconds;
@@ -2698,6 +2678,9 @@ public class KuroganesEchoGame : Game
         (int)(PlayerHalfWidth * 2f),
         (int)PlayerHeight);
 
+    private bool IsPlayerDashing =>
+        _player.Animation == PlayerAnimationState.Dash && _player.IsActionActive;
+
     private Rectangle PlayerAttackHitbox => new(
         (int)(_playerPosition.X + (_playerFacing > 0 ? 4f : -38f)),
         (int)(_playerPosition.Y - 28f),
@@ -2999,6 +2982,9 @@ public class KuroganesEchoGame : Game
 
     private void ResolvePlayerEnemyCollisions()
     {
+        if (IsPlayerDashing)
+            return;
+
         var playerHitbox = PlayerHitbox;
         foreach (var enemy in _enemies)
         {
@@ -3063,6 +3049,9 @@ public class KuroganesEchoGame : Game
             return false;
 #endif
 
+        if (IsPlayerDashing)
+            return false;
+
         if (_playerInvulnerability > 0f || _player.Animation == PlayerAnimationState.Disguise || _playerHealth <= 0)
             return false;
 
@@ -3125,6 +3114,8 @@ public class KuroganesEchoGame : Game
 
         if (action == PlayerAnimationState.Run && _stamina < RunStaminaCost)
             return;
+        if (action == PlayerAnimationState.Dash && _stamina < DashStaminaCost)
+            return;
         if (action == PlayerAnimationState.Attack2 && _stamina < CombatBalance.StrongAttackStaminaCost)
             return;
 
@@ -3135,6 +3126,8 @@ public class KuroganesEchoGame : Game
             _playerBellHitsApplied.Clear();
         }
         _runRemaining = action == PlayerAnimationState.Run ? _player.ActionRemaining : 0f;
+        if (action == PlayerAnimationState.Dash)
+            _dashDirection = Math.Abs(_moveInput.X) > 0.05f ? Math.Sign(_moveInput.X) : _playerFacing;
         if (action == PlayerAnimationState.Run)
         {
 #if DEBUG
@@ -3144,6 +3137,16 @@ public class KuroganesEchoGame : Game
             _stamina = Math.Max(0f, _stamina - RunStaminaCost);
 #endif
             _effects.Spawn(_playerPosition - new Vector2(0f, 2f), CombatEffectKind.Dust, new Vector2(-_playerFacing, 0f), 0.75f);
+        }
+        else if (action == PlayerAnimationState.Dash)
+        {
+#if DEBUG
+            if (!_debugCheatCodes.InfiniteStamina)
+                _stamina = Math.Max(0f, _stamina - DashStaminaCost);
+#else
+            _stamina = Math.Max(0f, _stamina - DashStaminaCost);
+#endif
+            _effects.Spawn(_playerPosition - new Vector2(0f, 2f), CombatEffectKind.Dust, new Vector2(-_dashDirection, 0f), 1f);
         }
         else if (action == PlayerAnimationState.Attack1)
         {
@@ -3526,16 +3529,6 @@ public class KuroganesEchoGame : Game
             $"{LocalizedText.Get("SfxVolume")}: {VolumePercent(_audio.SfxVolume)}");
         DrawAudioOption(MuteButton(), _optionsSelection == MuteOptionIndex,
             $"{LocalizedText.Get("Mute")}: {(_audio.IsMuted ? LocalizedText.Get("On") : LocalizedText.Get("Off"))}");
-
-#if DEBUG
-        DrawAudioOption(
-            TestInvulnerabilityButton(),
-            _optionsSelection == TestInvulnerabilityOptionIndex,
-            string.Format(
-                CultureInfo.CurrentCulture,
-                LocalizedText.Get("CheatStatus"),
-                _debugCheatCodes.InfiniteHealth ? "ON" : "OFF"));
-#endif
 
         if (IsMobile)
         {
@@ -4365,12 +4358,6 @@ public class KuroganesEchoGame : Game
     private Rectangle MuteButton() => IsDesktop
         ? new Rectangle(16, 149, 288, 14)
         : new Rectangle(16, 122, 288, 16);
-
-#if DEBUG
-    private Rectangle TestInvulnerabilityButton() => IsDesktop
-        ? new Rectangle(16, 165, 288, 12)
-        : new Rectangle(16, 137, 288, 12);
-#endif
 
     private Rectangle ControlsKeyboardButton() => new(8, 27, 148, 14);
 

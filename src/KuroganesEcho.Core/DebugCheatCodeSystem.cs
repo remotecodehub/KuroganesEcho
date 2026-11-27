@@ -18,6 +18,11 @@ internal sealed class DebugCheatCodeSystem
     private const int VirtualHeight = 180;
     private const int VisibleRowCount = 8;
 
+    private static readonly Keys[] DesktopKeyboardSequence =
+    {
+        Keys.K, Keys.U, Keys.R, Keys.O, Keys.G, Keys.A, Keys.N, Keys.E
+    };
+
     private static readonly Buttons[] DesktopSequence =
     {
         Buttons.RightTrigger, Buttons.RightShoulder,
@@ -29,12 +34,13 @@ internal sealed class DebugCheatCodeSystem
     private readonly List<DebugRow> _rows = new();
     private readonly List<string> _recentInputs = new();
     private int _sequenceIndex;
+    private int _keyboardSequenceIndex;
     private int _selectedRow;
     private int _scrollOffset;
     private bool _isOpen;
     private bool _isMobile;
+    private bool _usesKeyboardSequence;
     private string _lastInput = "-";
-    private string _typedOptionsCode = string.Empty;
     private bool _restoreResourcesRequested;
     private CheckpointOption? _selectedCheckpoint;
     private IReadOnlyList<CheckpointOption> _checkpoints = Array.Empty<CheckpointOption>();
@@ -48,63 +54,40 @@ internal sealed class DebugCheatCodeSystem
 
     public readonly record struct CheckpointOption(int Id, string Name, Vector2 RespawnPosition);
 
-    public void ResetOptionsCodeInput() => _typedOptionsCode = string.Empty;
-
-    public void UpdateOptionsCodeInput(KeyboardState currentKeyboard, KeyboardState previousKeyboard)
-    {
-        foreach (var key in currentKeyboard.GetPressedKeys())
-        {
-            if (previousKeyboard.IsKeyDown(key))
-                continue;
-
-            if (key is Keys.LeftShift or Keys.RightShift)
-                continue;
-
-            var keyName = key.ToString();
-            if (keyName.Length == 1 && keyName[0] is >= 'A' and <= 'Z')
-            {
-                _typedOptionsCode += keyName;
-                if (_typedOptionsCode.EndsWith("KUROGANE", StringComparison.OrdinalIgnoreCase))
-                {
-                    InfiniteHealth = true;
-                    _typedOptionsCode = string.Empty;
-                }
-                else if (_typedOptionsCode.EndsWith("CLEAR", StringComparison.OrdinalIgnoreCase))
-                {
-                    InfiniteHealth = false;
-                    _typedOptionsCode = string.Empty;
-                }
-                else if (_typedOptionsCode.Length > 8)
-                {
-                    _typedOptionsCode = _typedOptionsCode.Substring(_typedOptionsCode.Length - 8);
-                }
-            }
-            else
-            {
-                _typedOptionsCode = string.Empty;
-            }
-        }
-    }
-
     public bool Update(
+        KeyboardState currentKeyboard,
+        KeyboardState previousKeyboard,
         GamePadState currentGamePad,
         GamePadState previousGamePad,
         TouchCollection touches,
+        bool isDesktop,
         bool isMobile,
         Func<Vector2, Point> toVirtualPoint,
         IReadOnlyList<CheckpointOption> checkpoints)
     {
         _checkpoints = checkpoints;
         _isMobile = isMobile;
+        _usesKeyboardSequence = isDesktop && !isMobile && !currentGamePad.IsConnected;
 
         if (_isOpen)
         {
             RefreshRows();
-            UpdateDialog(currentGamePad, previousGamePad, touches, toVirtualPoint);
+            UpdateDialog(currentKeyboard, previousKeyboard, currentGamePad, previousGamePad, touches, toVirtualPoint);
             return true;
         }
 
-        if (!isMobile)
+        if (_usesKeyboardSequence)
+        {
+            foreach (var key in DesktopKeyboardSequence)
+            {
+                if (currentKeyboard.IsKeyDown(key) && previousKeyboard.IsKeyUp(key))
+                {
+                    TrackDesktopKey(key);
+                    break;
+                }
+            }
+        }
+        else if (!isMobile && currentGamePad.IsConnected)
         {
             foreach (var button in DesktopSequence)
             {
@@ -169,10 +152,15 @@ internal sealed class DebugCheatCodeSystem
         if (_scrollOffset + VisibleRowCount < _rows.Count)
             DrawTextCentered(spriteBatch, font, "v", new Vector2(302f, 136f), new Color(214, 191, 135), 0.48f);
 
+        var controlsHint = _isMobile
+            ? "TOUCH: LONG PRESS CONTINUE"
+            : _usesKeyboardSequence
+                ? "KEYBOARD: UP/DOWN / ENTER / ESC"
+                : "GAMEPAD: D-PAD / A / B";
         DrawTextCentered(
             spriteBatch,
             font,
-            "GAMEPAD: D-PAD / A / B   TOUCH: LONG PRESS CONTINUE",
+            controlsHint,
             new Vector2(VirtualWidth / 2f, 159f),
             new Color(156, 170, 169),
             0.35f);
@@ -186,7 +174,9 @@ internal sealed class DebugCheatCodeSystem
 
         var progress = _isMobile
             ? "DEBUG INPUT [TOUCH]  LONG PRESS CONTINUE"
-            : $"DEBUG INPUT [GAMEPAD]  {_sequenceIndex}/{DesktopSequence.Length}  LAST: {_lastInput}  NEXT: {GetExpectedInputLabel()}";
+            : _usesKeyboardSequence
+                ? $"DEBUG INPUT [KEYBOARD]  {_keyboardSequenceIndex}/{DesktopKeyboardSequence.Length}  LAST: {_lastInput}  NEXT: {GetExpectedInputLabel()}"
+                : $"DEBUG INPUT [GAMEPAD]  {_sequenceIndex}/{DesktopSequence.Length}  LAST: {_lastInput}  NEXT: {GetExpectedInputLabel()}";
         DrawText(
             spriteBatch,
             font,
@@ -221,6 +211,19 @@ internal sealed class DebugCheatCodeSystem
             Open();
     }
 
+    private void TrackDesktopKey(Keys key)
+    {
+        AddInputToHud(key.ToString());
+
+        if (key == DesktopKeyboardSequence[_keyboardSequenceIndex])
+            _keyboardSequenceIndex++;
+        else
+            _keyboardSequenceIndex = key == DesktopKeyboardSequence[0] ? 1 : 0;
+
+        if (_keyboardSequenceIndex >= DesktopKeyboardSequence.Length)
+            Open();
+    }
+
     private void AddInputToHud(string input)
     {
         _lastInput = input;
@@ -231,6 +234,11 @@ internal sealed class DebugCheatCodeSystem
 
     private string GetExpectedInputLabel()
     {
+        if (_usesKeyboardSequence)
+            return _keyboardSequenceIndex < DesktopKeyboardSequence.Length
+                ? DesktopKeyboardSequence[_keyboardSequenceIndex].ToString()
+                : "-";
+
         return _sequenceIndex < DesktopSequence.Length
             ? GetDesktopButtonLabel(DesktopSequence[_sequenceIndex])
             : "-";
@@ -250,6 +258,7 @@ internal sealed class DebugCheatCodeSystem
     public void Open()
     {
         _sequenceIndex = 0;
+        _keyboardSequenceIndex = 0;
         _isOpen = true;
         RefreshRows();
         _selectedRow = 0;
@@ -274,6 +283,8 @@ internal sealed class DebugCheatCodeSystem
     }
 
     private void UpdateDialog(
+        KeyboardState currentKeyboard,
+        KeyboardState previousKeyboard,
         GamePadState currentGamePad,
         GamePadState previousGamePad,
         TouchCollection touches,
@@ -286,11 +297,24 @@ internal sealed class DebugCheatCodeSystem
             return;
         }
 
-        if (IsNewButtonPress(currentGamePad, previousGamePad, Buttons.DPadUp))
+        if (!_isMobile &&
+            (IsNewKeyPress(currentKeyboard, previousKeyboard, Keys.Escape) ||
+             IsNewKeyPress(currentKeyboard, previousKeyboard, Keys.Back)))
+        {
+            _isOpen = false;
+            return;
+        }
+
+        if (IsNewButtonPress(currentGamePad, previousGamePad, Buttons.DPadUp) ||
+            (!_isMobile && IsNewKeyPress(currentKeyboard, previousKeyboard, Keys.Up)))
             MoveSelection(-1);
-        if (IsNewButtonPress(currentGamePad, previousGamePad, Buttons.DPadDown))
+        if (IsNewButtonPress(currentGamePad, previousGamePad, Buttons.DPadDown) ||
+            (!_isMobile && IsNewKeyPress(currentKeyboard, previousKeyboard, Keys.Down)))
             MoveSelection(1);
-        if (IsNewButtonPress(currentGamePad, previousGamePad, Buttons.A))
+        if (IsNewButtonPress(currentGamePad, previousGamePad, Buttons.A) ||
+            (!_isMobile &&
+             (IsNewKeyPress(currentKeyboard, previousKeyboard, Keys.Enter) ||
+              IsNewKeyPress(currentKeyboard, previousKeyboard, Keys.Space))))
             ActivateSelectedRow();
 
         foreach (var touch in touches)
@@ -400,6 +424,9 @@ internal sealed class DebugCheatCodeSystem
 
     private static bool IsNewButtonPress(GamePadState current, GamePadState previous, Buttons button) =>
         current.IsButtonDown(button) && !previous.IsButtonDown(button);
+
+    private static bool IsNewKeyPress(KeyboardState current, KeyboardState previous, Keys key) =>
+        current.IsKeyDown(key) && previous.IsKeyUp(key);
 
     private static void DrawTextCentered(SpriteBatch spriteBatch, SpriteFont font, string text, Vector2 center, Color color, float scale)
     {

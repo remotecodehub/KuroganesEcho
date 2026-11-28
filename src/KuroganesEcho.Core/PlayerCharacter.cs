@@ -31,6 +31,7 @@ internal enum PlayerAnimationState
 internal sealed class PlayerCharacter
 {
     private readonly Dictionary<PlayerAnimationState, Texture2D> _textures = new();
+    private readonly Dictionary<PlayerAnimationState, Texture2D[]> _separateFrames = new();
     private readonly Dictionary<PlayerAnimationState, int> _frameCounts = new();
     private float _animationClock;
     private int _lastStepFrame = -1;
@@ -63,7 +64,11 @@ internal sealed class PlayerCharacter
 
         player.Add(content, PlayerAnimationState.Idle, $"{root}/Idle", FrameCount(characterId, PlayerAnimationState.Idle));
         player.Add(content, PlayerAnimationState.Run, $"{root}/Run", FrameCount(characterId, PlayerAnimationState.Run));
-        player.Add(content, PlayerAnimationState.Dash, $"{root}/Dash", FrameCount(characterId, PlayerAnimationState.Dash));
+        player.AddSeparateFrames(
+            content,
+            PlayerAnimationState.Dash,
+            $"Tiled/Chars/GeneratedFrames/{characterId}/Dash",
+            FrameCount(characterId, PlayerAnimationState.Dash));
         player.Add(content, PlayerAnimationState.Walk, $"{root}/Walk", FrameCount(characterId, PlayerAnimationState.Walk));
         player.Add(content, PlayerAnimationState.Attack1, $"{root}/Attack_1", FrameCount(characterId, PlayerAnimationState.Attack1));
         player.Add(content, PlayerAnimationState.Attack2, $"{root}/Attack_2", FrameCount(characterId, PlayerAnimationState.Attack2));
@@ -178,15 +183,25 @@ internal sealed class PlayerCharacter
 
     public void Draw(SpriteBatch spriteBatch, Vector2 position, float scale, SpriteEffects effects)
     {
-        var texture = _textures[Animation];
         var frameCount = _frameCounts[Animation];
-        var frameWidth = texture.Width / frameCount;
         var frameRate = Animation == PlayerAnimationState.Dead
             ? DeadFrameRate
             : Animation == PlayerAnimationState.Idle ? 7f : 10f;
         var frame = Animation == PlayerAnimationState.Dead
             ? Math.Min((int)(_animationClock * frameRate), frameCount - 1)
             : (int)(_animationClock * frameRate) % frameCount;
+
+        if (_separateFrames.TryGetValue(Animation, out var separateFrames))
+        {
+            var frameTexture = separateFrames[frame];
+            var frameBounds = new Rectangle(0, 0, frameTexture.Width, frameTexture.Height);
+            var frameOrigin = new Vector2(frameTexture.Width / 2f, frameTexture.Height);
+            spriteBatch.Draw(frameTexture, position, frameBounds, Color.White, 0f, frameOrigin, scale, effects, 0f);
+            return;
+        }
+
+        var texture = _textures[Animation];
+        var frameWidth = texture.Width / frameCount;
         var source = new Rectangle(frame * frameWidth, 0, frameWidth, texture.Height);
         var origin = new Vector2(frameWidth / 2f, texture.Height);
         spriteBatch.Draw(texture, position, source, Color.White, 0f, origin, scale, effects, 0f);
@@ -214,6 +229,16 @@ internal sealed class PlayerCharacter
     private void Add(ContentManager content, PlayerAnimationState animation, string asset, int frameCount)
     {
         _textures[animation] = content.Load<Texture2D>(asset);
+        _frameCounts[animation] = frameCount;
+    }
+
+    private void AddSeparateFrames(ContentManager content, PlayerAnimationState animation, string assetRoot, int frameCount)
+    {
+        var frames = new Texture2D[frameCount];
+        for (var index = 0; index < frameCount; index++)
+            frames[index] = content.Load<Texture2D>($"{assetRoot}_{index:00}");
+
+        _separateFrames[animation] = frames;
         _frameCounts[animation] = frameCount;
     }
 

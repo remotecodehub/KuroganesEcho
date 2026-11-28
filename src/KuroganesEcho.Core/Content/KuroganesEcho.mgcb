@@ -287,6 +287,114 @@
 /processorParam:PremultiplyAlpha=True
 /build:Tiled/Chars/GeneratedFrames/Kunoichi/Spine.png
 
+#begin Tiled/Chars/GeneratedFrames/Kunoichi/Dash_00.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Kunoichi/Dash_00.png
+
+#begin Tiled/Chars/GeneratedFrames/Kunoichi/Dash_01.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Kunoichi/Dash_01.png
+
+#begin Tiled/Chars/GeneratedFrames/Kunoichi/Dash_02.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Kunoichi/Dash_02.png
+
+#begin Tiled/Chars/GeneratedFrames/Kunoichi/Dash_03.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Kunoichi/Dash_03.png
+
+#begin Tiled/Chars/GeneratedFrames/Kunoichi/Dash_04.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Kunoichi/Dash_04.png
+
+#begin Tiled/Chars/GeneratedFrames/Kunoichi/Dash_05.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Kunoichi/Dash_05.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_00.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_00.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_01.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_01.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_02.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_02.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_03.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_03.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_04.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_04.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_05.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Monk/Dash_05.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_00.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_00.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_01.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_01.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_02.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_02.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_03.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_03.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_04.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_04.png
+
+#begin Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_05.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:PremultiplyAlpha=True
+/build:Tiled/Chars/GeneratedFrames/Ninja_Peasant/Dash_05.png
+
 #begin Tiled/Chars/GeneratedFrames/Ninja_Monk/Kunai.png
 /importer:TextureImporter
 /processor:TextureProcessor

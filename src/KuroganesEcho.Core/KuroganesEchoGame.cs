@@ -165,6 +165,7 @@ public class KuroganesEchoGame : Game
     private float _verticalVelocity;
     private bool _isGrounded;
     private float _runRemaining;
+    private float _runDirection = 1f;
     private float _dashDirection;
     private float _stamina = StaminaMaximum;
     private float _power;
@@ -2268,12 +2269,12 @@ public class KuroganesEchoGame : Game
 
         if (_moveInput.LengthSquared() > 1f)
             _moveInput.Normalize();
-        if (Math.Abs(_moveInput.X) > 0.05f)
+        if (!IsPlayerDashing && Math.Abs(_moveInput.X) > 0.05f)
             _playerFacing = _moveInput.X < 0f ? -1 : 1;
         var movementSpeed = IsPlayerDashing ? DashSpeed : _runRemaining > 0f ? RunSpeed : PlayerSpeed;
         var movementDirection = IsPlayerDashing
-            ? (Math.Abs(_moveInput.X) > 0.05f ? Math.Sign(_moveInput.X) : _dashDirection)
-            : _moveInput.X;
+            ? _dashDirection
+            : _runRemaining > 0f ? _runDirection : _moveInput.X;
         _playerPosition.X += (movementDirection * movementSpeed + _playerKnockbackVelocity) * elapsedSeconds;
         _playerKnockbackVelocity = MathHelper.Lerp(_playerKnockbackVelocity, 0f, Math.Min(1f, elapsedSeconds * 8f));
         _verticalVelocity += Gravity * elapsedSeconds;
@@ -3126,6 +3127,8 @@ public class KuroganesEchoGame : Game
             _playerBellHitsApplied.Clear();
         }
         _runRemaining = action == PlayerAnimationState.Run ? _player.ActionRemaining : 0f;
+        if (action == PlayerAnimationState.Run)
+            _runDirection = Math.Abs(_moveInput.X) > 0.05f ? Math.Sign(_moveInput.X) : _playerFacing;
         if (action == PlayerAnimationState.Dash)
             _dashDirection = Math.Abs(_moveInput.X) > 0.05f ? Math.Sign(_moveInput.X) : _playerFacing;
         if (action == PlayerAnimationState.Run)
